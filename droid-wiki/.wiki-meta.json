@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-05-30T17:30:00Z",
+  "commitHash": "506c47efb3873b05fa0a5837afe1692e04c47941",
+  "branch": "main",
+  "pageCount": 23,
+  "topLevelSections": [
+    "overview",
+    "by-the-numbers",
+    "lore",
+    "how-to-contribute",
+    "features",
+    "reference"
+  ],
+  "pageOrder": [
+    "overview/index.md",
+    "overview/architecture.md",
+    "overview/getting-started.md",
+    "overview/glossary.md",
+    "by-the-numbers.md",
+    "lore.md",
+    "how-to-contribute/index.md",
+    "how-to-contribute/development-workflow.md",
+    "how-to-contribute/testing.md",
+    "how-to-contribute/debugging.md",
+    "how-to-contribute/patterns-and-conventions.md",
+    "how-to-contribute/tooling.md",
+    "features/index.md",
+    "features/content-collections.md",
+    "features/theming-and-styling.md",
+    "features/publications.md",
+    "features/blog.md",
+    "features/analytics-and-search.md",
+    "deployment.md",
+    "reference/index.md",
+    "reference/configuration.md",
+    "reference/data-models.md",
+    "reference/dependencies.md"
+  ]
+}
