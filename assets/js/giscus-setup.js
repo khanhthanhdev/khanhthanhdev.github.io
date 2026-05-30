@@ -39,4 +39,3 @@ function determineGiscusTheme() {
   );
   document.getElementById("giscus_thread").appendChild(giscusScript);
 })();
-

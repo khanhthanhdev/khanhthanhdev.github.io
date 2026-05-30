@@ -29,14 +29,14 @@ All commit messages follow a conventional type prefix:
 <body (optional)>
 ```
 
-| Type | Purpose |
-|------|---------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation only |
-| `style` | Formatting, whitespace (no logic change) |
-| `config` | Configuration file changes |
-| `chore` | Build process, tooling, dependency updates |
+| Type     | Purpose                                    |
+| -------- | ------------------------------------------ |
+| `feat`   | New feature                                |
+| `fix`    | Bug fix                                    |
+| `docs`   | Documentation only                         |
+| `style`  | Formatting, whitespace (no logic change)   |
+| `config` | Configuration file changes                 |
+| `chore`  | Build process, tooling, dependency updates |
 
 **Examples:**
 

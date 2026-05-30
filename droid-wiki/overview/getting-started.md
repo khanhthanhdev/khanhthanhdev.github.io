@@ -64,14 +64,14 @@ docker compose up --build
 
 ## Key commands
 
-| Task | Command |
-|------|---------|
-| Start dev server (Docker) | `docker compose up` |
-| Rebuild with updated deps | `docker compose up --build` |
-| Stop server | `docker compose down` |
-| Format all files | `npx prettier . --write` |
-| Build only (no serve) | `bundle exec jekyll build` |
-| Build for production | `JEKYLL_ENV=production bundle exec jekyll build` |
+| Task                      | Command                                          |
+| ------------------------- | ------------------------------------------------ |
+| Start dev server (Docker) | `docker compose up`                              |
+| Rebuild with updated deps | `docker compose up --build`                      |
+| Stop server               | `docker compose down`                            |
+| Format all files          | `npx prettier . --write`                         |
+| Build only (no serve)     | `bundle exec jekyll build`                       |
+| Build for production      | `JEKYLL_ENV=production bundle exec jekyll build` |
 
 ## Configuration
 

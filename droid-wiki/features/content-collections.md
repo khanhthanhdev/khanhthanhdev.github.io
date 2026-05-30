@@ -4,13 +4,13 @@ Jekyll collections are groups of related content that share a common structure. 
 
 ## Collections Reference
 
-| Collection   | Directory       | Layout           | Output | Description                              |
-| ------------ | --------------- | ---------------- | ------ | ---------------------------------------- |
-| `posts`      | `_posts/`       | `post`           | yes    | Blog posts (built-in Jekyll collection)  |
-| `projects`   | `_projects/`    | `page`           | yes    | Portfolio project cards                  |
-| `news`       | `_news/`        | `post` (default) | yes    | Announcements displayed on the homepage  |
-| `books`      | `_books/`       | `book-review`    | yes    | Book reviews with ratings and metadata   |
-| `teachings`  | `_teachings/`   | `course`         | yes    | Course pages with weekly schedules       |
+| Collection  | Directory     | Layout           | Output | Description                             |
+| ----------- | ------------- | ---------------- | ------ | --------------------------------------- |
+| `posts`     | `_posts/`     | `post`           | yes    | Blog posts (built-in Jekyll collection) |
+| `projects`  | `_projects/`  | `page`           | yes    | Portfolio project cards                 |
+| `news`      | `_news/`      | `post` (default) | yes    | Announcements displayed on the homepage |
+| `books`     | `_books/`     | `book-review`    | yes    | Book reviews with ratings and metadata  |
+| `teachings` | `_teachings/` | `course`         | yes    | Course pages with weekly schedules      |
 
 The collection configuration in `_config.yml`:
 
@@ -63,6 +63,7 @@ category: fun
 ```
 
 Key fields:
+
 - **`importance`** — Controls sort order on the projects page (higher = shown first).
 - **`category`** — Groups projects into filterable categories when `enable_project_categories: true`.
 - **`redirect`** — Optionally redirect to an external URL instead of rendering content.
@@ -101,8 +102,8 @@ Configuration in `_config.yml`:
 ```yaml
 announcements:
   enabled: true
-  scrollable: true  # adds scroll bar if more than 3 items
-  limit: 5          # max items shown (blank = all)
+  scrollable: true # adds scroll bar if more than 3 items
+  limit: 5 # max items shown (blank = all)
 ```
 
 ## Books
@@ -133,6 +134,7 @@ status: Finished
 ```
 
 Key fields:
+
 - **`cover`** — Path to a local cover image. If omitted, the theme fetches one from Open Library using `olid` or `isbn`.
 - **`stars`** — Rating from 1 to 5.
 - **`status`** — Reading status (e.g., `Finished`, `Reading`, `To Read`).
@@ -170,6 +172,7 @@ schedule:
 ```
 
 Key fields:
+
 - **`schedule`** — Array of weekly entries, each with `week`, `date`, `topic`, `description`, and `materials`.
 - **`materials`** — Array of `{name, url}` objects linking to lecture slides, assignments, etc.
 

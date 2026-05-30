@@ -26,7 +26,8 @@ scholar:
 ```
 
 Key settings:
-- **`last_name` / `first_name`** — Used to identify the site owner's publications. The owner's name is rendered in *italics* in the author list.
+
+- **`last_name` / `first_name`** — Used to identify the site owner's publications. The owner's name is rendered in _italics_ in the author list.
 - **`bibliography_template: bib`** — Points to `_layouts/bib.liquid` for rendering each entry.
 - **`group_by: year`** — Groups publications by year in descending order.
 
@@ -66,33 +67,33 @@ Entries in `_bibliography/papers.bib` use standard BibTeX types (`@article`, `@b
 
 These keywords are filtered from the BibTeX output but control rendering behavior:
 
-| Keyword              | Description                                                       |
-| -------------------- | ----------------------------------------------------------------- |
-| `abbr`               | Abbreviated venue name shown as a badge (can link via `_data/venues.yml`) |
-| `abstract`           | Full abstract text; shown in an expandable "Abs" button           |
-| `altmetric`          | Altmetric ID for citation badge                                   |
-| `annotation`         | Popover annotation shown next to author names                     |
-| `arxiv`              | arXiv ID; generates an "arXiv" button                             |
-| `award`              | Award description; shown in an expandable "Awarded" button        |
-| `award_name`         | Label for the award button (defaults to "Awarded")                |
-| `bibtex_show`        | Show a "Bib" button that expands to the raw BibTeX                |
-| `blog`               | URL to a blog post about this paper                               |
-| `code`               | URL to source code                                                |
-| `dimensions`         | Dimensions badge (`true` for DOI-based, or a specific ID)         |
-| `doi`                | DOI string; generates a "DOI" button linking to doi.org           |
-| `google_scholar_id`  | Google Scholar citation ID for the badge                          |
-| `hal`                | HAL identifier; generates an "HAL" button                         |
-| `html`               | URL to HTML version (local path or full URL)                      |
-| `inspirehep_id`      | InspireHEP record ID for citation badge                           |
-| `pdf`                | PDF file name (looked up in `/assets/pdf/`) or full URL           |
-| `pmid`               | PubMed ID for Altmetric/Dimensions badges                         |
-| `poster`             | Poster PDF path or URL                                            |
-| `preview`            | Thumbnail image (looked up in `/assets/img/publication_preview/`) |
-| `selected`           | Marks entry for the "selected papers" page                        |
-| `slides`             | Slides PDF path or URL                                            |
-| `supp`               | Supplementary material PDF path or URL                            |
-| `video`              | Video URL; embedded if `enable_video_embedding: true`             |
-| `website`            | Project website URL                                               |
+| Keyword             | Description                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| `abbr`              | Abbreviated venue name shown as a badge (can link via `_data/venues.yml`) |
+| `abstract`          | Full abstract text; shown in an expandable "Abs" button                   |
+| `altmetric`         | Altmetric ID for citation badge                                           |
+| `annotation`        | Popover annotation shown next to author names                             |
+| `arxiv`             | arXiv ID; generates an "arXiv" button                                     |
+| `award`             | Award description; shown in an expandable "Awarded" button                |
+| `award_name`        | Label for the award button (defaults to "Awarded")                        |
+| `bibtex_show`       | Show a "Bib" button that expands to the raw BibTeX                        |
+| `blog`              | URL to a blog post about this paper                                       |
+| `code`              | URL to source code                                                        |
+| `dimensions`        | Dimensions badge (`true` for DOI-based, or a specific ID)                 |
+| `doi`               | DOI string; generates a "DOI" button linking to doi.org                   |
+| `google_scholar_id` | Google Scholar citation ID for the badge                                  |
+| `hal`               | HAL identifier; generates an "HAL" button                                 |
+| `html`              | URL to HTML version (local path or full URL)                              |
+| `inspirehep_id`     | InspireHEP record ID for citation badge                                   |
+| `pdf`               | PDF file name (looked up in `/assets/pdf/`) or full URL                   |
+| `pmid`              | PubMed ID for Altmetric/Dimensions badges                                 |
+| `poster`            | Poster PDF path or URL                                                    |
+| `preview`           | Thumbnail image (looked up in `/assets/img/publication_preview/`)         |
+| `selected`          | Marks entry for the "selected papers" page                                |
+| `slides`            | Slides PDF path or URL                                                    |
+| `supp`              | Supplementary material PDF path or URL                                    |
+| `video`             | Video URL; embedded if `enable_video_embedding: true`                     |
+| `website`           | Project website URL                                                       |
 
 These keywords are listed in `filtered_bibtex_keywords` in `_config.yml` so they are stripped from the displayed BibTeX output.
 
@@ -126,7 +127,7 @@ Renders a shields.io badge showing the citation count from InspireHEP. The count
 
 ## Author Handling
 
-- The site owner's name (matched via `scholar.last_name` and `scholar.first_name`) is rendered in *italics*.
+- The site owner's name (matched via `scholar.last_name` and `scholar.first_name`) is rendered in _italics_.
 - Co-author names can be linked to their websites via `_data/coauthors.yml`.
 - Superscript symbols in author names (e.g., `*`, `†`, `‡`) are automatically rendered as `<sup>` elements.
 - `max_author_limit` (default `3`) controls how many authors are shown before collapsing into a clickable "N more authors" span.

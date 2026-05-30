@@ -36,27 +36,27 @@ Content lives in Jekyll collections:
 
 Key layouts:
 
-| Layout | Purpose |
-|--------|---------|
-| `about.liquid` | Profile page with avatar, bio, news, and selected papers |
-| `post.liquid` | Blog post with metadata, TOC, and related posts |
-| `bib.liquid` | Publication entry with badges (Altmetric, Dimensions, Google Scholar) |
-| `cv.liquid` | Full CV page rendered from `_data/cv.yml` |
-| `distill.liquid` | Distill-style interactive articles |
-| `page.liquid` | Generic content page |
+| Layout           | Purpose                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| `about.liquid`   | Profile page with avatar, bio, news, and selected papers              |
+| `post.liquid`    | Blog post with metadata, TOC, and related posts                       |
+| `bib.liquid`     | Publication entry with badges (Altmetric, Dimensions, Google Scholar) |
+| `cv.liquid`      | Full CV page rendered from `_data/cv.yml`                             |
+| `distill.liquid` | Distill-style interactive articles                                    |
+| `page.liquid`    | Generic content page                                                  |
 
 ### Styling
 
 SCSS files in `_sass/` compile to CSS. The theme system (`_sass/_themes.scss`) supports light and dark modes. Key files:
 
-| File | Purpose |
-|------|---------|
-| `_sass/_base.scss` | Base styles, layout grid, responsive breakpoints |
-| `_sass/_themes.scss` | Light/dark color variable definitions |
-| `_sass/_navbar.scss` | Navigation bar styles |
-| `_sass/_publications.scss` | Publication list styling |
-| `_sass/_cv.scss` | CV page layout |
-| `_sass/_utilities.scss` | Utility classes |
+| File                       | Purpose                                          |
+| -------------------------- | ------------------------------------------------ |
+| `_sass/_base.scss`         | Base styles, layout grid, responsive breakpoints |
+| `_sass/_themes.scss`       | Light/dark color variable definitions            |
+| `_sass/_navbar.scss`       | Navigation bar styles                            |
+| `_sass/_publications.scss` | Publication list styling                         |
+| `_sass/_cv.scss`           | CV page layout                                   |
+| `_sass/_utilities.scss`    | Utility classes                                  |
 
 ### Plugins
 
@@ -103,13 +103,13 @@ graph LR
 
 ## Key source files
 
-| File | Purpose |
-|------|---------|
-| `_config.yml` | Central configuration: site metadata, feature flags, plugin settings, library versions |
-| `Gemfile` | Ruby dependency declarations for Jekyll and all plugins |
-| `Dockerfile` | Docker image definition for local development |
-| `docker-compose.yml` | Docker Compose config mapping port 8080 and source volume |
-| `bin/entry_point.sh` | Docker entry point: starts Jekyll with livereload, watches `_config.yml` for changes |
-| `purgecss.config.js` | PurgeCSS configuration for production CSS optimization |
-| `.github/workflows/deploy.yml` | Main CI/CD deployment workflow |
-| `.github/workflows/prettier.yml` | Code formatting enforcement workflow |
+| File                             | Purpose                                                                                |
+| -------------------------------- | -------------------------------------------------------------------------------------- |
+| `_config.yml`                    | Central configuration: site metadata, feature flags, plugin settings, library versions |
+| `Gemfile`                        | Ruby dependency declarations for Jekyll and all plugins                                |
+| `Dockerfile`                     | Docker image definition for local development                                          |
+| `docker-compose.yml`             | Docker Compose config mapping port 8080 and source volume                              |
+| `bin/entry_point.sh`             | Docker entry point: starts Jekyll with livereload, watches `_config.yml` for changes   |
+| `purgecss.config.js`             | PurgeCSS configuration for production CSS optimization                                 |
+| `.github/workflows/deploy.yml`   | Main CI/CD deployment workflow                                                         |
+| `.github/workflows/prettier.yml` | Code formatting enforcement workflow                                                   |
