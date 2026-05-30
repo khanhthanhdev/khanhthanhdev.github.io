@@ -602,3 +602,9 @@ figure.cover {
 mjx-container[jax="CHTML"][display="true"] {
   overflow-x: auto;
 }
+
+// Name highlight (bold black text)
+.name-highlight {
+  color: #000;
+  font-weight: 900;
+}
