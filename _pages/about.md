@@ -21,15 +21,12 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
-I will study Electrical and Computer Engineering at VinUniversity. I love science, technology, engineering, and math (STEM). I'm really interested in robots and coding.
+I am a **first-year Electrical and Computer Engineering student at VinUniversity**. I am interested in **robotics**, **AI agents**, and **full-stack systems** that solve real-world problems.
 
-Currently, I'm a volunteer at [STEAM For Vietnam](https://steamforvietnam.org/) with the role of Software Engineering and Rule Developer. I join projects like building Robotics Tournament Management system, AI Agent for teachers, and Robotic Tournament (coming soon).
+My current research focuses on **AI agents and robotics**, especially solving and accelerating traditional processes using AI Agents. .
 
-Here are some cool things I've done:
+Some notable things worth mentioning:
 
-<ul>
-  <li><b>FIRST Prize</b> at Vietnam AI Contest 2024 by VLAB Innovation and Boston Global Forum (My team: me, Huy Khanh, Hoang Minh, Huy Anh, Manh Linh)</li>
-  <li><b>Gold Medal</b> at <a href="https://first.global/">FIRST Global Challenge</a> robotics competition in Singapore</li>
-  <li>Attended a Math and Science Summer Program where I learned about Data Science and Machine Learning</li>
-  <li>Co-authored a research paper on improving summaries of long medical documents using LSG Attention for BART Model</li>
-</ul>
+- Gained hands-on experience at **[STEAM for Vietnam](https://steamforvietnam.org/)**, contributing to projects related to **Robotics Tournament Management Sysyem**.
+- Won **First Prize** at **[Vietnam AI Contest 2024](https://vlabinnovation.com/tin-tuc-su-kien/chinh-thuc-mo-cong-dang-ky-vietnam-ai-contest-2024/)** .
+- Won a **Gold Medal** at the **[FIRST Global Challenge 2023](https://first.global/)** international robotics competition.

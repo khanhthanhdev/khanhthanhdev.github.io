@@ -7,12 +7,6 @@ nav: true
 nav_order: 6
 ---
 
-### education
-
-> Currently studying at [Your University] — pursuing a degree in [Your Major].
-
----
-
 _green = intro, blue = intermediate, orange = advanced, red = graduate_
 
 ### computer science
