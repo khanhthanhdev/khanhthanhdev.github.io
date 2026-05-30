@@ -6,25 +6,25 @@ The site uses a modular SCSS architecture with CSS custom properties to support 
 
 The `_sass/` directory contains the following files:
 
-| File                  | Purpose                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| `_variables.scss`     | Base color palette, spacing, and configuration variables     |
-| `_themes.scss`        | CSS custom property definitions for light and dark themes    |
-| `_base.scss`          | Base element styles (typography, tables, blockquotes, etc.)  |
-| `_layout.scss`        | Page container, profile, and content layout rules            |
-| `_navbar.scss`        | Navigation bar, dropdowns, and mobile hamburger menu         |
-| `_footer.scss`        | Fixed and sticky footer styles                               |
-| `_blog.scss`          | Blog post headers, post lists, pagination, tags              |
-| `_publications.scss`  | Publication entry layout and badge styles                    |
-| `_components.scss`    | Reusable component styles                                    |
-| `_cv.scss`            | CV page specific styles                                      |
-| `_tabs.scss`          | Tab component styles                                         |
-| `_teachings.scss`     | Course/teaching page styles                                  |
-| `_utilities.scss`     | Utility classes                                              |
-| `_typography.scss`    | Font and text sizing                                         |
-| `_toc-sidebar.scss`   | Sidebar table of contents styles                             |
-| `_distill.scss`       | Distill-style article formatting                             |
-| `_typograms.scss`     | Typogram diagram styles                                      |
+| File                 | Purpose                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| `_variables.scss`    | Base color palette, spacing, and configuration variables    |
+| `_themes.scss`       | CSS custom property definitions for light and dark themes   |
+| `_base.scss`         | Base element styles (typography, tables, blockquotes, etc.) |
+| `_layout.scss`       | Page container, profile, and content layout rules           |
+| `_navbar.scss`       | Navigation bar, dropdowns, and mobile hamburger menu        |
+| `_footer.scss`       | Fixed and sticky footer styles                              |
+| `_blog.scss`         | Blog post headers, post lists, pagination, tags             |
+| `_publications.scss` | Publication entry layout and badge styles                   |
+| `_components.scss`   | Reusable component styles                                   |
+| `_cv.scss`           | CV page specific styles                                     |
+| `_tabs.scss`         | Tab component styles                                        |
+| `_teachings.scss`    | Course/teaching page styles                                 |
+| `_utilities.scss`    | Utility classes                                             |
+| `_typography.scss`   | Font and text sizing                                        |
+| `_toc-sidebar.scss`  | Sidebar table of contents styles                            |
+| `_distill.scss`      | Distill-style article formatting                            |
+| `_typograms.scss`    | Typogram diagram styles                                     |
 
 SCSS is compiled with `sass: compressed` output style (configured in `_config.yml`).
 
@@ -61,17 +61,17 @@ Theme-specific CSS custom properties are defined in `_sass/_themes.scss`. The `:
 
 **Key custom properties:**
 
-| Property                        | Light Mode        | Dark Mode           |
-| ------------------------------- | ----------------- | ------------------- |
-| `--global-bg-color`             | `#ffffff`         | `#1c1c1d`           |
-| `--global-text-color`           | `#000000`         | `#c7c7c7`           |
-| `--global-text-color-light`     | `#828282`         | `#828282`           |
-| `--global-theme-color`          | `#4d74eb`         | `#2698ba` (cyan)    |
-| `--global-hover-color`          | `#4d74eb`         | `#2698ba`           |
-| `--global-footer-bg-color`      | `#1c1c1d`         | `#c7c7c7`           |
-| `--global-divider-color`        | `rgba(0,0,0,0.1)` | `#424246`           |
-| `--global-card-bg-color`        | `#ffffff`         | `#212529`           |
-| `--global-code-bg-color`        | light purple tint | `#2c3237`           |
+| Property                    | Light Mode        | Dark Mode        |
+| --------------------------- | ----------------- | ---------------- |
+| `--global-bg-color`         | `#ffffff`         | `#1c1c1d`        |
+| `--global-text-color`       | `#000000`         | `#c7c7c7`        |
+| `--global-text-color-light` | `#828282`         | `#828282`        |
+| `--global-theme-color`      | `#4d74eb`         | `#2698ba` (cyan) |
+| `--global-hover-color`      | `#4d74eb`         | `#2698ba`        |
+| `--global-footer-bg-color`  | `#1c1c1d`         | `#c7c7c7`        |
+| `--global-divider-color`    | `rgba(0,0,0,0.1)` | `#424246`        |
+| `--global-card-bg-color`    | `#ffffff`         | `#212529`        |
+| `--global-code-bg-color`    | light purple tint | `#2c3237`        |
 
 All component styles reference these custom properties rather than hardcoded colors, so the entire site responds to theme changes.
 
@@ -106,12 +106,14 @@ The site is responsive by default:
 To change the site's color scheme:
 
 1. **Override SCSS variables:** Create or edit `_sass/_variables.scss` and define your values before the defaults:
+
    ```scss
    $cyan-color: #your-color;
    $blue-color: #your-color;
    ```
 
 2. **Override CSS custom properties:** Add a `_sass/_custom.scss` file (or use `_layouts/default.liquid` with a `<style>` block) to redefine theme properties:
+
    ```scss
    :root {
      --global-theme-color: #your-brand-color;
@@ -130,12 +132,15 @@ Blockquotes can be styled as callout blocks using CSS classes:
 
 ```markdown
 {: .block-tip }
+
 > **Tip:** Helpful information.
 
 {: .block-warning }
+
 > **Warning:** Potential issues.
 
 {: .block-danger }
+
 > **Danger:** Destructive actions.
 ```
 

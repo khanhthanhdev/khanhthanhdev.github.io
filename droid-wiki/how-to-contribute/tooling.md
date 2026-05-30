@@ -8,22 +8,22 @@ The site is built with [Jekyll](https://jekyllrb.com/) v4.x, a Ruby static site 
 
 ### Key plugins (from `Gemfile`)
 
-| Plugin | Purpose |
-|--------|---------|
-| `jekyll-scholar` | BibTeX bibliography management |
-| `jekyll-paginate-v2` | Pagination for blog and other listings |
-| `jekyll-archives-v2` | Archive page generation |
-| `jekyll-minifier` | CSS/JS minification in production |
-| `jekyll-toc` | Table of contents generation |
-| `jekyll-tabs` | Tab UI components |
-| `jemoji` | Emoji support |
-| `jekyll-feed` | RSS/Atom feed generation |
-| `jekyll-sitemap` | Sitemap generation |
-| `jekyll-jupyter-notebook` | Jupyter notebook embedding |
-| `jekyll-imagemagick` | Image processing (requires ImageMagick) |
-| `jekyll-cache-bust` | Cache-busting for static assets |
-| `jekyll-socials` | Social media link rendering |
-| `classifier-reborn` | Related posts calculation |
+| Plugin                    | Purpose                                 |
+| ------------------------- | --------------------------------------- |
+| `jekyll-scholar`          | BibTeX bibliography management          |
+| `jekyll-paginate-v2`      | Pagination for blog and other listings  |
+| `jekyll-archives-v2`      | Archive page generation                 |
+| `jekyll-minifier`         | CSS/JS minification in production       |
+| `jekyll-toc`              | Table of contents generation            |
+| `jekyll-tabs`             | Tab UI components                       |
+| `jemoji`                  | Emoji support                           |
+| `jekyll-feed`             | RSS/Atom feed generation                |
+| `jekyll-sitemap`          | Sitemap generation                      |
+| `jekyll-jupyter-notebook` | Jupyter notebook embedding              |
+| `jekyll-imagemagick`      | Image processing (requires ImageMagick) |
+| `jekyll-cache-bust`       | Cache-busting for static assets         |
+| `jekyll-socials`          | Social media link rendering             |
+| `classifier-reborn`       | Related posts calculation               |
 
 ## Docker
 
@@ -100,11 +100,11 @@ PurgeCSS runs automatically during the CI deploy workflow after Jekyll builds th
 
 `.pre-commit-config.yaml` defines hooks that run before each commit:
 
-| Hook | Purpose |
-|------|---------|
-| `trailing-whitespace` | Removes trailing whitespace |
-| `end-of-file-fixer` | Ensures files end with a newline |
-| `check-yaml` | Validates YAML syntax |
+| Hook                      | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| `trailing-whitespace`     | Removes trailing whitespace            |
+| `end-of-file-fixer`       | Ensures files end with a newline       |
+| `check-yaml`              | Validates YAML syntax                  |
 | `check-added-large-files` | Prevents accidental large file commits |
 
 Install with:

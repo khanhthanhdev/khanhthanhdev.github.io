@@ -157,4 +157,3 @@ function initializeCookieConsent() {
 
 // Initialize when the library is available
 initializeCookieConsent();
-

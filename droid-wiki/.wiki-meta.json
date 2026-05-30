@@ -3,14 +3,7 @@
   "commitHash": "506c47efb3873b05fa0a5837afe1692e04c47941",
   "branch": "main",
   "pageCount": 23,
-  "topLevelSections": [
-    "overview",
-    "by-the-numbers",
-    "lore",
-    "how-to-contribute",
-    "features",
-    "reference"
-  ],
+  "topLevelSections": ["overview", "by-the-numbers", "lore", "how-to-contribute", "features", "reference"],
   "pageOrder": [
     "overview/index.md",
     "overview/architecture.md",

@@ -2,9 +2,56 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: |
+          (?x)^(
+            .*\.min\.(js|css)$|
+            .*\.map$|
+            assets/js/distillpub/.*|
+            assets/js/search/.*|
+            _sass/font-awesome/.*|
+            _scripts/.*|
+            lighthouse_results/.*|
+            _data/citations\.yml$
+          )$
       - id: end-of-file-fixer
+        exclude: |
+          (?x)^(
+            .*\.min\.(js|css)$|
+            .*\.map$|
+            assets/js/distillpub/.*|
+            assets/js/search/.*|
+            _sass/font-awesome/.*|
+            _scripts/.*|
+            lighthouse_results/.*|
+            _data/citations\.yml$
+          )$
       - id: check-yaml
+        args: [--allow-multiple-documents]
       - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-json
+        exclude: \.devcontainer/devcontainer\.json$
+      - id: detect-private-key
+
+  # Prettier formatting (matches CI prettier.yml workflow)
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write
+        language: system
+        files: \.(js|jsx|ts|tsx|css|scss|md|mdx|html|liquid|json|yml|yaml)$
+        exclude: |
+          (?x)^(
+            .*\.min\.(js|css)$|
+            .*\.map$|
+            assets/js/distillpub/.*|
+            assets/js/search/.*|
+            _sass/font-awesome/.*|
+            _scripts/.*|
+            lighthouse_results/.*|
+            _data/citations\.yml$
+          )$

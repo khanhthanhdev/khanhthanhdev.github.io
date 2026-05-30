@@ -91,12 +91,12 @@ Configuration script: `_scripts/cookie-consent-setup.js`
 
 ### Supported Providers with Cookie Consent
 
-| Provider           | Script Type                                  | Blocked Until Consent |
-| ------------------ | -------------------------------------------- | --------------------- |
-| Google Analytics   | `type="text/plain" data-category="analytics"` | Yes                   |
-| Cronitor RUM       | `type="text/plain" data-category="analytics"` | Yes                   |
-| Pirsch             | `type="text/plain" data-category="analytics"` | Yes                   |
-| Openpanel          | `type="text/plain" data-category="analytics"` | Yes                   |
+| Provider         | Script Type                                   | Blocked Until Consent |
+| ---------------- | --------------------------------------------- | --------------------- |
+| Google Analytics | `type="text/plain" data-category="analytics"` | Yes                   |
+| Cronitor RUM     | `type="text/plain" data-category="analytics"` | Yes                   |
+| Pirsch           | `type="text/plain" data-category="analytics"` | Yes                   |
+| Openpanel        | `type="text/plain" data-category="analytics"` | Yes                   |
 
 ## Search
 
@@ -106,9 +106,9 @@ The site includes a client-side search feature powered by [ninja-keys](https://g
 
 ```yaml
 search_enabled: true
-socials_in_search: true     # include social links in results
-posts_in_search: true        # include blog posts in results
-bib_search: true             # include bibliography entries in results
+socials_in_search: true # include social links in results
+posts_in_search: true # include blog posts in results
+bib_search: true # include bibliography entries in results
 ```
 
 ### How It Works

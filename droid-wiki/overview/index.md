@@ -6,15 +6,15 @@ The site showcases an academic portfolio including a profile page, publications 
 
 ## Key facts
 
-| Field | Value |
-|-------|-------|
-| Base theme | al-folio (Jekyll academic theme) |
-| Owner | Tran Khanh Thanh |
-| Host | GitHub Pages |
-| URL | https://khanhthanhdev.github.io |
+| Field      | Value                                                    |
+| ---------- | -------------------------------------------------------- |
+| Base theme | al-folio (Jekyll academic theme)                         |
+| Owner      | Tran Khanh Thanh                                         |
+| Host       | GitHub Pages                                             |
+| URL        | https://khanhthanhdev.github.io                          |
 | Tech stack | Jekyll 4.x, Ruby 3.3.5, Liquid, SCSS, Node.js (Prettier) |
-| Deployment | GitHub Actions (`deploy.yml`) to `gh-pages` branch |
-| Local dev | Docker (`docker compose up`) on port 8080 |
+| Deployment | GitHub Actions (`deploy.yml`) to `gh-pages` branch       |
+| Local dev  | Docker (`docker compose up`) on port 8080                |
 
 ## Repository structure
 

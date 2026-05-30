@@ -8,17 +8,17 @@
 
 Counts include only source files (`.md`, `.liquid`, `.scss`, `.rb`, `.yml`, `.js`, `.py`, `.sh`, `.bib`), excluding `node_modules/`, `_site/`, `.git/`, and `vendor/`.
 
-| Language   | Files | Lines  |
-| ---------- | ----- | ------ |
-| JavaScript | 77    | 32,764 |
-| SCSS       | 53    | 14,695 |
-| Markdown   | 46    | 7,217  |
-| YAML       | 30    | 6,297  |
-| Liquid     | 49    | 4,279  |
-| Ruby       | 7     | 359    |
-| Python     | 1     | 132    |
-| BibTeX     | 2     | 122    |
-| Shell      | 1     | 37     |
+| Language   | Files   | Lines      |
+| ---------- | ------- | ---------- |
+| JavaScript | 77      | 32,764     |
+| SCSS       | 53      | 14,695     |
+| Markdown   | 46      | 7,217      |
+| YAML       | 30      | 6,297      |
+| Liquid     | 49      | 4,279      |
+| Ruby       | 7       | 359        |
+| Python     | 1       | 132        |
+| BibTeX     | 2       | 122        |
+| Shell      | 1       | 37         |
 | **Total**  | **266** | **65,902** |
 
 ```mermaid
@@ -33,11 +33,11 @@ xychart-beta
 
 ### Source files vs config files
 
-| Category        | Files |
-| --------------- | ----- |
-| Source files    | 229   |
-| Config files    | 48    |
-| **Total**       | **277** |
+| Category     | Files   |
+| ------------ | ------- |
+| Source files | 229     |
+| Config files | 48      |
+| **Total**    | **277** |
 
 ```mermaid
 xychart-beta
@@ -49,11 +49,11 @@ xychart-beta
 
 ## Activity
 
-| Metric                              | Count |
-| ----------------------------------- | ----- |
-| Total commits (main branch)        | 6     |
-| Total commits (all branches)       | 10    |
-| Recent commits (since 2026-04-30)  | 4     |
+| Metric                            | Count |
+| --------------------------------- | ----- |
+| Total commits (main branch)       | 6     |
+| Total commits (all branches)      | 10    |
+| Recent commits (since 2026-04-30) | 4     |
 
 ### Most changed files
 
@@ -102,8 +102,8 @@ No commits in this repository contain `Co-authored-by` trailers.
 
 ### Largest source files
 
-| File                               | Lines  |
-| ---------------------------------- | ------ |
+| File                                    | Lines  |
+| --------------------------------------- | ------ |
 | `assets/js/distillpub/transforms.v2.js` | 14,557 |
 | `assets/js/distillpub/template.v2.js`   | 9,616  |
 | `_sass/font-awesome/_variables.scss`    | 5,130  |
@@ -111,6 +111,6 @@ No commits in this repository contain `Co-authored-by` trailers.
 | `_data/citations.yml`                   | 4,179  |
 | `_sass/font-awesome/_shims.scss`        | 2,193  |
 | `CUSTOMIZE.md`                          | 1,402  |
-| `assets/js/typograms.js`               | 1,341  |
+| `assets/js/typograms.js`                | 1,341  |
 | `_sass/_base.scss`                      | 1,297  |
 | `_config.yml`                           | 681    |

@@ -8,27 +8,27 @@ Blog posts live in `_posts/` and follow Jekyll's naming convention: `YYYY-MM-DD-
 
 **Frontmatter fields:**
 
-| Field              | Description                                          | Default |
-| ------------------ | ---------------------------------------------------- | ------- |
-| `layout`           | Always `post`                                        | —       |
-| `title`            | Post title                                           | —       |
-| `date`             | Publication date (`YYYY-MM-DD HH:MM:SS`)             | —       |
-| `description`      | Short description for previews and meta tags          | —       |
-| `tags`             | Array or space-separated tags                        | —       |
-| `categories`       | Array or space-separated categories                  | —       |
-| `featured`         | Pin to top of blog listing                           | `false` |
-| `redirect`         | Redirect to URL instead of rendering content         | —       |
-| `thumbnail`        | Path to thumbnail image for the listing              | —       |
-| `toc`              | Table of contents configuration                      | —       |
-| `giscus_comments`  | Enable Giscus comments                               | `true`  |
-| `related_posts`    | Show related posts section                           | `true`  |
-| `disqus_comments`  | Enable Disqus comments (deprecated)                  | `false` |
-| `citation`         | Show a citation block at the bottom                  | —       |
-| `related_publications` | Link bibliography entries from `_bibliography/`  | —       |
-| `last_updated`     | Date of last update                                  | —       |
-| `meta`             | Additional metadata text in the post header          | —       |
-| `author`           | Author name                                          | —       |
-| `_styles`          | Custom CSS injected into the post                    | —       |
+| Field                  | Description                                     | Default |
+| ---------------------- | ----------------------------------------------- | ------- |
+| `layout`               | Always `post`                                   | —       |
+| `title`                | Post title                                      | —       |
+| `date`                 | Publication date (`YYYY-MM-DD HH:MM:SS`)        | —       |
+| `description`          | Short description for previews and meta tags    | —       |
+| `tags`                 | Array or space-separated tags                   | —       |
+| `categories`           | Array or space-separated categories             | —       |
+| `featured`             | Pin to top of blog listing                      | `false` |
+| `redirect`             | Redirect to URL instead of rendering content    | —       |
+| `thumbnail`            | Path to thumbnail image for the listing         | —       |
+| `toc`                  | Table of contents configuration                 | —       |
+| `giscus_comments`      | Enable Giscus comments                          | `true`  |
+| `related_posts`        | Show related posts section                      | `true`  |
+| `disqus_comments`      | Enable Disqus comments (deprecated)             | `false` |
+| `citation`             | Show a citation block at the bottom             | —       |
+| `related_publications` | Link bibliography entries from `_bibliography/` | —       |
+| `last_updated`         | Date of last update                             | —       |
+| `meta`                 | Additional metadata text in the post header     | —       |
+| `author`               | Author name                                     | —       |
+| `_styles`              | Custom CSS injected into the post               | —       |
 
 **Example:**
 

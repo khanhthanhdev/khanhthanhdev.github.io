@@ -67,7 +67,7 @@ module ExternalPosts
       doc.data['description'] = content[:summary]
       doc.data['date'] = content[:published]
       doc.data['redirect'] = url
-      
+
       # Apply default categories and tags from source configuration
       if src['categories'] && src['categories'].is_a?(Array) && !src['categories'].empty?
         doc.data['categories'] = src['categories']
@@ -75,7 +75,7 @@ module ExternalPosts
       if src['tags'] && src['tags'].is_a?(Array) && !src['tags'].empty?
         doc.data['tags'] = src['tags']
       end
-      
+
       doc.content = content[:content]
       site.collections['posts'].docs << doc
     end

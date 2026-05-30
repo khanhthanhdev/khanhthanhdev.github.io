@@ -14,11 +14,11 @@ The main deployment workflow builds the site and pushes the output to the `gh-pa
 
 **Triggers:**
 
-| Event | Branches | Condition |
-|-------|----------|-----------|
-| `push` | `master`, `main` | Changes to content files (assets, sass, scripts, bib, html, js, liquid, markdown, yml, Gemfile) |
-| `pull_request` | `master`, `main` | Same file changes (build only, no deploy) |
-| `workflow_dispatch` | — | Manual trigger |
+| Event               | Branches         | Condition                                                                                       |
+| ------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
+| `push`              | `master`, `main` | Changes to content files (assets, sass, scripts, bib, html, js, liquid, markdown, yml, Gemfile) |
+| `pull_request`      | `master`, `main` | Same file changes (build only, no deploy)                                                       |
+| `workflow_dispatch` | —                | Manual trigger                                                                                  |
 
 **Build steps:**
 
@@ -73,11 +73,11 @@ Creates a size-optimized "slim" variant of the Docker image using [DockerSlim](h
 
 **Triggers:**
 
-| Event | Condition |
-|-------|-----------|
-| `push` to `master`/`main` | When `docker-slim.yml` changes |
-| `workflow_run` | After the "Docker Image CI" workflow succeeds |
-| `workflow_dispatch` | Manual trigger |
+| Event                     | Condition                                     |
+| ------------------------- | --------------------------------------------- |
+| `push` to `master`/`main` | When `docker-slim.yml` changes                |
+| `workflow_run`            | After the "Docker Image CI" workflow succeeds |
+| `workflow_dispatch`       | Manual trigger                                |
 
 **Build steps:**
 
@@ -107,25 +107,25 @@ Based on `ruby:slim`, the image includes:
 
 **Environment variables set in the image:**
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `EXECJS_RUNTIME` | `Node` | JavaScript runtime for ExecJS. |
-| `JEKYLL_ENV` | `production` | Jekyll environment. |
-| `LANG` | `en_US.UTF-8` | System locale. |
-| `LANGUAGE` | `en_US:en` | Language preference. |
-| `LC_ALL` | `en_US.UTF-8` | Locale override. |
+| Variable         | Value         | Purpose                        |
+| ---------------- | ------------- | ------------------------------ |
+| `EXECJS_RUNTIME` | `Node`        | JavaScript runtime for ExecJS. |
+| `JEKYLL_ENV`     | `production`  | Jekyll environment.            |
+| `LANG`           | `en_US.UTF-8` | System locale.                 |
+| `LANGUAGE`       | `en_US:en`    | Language preference.           |
+| `LC_ALL`         | `en_US.UTF-8` | Locale override.               |
 
 ### docker-compose.yml
 
 **File:** `docker-compose.yml`
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| `image` | `amirpourmand/al-folio:v0.16.3` | Pre-built image from Docker Hub. |
-| `build` | `.` | Falls back to building from Dockerfile if image pull fails. |
-| `ports` | `8080:8080`, `35729:35729` | Jekyll server (8080) and LiveReload (35729). |
-| `volumes` | `.:/srv/jekyll` | Mounts the repository into the container for live editing. |
-| `environment` | `JEKYLL_ENV=development` | Enables development mode features. |
+| Setting       | Value                           | Description                                                 |
+| ------------- | ------------------------------- | ----------------------------------------------------------- |
+| `image`       | `amirpourmand/al-folio:v0.16.3` | Pre-built image from Docker Hub.                            |
+| `build`       | `.`                             | Falls back to building from Dockerfile if image pull fails. |
+| `ports`       | `8080:8080`, `35729:35729`      | Jekyll server (8080) and LiveReload (35729).                |
+| `volumes`     | `.:/srv/jekyll`                 | Mounts the repository into the container for live editing.  |
+| `environment` | `JEKYLL_ENV=development`        | Enables development mode features.                          |
 
 ### docker-compose-slim.yml
 
@@ -163,12 +163,12 @@ A shell script for manually deploying to GitHub Pages without GitHub Actions.
 bin/deploy [-s SRC_BRANCH] [-d DEPLOY_BRANCH] [--verbose] [--no-push]
 ```
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-s`, `--src` | `main` | Source branch to build from. |
-| `-d`, `--deploy` | `gh-pages` | Target branch for deployment. |
-| `--verbose` | — | Enable shell tracing (`set -x`). |
-| `--no-push` | — | Build but don't push to remote. |
+| Flag             | Default    | Description                      |
+| ---------------- | ---------- | -------------------------------- |
+| `-s`, `--src`    | `main`     | Source branch to build from.     |
+| `-d`, `--deploy` | `gh-pages` | Target branch for deployment.    |
+| `--verbose`      | —          | Enable shell tracing (`set -x`). |
+| `--no-push`      | —          | Build but don't push to remote.  |
 
 **Process:**
 
@@ -188,15 +188,15 @@ bin/deploy [-s SRC_BRANCH] [-d DEPLOY_BRANCH] [--verbose] [--no-push]
 
 Additional workflows run alongside deployment:
 
-| Workflow | File | Trigger | Purpose |
-|----------|------|---------|---------|
-| Update citations | `update-citations.yml` | Mon/Wed/Fri schedule + manual | Fetches Google Scholar citation counts and updates `_data/citations.yml`. |
-| Render CV | `render-cv.yml` | Push to `_data/cv.yml` or RenderCV config + manual | Renders the CV from YAML to PDF using RenderCV. |
-| Prettier | `prettier.yml` | Push/PR | Formats code with Prettier. |
-| CodeQL | `codeql.yml` | Push/PR + schedule | Security analysis of the codebase. |
-| Broken links | `broken-links.yml` / `broken-links-site.yml` | Schedule + manual | Checks for broken internal and external links. |
-| Lighthouse | `lighthouse-badger.yml` | Schedule + manual | Runs Lighthouse performance/accessibility audits. |
-| Axe | `axe.yml` | Schedule + manual | Accessibility testing with axe-core. |
+| Workflow         | File                                         | Trigger                                            | Purpose                                                                   |
+| ---------------- | -------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------- |
+| Update citations | `update-citations.yml`                       | Mon/Wed/Fri schedule + manual                      | Fetches Google Scholar citation counts and updates `_data/citations.yml`. |
+| Render CV        | `render-cv.yml`                              | Push to `_data/cv.yml` or RenderCV config + manual | Renders the CV from YAML to PDF using RenderCV.                           |
+| Prettier         | `prettier.yml`                               | Push/PR                                            | Formats code with Prettier.                                               |
+| CodeQL           | `codeql.yml`                                 | Push/PR + schedule                                 | Security analysis of the codebase.                                        |
+| Broken links     | `broken-links.yml` / `broken-links-site.yml` | Schedule + manual                                  | Checks for broken internal and external links.                            |
+| Lighthouse       | `lighthouse-badger.yml`                      | Schedule + manual                                  | Runs Lighthouse performance/accessibility audits.                         |
+| Axe              | `axe.yml`                                    | Schedule + manual                                  | Accessibility testing with axe-core.                                      |
 
 ---
 
