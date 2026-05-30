@@ -125,40 +125,39 @@ ul.task-list input[type="checkbox"] {
 // Projects
 
 .projects {
-  margin-top: 2rem;
+  a {
+    text-decoration: none;
 
-  h4.category {
-    color: var(--global-theme-color);
-    margin-top: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  ul {
-    padding-left: 1.5rem;
-  }
-
-  .project-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-
-    .project-thumb {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-
-    .project-info {
-      a {
-        color: var(--global-text-color);
-
-        &:hover {
-          color: var(--global-theme-color);
-        }
+    &:hover {
+      .card-title {
+        color: var(--global-theme-color);
       }
     }
+  }
+
+  .card {
+    img {
+      width: 100%;
+    }
+  }
+
+  .col {
+    padding-bottom: 1rem;
+  }
+
+  .grid-sizer,
+  .grid-item {
+    width: 250px;
+    margin-bottom: 10px;
+  }
+
+  h2.category {
+    color: var(--global-divider-color);
+    border-bottom: 1px solid var(--global-divider-color);
+    padding-top: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    text-align: right;
   }
 }
 

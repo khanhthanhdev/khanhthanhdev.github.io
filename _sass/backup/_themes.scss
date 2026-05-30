@@ -10,10 +10,8 @@
   --global-code-bg-color: #{v.$code-bg-color-light};
   --global-text-color: #{v.$black-color};
   --global-text-color-light: #{v.$grey-color};
-  --global-text-color-lighter: #{v.$grey-color-light};
-  --global-theme-color: #4d74eb;
-  --global-theme-color-rgb: 77, 116, 235;
-  --global-hover-color: #4d74eb;
+  --global-theme-color: #{v.$purple-color};
+  --global-hover-color: #{v.$purple-color};
   --global-hover-text-color: #{v.$white-color};
   --global-footer-bg-color: #{v.$grey-color-dark};
   --global-footer-text-color: #{v.$grey-color-light};
@@ -23,9 +21,9 @@
   --global-card-bg-color: #{v.$white-color};
   --global-highlight-color: #{v.$red-color-dark};
   --global-back-to-top-bg-color: rgba(
-    #{color.channel(v.$black-color, "red", $space: rgb)},
-    #{color.channel(v.$black-color, "green", $space: rgb)},
-    #{color.channel(v.$black-color, "blue", $space: rgb)},
+    #{color.channel(v.$black-color, "red", v.$space: rgb)},
+    #{color.channel(v.$black-color, "green", v.$space: rgb)},
+    #{color.channel(v.$black-color, "blue", v.$space: rgb)},
     0.4
   );
   --global-back-to-top-text-color: #{v.$white-color};
@@ -65,13 +63,6 @@
     display: none;
   }
 
-  .repo-img-light {
-    display: block;
-  }
-  .repo-img-dark {
-    display: none;
-  }
-
   #back-to-top {
     color: var(--global-back-to-top-text-color);
     background: var(--global-back-to-top-bg-color);
@@ -89,9 +80,7 @@ html[data-theme="dark"] {
   --global-code-bg-color: #{v.$code-bg-color-dark};
   --global-text-color: #{v.$grey-color-light};
   --global-text-color-light: #{v.$grey-color};
-  --global-text-color-lighter: #{v.$grey-color};
   --global-theme-color: #{v.$cyan-color};
-  --global-theme-color-rgb: 38, 152, 186;
   --global-hover-color: #{v.$cyan-color};
   --global-hover-text-color: #{v.$white-color};
   --global-footer-bg-color: #{v.$grey-color-light};
@@ -101,9 +90,9 @@ html[data-theme="dark"] {
   --global-divider-color: #424246;
   --global-card-bg-color: #{v.$grey-900};
   --global-back-to-top-bg-color: rgba(
-    #{color.channel(v.$white-color, "red", $space: rgb)},
-    #{color.channel(v.$white-color, "green", $space: rgb)},
-    #{color.channel(v.$white-color, "blue", $space: rgb)},
+    #{color.channel(v.$white-color, "red", v.$space: rgb)},
+    #{color.channel(v.$white-color, "green", v.$space: rgb)},
+    #{color.channel(v.$white-color, "blue", v.$space: rgb)},
     0.5
   );
   --global-back-to-top-text-color: #{v.$black-color};
@@ -128,13 +117,6 @@ html[data-theme="dark"] {
   }
 
   .only-dark {
-    display: block;
-  }
-
-  .repo-img-light {
-    display: none;
-  }
-  .repo-img-dark {
     display: block;
   }
 }

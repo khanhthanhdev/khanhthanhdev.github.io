@@ -1,0 +1,311 @@
+// Sidebar Table of Contents
+// ----------------------------------------------------------------------------
+// Clean, left-stuck TOC visually separated from the main content by a vertical
+// divider. The aside is `position: fixed` on large screens (so it can hug the
+// viewport edge) and becomes a bottom-sheet on small screens.
+//
+// Theming: link colours are exposed as CSS custom properties scoped to
+// `.toc-sidebar`, so dark mode can override them in one place.
+
+.toc-sidebar {
+  // Light theme defaults — blue links that turn black on hover.
+  --toc-link-color: #2952c8;
+  --toc-link-hover-color: #000000;
+  --toc-active-color: #7c1f5d;
+}
+
+html[data-theme="dark"] .toc-sidebar {
+  --toc-link-color: var(--global-theme-color);
+  --toc-link-hover-color: #ffffff;
+  --toc-active-color: #d97bb5;
+}
+
+// ----------------------------------------------------------------------------
+// Container / layout
+// ----------------------------------------------------------------------------
+
+.toc-sidebar-container {
+  position: relative;
+}
+
+// On large screens, pin the TOC to the viewport's left edge and shift the
+// main container so its content stays visually centred in the remaining
+// space. Half-width values are tuned to the sidebar widths below.
+@media (min-width: 992px) {
+  .container.mt-5:has(.toc-sidebar-container) {
+    padding-left: 130px; // ~250px sidebar / 2 + small buffer
+    padding-right: 0;
+  }
+
+  // Collapse the Bootstrap column wrapping the <aside> — the aside itself is
+  // position:fixed (see below), so it no longer needs grid space.
+  .toc-sidebar-container > div:has(> #toc-sidebar) {
+    flex: 0 0 0 !important;
+    max-width: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+  }
+
+  // Let the main content span the full remaining width.
+  .toc-sidebar-container > div:not(:has(> #toc-sidebar)) {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container.mt-5:has(.toc-sidebar-container) {
+    padding-left: 150px; // ~290px sidebar / 2 + small buffer
+  }
+}
+
+// ----------------------------------------------------------------------------
+// The sidebar itself
+// ----------------------------------------------------------------------------
+
+.toc-sidebar {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 1.25rem 0;
+  background-color: transparent;
+  border: none;
+  border-right: 1px solid var(--global-divider-color);
+  border-radius: 0;
+  box-shadow: none;
+  // Above body content but below modals/navbar.
+  z-index: 10;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+
+  @media (min-width: 992px) {
+    position: fixed;
+    top: 5rem; // clears the (optionally fixed) navbar
+    left: 0;
+    width: 250px;
+    max-height: calc(100vh - 7rem);
+    padding: 1rem 1rem 1rem 0.75rem;
+  }
+
+  @media (min-width: 1400px) {
+    width: 290px;
+    padding: 1rem 1.25rem 1rem 1rem;
+  }
+
+  &.toc-sidebar-hidden {
+    display: none;
+  }
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--global-divider-color);
+    border-radius: 3px;
+
+    &:hover {
+      background-color: var(--global-text-color-light);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Header (title + close button)
+// ----------------------------------------------------------------------------
+
+.toc-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.toc-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--global-text-color);
+}
+
+.toc-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--global-text-color);
+  cursor: pointer;
+  border-radius: 4px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background-color: var(--global-divider-color);
+    color: var(--global-text-color);
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Floating "open TOC" button (desktop, when the sidebar is collapsed)
+//
+// IMPORTANT: default display is `flex` so the icon and label respect
+// `align-items` / `gap`. Visibility is toggled via the inline `display: none`
+// set in the layout markup; jQuery's `.show()` clears that inline style and
+// reveals the button as flex. On mobile the button is hidden unconditionally.
+// ----------------------------------------------------------------------------
+
+.toc-open-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--toc-link-color, #2952c8);
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    color: #fff;
+  }
+
+  i {
+    font-size: 0.95rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// The TOC nav itself (rendered by bootstrap-toc)
+// ----------------------------------------------------------------------------
+
+.toc-nav {
+  // Top-level list — flat, no bullet
+  .nav {
+    flex-direction: column;
+    padding-left: 0;
+    list-style: none;
+    margin: 0;
+  }
+
+  // Shared link styles for every nesting level. `!important` is used on the
+  // properties that Bootstrap / theme stylesheets are known to override
+  // (color, font-size, text-decoration) so the TOC stays consistent.
+  .nav-link {
+    display: block;
+    padding: 0.45rem 0;
+    color: var(--toc-link-color) !important;
+    text-decoration: none !important;
+    font-size: 16px !important;
+    line-height: 1.45;
+    background: none;
+    border-left: none;
+    transition: color 0.15s ease;
+
+    &:hover,
+    &:focus {
+      color: var(--toc-link-hover-color) !important;
+      text-decoration: underline !important;
+    }
+
+    &.active {
+      color: var(--toc-active-color) !important;
+      font-weight: 700;
+    }
+  }
+
+  // Nested lists — disc bullets like the reference design
+  ul {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1.5rem;
+    margin: 0.15rem 0;
+    list-style: disc;
+
+    li::marker {
+      color: var(--global-text-color);
+    }
+
+    .nav-link {
+      padding: 0.35rem 0;
+    }
+
+    // Third level uses hollow circles
+    ul {
+      list-style: circle;
+      padding-left: 1.25rem;
+
+      .nav-link {
+        padding: 0.3rem 0;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Mobile: TOC becomes a bottom-sheet
+// ----------------------------------------------------------------------------
+
+@media (max-width: 991px) {
+  .toc-sidebar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 70vh;
+    padding: 1.25rem;
+    background-color: var(--global-bg-color);
+    border: 1px solid var(--global-divider-color);
+    border-bottom: none;
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+
+    &.toc-sidebar-hidden {
+      transform: translateY(100%);
+      pointer-events: none;
+    }
+  }
+
+  // The floating "open TOC" button is desktop-only.
+  .toc-open-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .toc-sidebar {
+    padding: 1rem;
+  }
+
+  .toc-sidebar-header {
+    margin-bottom: 0.5rem;
+  }
+}

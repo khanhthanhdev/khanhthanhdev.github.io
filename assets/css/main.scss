@@ -19,6 +19,7 @@
 @use "layout";
 
 // Core styles organized by usage
+@use "base";
 @use "typography";
 @use "navbar";
 @use "footer";
@@ -26,6 +27,7 @@
 @use "publications";
 @use "components";
 @use "utilities";
+@use "toc-sidebar";
 
 // Other specialized styles
 @use "distill";

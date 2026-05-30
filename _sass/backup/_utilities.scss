@@ -444,8 +444,9 @@ nav[data-toggle="toc"] {
   z-index: 999;
 }
 
-// NOTE: #toc-sidebar z-index is owned by _toc-sidebar.scss so the bottom-sheet
-// stacking on mobile works correctly. Don't add an ID-level override here.
+#toc-sidebar {
+  z-index: 1;
+}
 
 .echarts {
   height: 400px;

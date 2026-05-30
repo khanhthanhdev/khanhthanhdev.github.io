@@ -18,18 +18,50 @@ $(document).ready(function () {
   $("a").removeClass("waves-effect waves-light");
 
   // bootstrap-toc
-  if ($("#toc-sidebar").length) {
+  if ($("#toc-sidebar-nav").length) {
     // remove related publications years from the TOC
     $(".publications h2").each(function () {
       $(this).attr("data-toc-skip", "");
     });
-    var navSelector = "#toc-sidebar";
+    var navSelector = "#toc-sidebar-nav";
     var $myNav = $(navSelector);
     Toc.init($myNav);
+    // Keep the generated TOC tree expanded instead of only showing the
+    // currently active branch.
+    $myNav.find("ul").removeClass("collapse collapsing").show();
     $("body").scrollspy({
       target: navSelector,
       offset: 100,
     });
+
+    // Close/open sidebar functionality
+    var $sidebar = $("#toc-sidebar");
+    var $closeBtn = $("#close-sidebar-btn");
+    var $openBtn = $("#open-sidebar-btn");
+
+    $closeBtn.on("click", function () {
+      $sidebar.addClass("toc-sidebar-hidden");
+      if (window.innerWidth > 991) {
+        $openBtn.show();
+      }
+    });
+
+    $openBtn.on("click", function () {
+      $sidebar.removeClass("toc-sidebar-hidden");
+      $openBtn.hide();
+    });
+
+    // Handle responsive behavior
+    function handleResize() {
+      // Show the TOC by default at every breakpoint; users can still collapse
+      // it manually with the header chevron.
+      $sidebar.removeClass("toc-sidebar-hidden");
+      $openBtn.hide();
+    }
+
+    // Run on page load and window resize
+    handleResize();
+    $(window).on("resize", handleResize);
   }
 
   // add css to jupyter notebooks

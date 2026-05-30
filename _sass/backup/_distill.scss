@@ -132,6 +132,20 @@ d-article {
 
   d-footnote {
     scroll-margin-top: 66px;
+    color: var(--global-theme-color) !important; /* Footnote text color */
+    &:hover {
+      color: var(--global-hover-color) !important; /* Footnote hover color */
+    }
+  }
+
+  /* Citations */
+  d-cite a,
+  a.citation {
+    /* Target citations within d-cite and also general .citation links */
+    color: var(--global-theme-color) !important;
+    &:hover {
+      color: var(--global-hover-color) !important;
+    }
   }
 }
 
@@ -152,12 +166,12 @@ d-appendix {
   }
 }
 
-@media (max-width: 4096px) {
+@media (max-width: 1024px) {
   d-article {
     d-contents {
       display: block;
-      grid-column-start: 4;
-      grid-column-end: -4;
+      grid-column-start: 2;
+      grid-column-end: -2;
       padding-bottom: 0.5em;
       margin-bottom: 1em;
       padding-top: 0.5em;
@@ -167,80 +181,5 @@ d-appendix {
         grid-column: none;
       }
     }
-  }
-}
-
-d-article {
-  p {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  h1 {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  h2 {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  h3 {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  h4 {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  figure {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  table tr th {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  table {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  table tr td{
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  table tr {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  ul {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  ol {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  ul li {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  ol li {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  block {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  d-code {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  code {
-    grid-column-start: 3;
-    grid-column-end: -3;
-  }
-  div {
-    grid-column-start: 3;
-    grid-column-end: -3;
   }
 }

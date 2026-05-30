@@ -1,22 +1,35 @@
 /*******************************************************************************
- * Blog post and listing styles - matching alexzhang13.github.io
+ * Blog post and listing styles
  ******************************************************************************/
 
-.post-header {
-  margin-bottom: 2rem;
+.header-bar {
   border-bottom: 1px solid var(--global-divider-color);
-  padding-bottom: 1rem;
-  
-  .post-title {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: var(--global-text-color);
+  text-align: center;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+
+  h1 {
+    color: var(--global-theme-color);
+    font-size: 5rem;
   }
-  
-  .post-meta {
-    color: var(--global-text-color-light);
-    font-size: 1rem;
-    margin-bottom: 0;
+}
+
+.tag-category-list {
+  border-bottom: 1px solid var(--global-divider-color);
+  text-align: center;
+  padding-top: 1rem;
+
+  ul {
+    justify-content: center;
+    display: flow-root;
+
+    p,
+    li {
+      list-style: none;
+      display: inline-block;
+      padding: 1rem 0.5rem;
+      color: var(--global-text-color-light);
+    }
   }
 }
 
@@ -36,11 +49,6 @@
     list-style: none;
     padding-top: 2rem;
     padding-bottom: 2rem;
-
-    h3 {
-      margin-bottom: 0.5rem;
-      font-weight: normal;
-    }
 
     .post-meta {
       color: var(--global-text-color-light);
@@ -113,6 +121,34 @@
         color: var(--global-theme-color);
       }
     }
+  }
+}
+
+.featured-posts {
+  a {
+    color: var(--global-text-color-light);
+    text-decoration: none;
+
+    .card-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      color: var(--global-theme-color);
+
+      .card-title {
+        color: var(--global-theme-color);
+      }
+    }
+  }
+
+  .post-meta {
+    color: var(--global-text-color-light);
+    font-size: 0.875rem;
+    margin-bottom: 0;
+    padding-top: 0.5rem;
   }
 }
 

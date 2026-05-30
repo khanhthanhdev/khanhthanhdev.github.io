@@ -15,6 +15,12 @@ layout: default
   </header>
 
   <article>
+    {% if page.toc and page.toc.beginning and page.toc.sidebar == nil %}
+      <div id="table-of-contents">
+        {% toc %}
+      </div>
+      <hr>
+    {% endif %}
     {{ content }}
   </article>
 

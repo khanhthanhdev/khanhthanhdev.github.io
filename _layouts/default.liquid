@@ -23,25 +23,34 @@
     <!-- Content -->
     <div class="container mt-5" role="main">
       {% if page.toc and page.toc.sidebar %}
-        {% if page.toc.sidebar == 'right' %}
-          <div class="row">
-            <!-- main content area -->
-            <div class="col-sm-9">{{ content }}</div>
-            <!-- sidebar, which will move to the top on a small screen -->
-            <div class="col-sm-3">
-              <nav id="toc-sidebar" class="sticky-top"></nav>
-            </div>
+        {% capture toc_sidebar_col %}
+          <div class="col-lg-3 col-xl-2">
+            <aside id="toc-sidebar" class="toc-sidebar">
+              <div class="toc-sidebar-header">
+                <span class="toc-title">Table of Contents</span>
+                <button id="close-sidebar-btn" class="toc-close-btn" aria-label="Collapse TOC">
+                  <i class="fa-solid fa-angle-down"></i>
+                </button>
+              </div>
+              <nav id="toc-sidebar-nav" class="toc-nav"></nav>
+            </aside>
+            <button id="open-sidebar-btn" class="toc-open-btn" aria-label="Open TOC" style="display: none;">
+              <i class="fa-solid fa-list"></i> Table of Contents
+            </button>
           </div>
-        {% else %}
-          <div class="row">
-            <!-- sidebar, which will move to the top on a small screen -->
-            <div class="col-sm-3">
-              <nav id="toc-sidebar" class="sticky-top"></nav>
-            </div>
-            <!-- main content area -->
-            <div class="col-sm-9">{{ content }}</div>
-          </div>
-        {% endif %}
+        {% endcapture %}
+        {% capture toc_main_col %}
+          <div class="col-lg-9 col-xl-10">{{ content }}</div>
+        {% endcapture %}
+        <div class="row toc-sidebar-container">
+          {% if page.toc.sidebar == 'right' %}
+            {{ toc_main_col }}
+            {{ toc_sidebar_col }}
+          {% else %}
+            {{ toc_sidebar_col }}
+            {{ toc_main_col }}
+          {% endif %}
+        </div>
       {% else %}
         {{ content }}
       {% endif %}
