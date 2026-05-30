@@ -43,6 +43,19 @@ jobs:
           done
           rm gh-md-toc
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Run Prettier on changed files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          npm install --save-dev --save-exact prettier @shopify/prettier-plugin-liquid
+          for file in ${ALL_CHANGED_FILES}; do
+            if [[ "$file" == *.md ]]; then
+              npx prettier --write "$file"
+            fi
+          done
+
       - name: Commit changes
         if: steps.changed-files.outputs.any_changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5.0.1

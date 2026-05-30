@@ -49,6 +49,14 @@ jobs:
         with:
           name: RenderCV Output
           path: assets/rendercv/rendercv_output
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Run Prettier on rendered files
+        run: |
+          npm install --save-dev --save-exact prettier @shopify/prettier-plugin-liquid
+          npx prettier --write 'assets/rendercv/rendercv_output/**/*.{md,html}'
+
       - name: Push the changes
         run: |
           git config --global user.name "${{ github.actor }}"
