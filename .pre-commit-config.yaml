@@ -36,7 +36,7 @@ repos:
         exclude: \.devcontainer/devcontainer\.json$
       - id: detect-private-key
 
-  # Prettier formatting (matches CI prettier.yml workflow)
+  # Prettier formatting on commit (auto-fix staged files)
   - repo: local
     hooks:
       - id: prettier
@@ -55,3 +55,12 @@ repos:
             lighthouse_results/.*|
             _data/citations\.yml$
           )$
+
+      # Full repo check on push (matches CI: npx prettier . --check)
+      - id: prettier-check-all
+        name: prettier-check-all
+        entry: npx prettier . --check
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
