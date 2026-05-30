@@ -26,6 +26,7 @@ display_categories: [work, fun]
 
 {% else %}
 {% assign sorted_projects = site.projects | sort: "importance" %}
+
 <ul>
   {% for project in sorted_projects %}
     {% include projects.liquid %}

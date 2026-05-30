@@ -15,7 +15,7 @@
     <a href="{% if project.redirect %}{{ project.redirect }}{% else %}{{ project.url | relative_url }}{% endif %}">
       <strong>{{ project.title }}</strong>
     </a>
-    {% if project.date %} ({{ project.date | date: "%Y" }}){% endif %}
+    {% if project.date %} ({{ project.date | date: '%Y' }}){% endif %}
     {% if project.description %} — {{ project.description }}{% endif %}
     {% if project.github %}
       [<a href="{{ project.github }}">code</a>]

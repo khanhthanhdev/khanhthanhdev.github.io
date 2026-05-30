@@ -27,16 +27,32 @@
             <a href="mailto:{{ site.data.socials.email | encode_email }}" title="email"><i class="fa-solid fa-envelope"></i></a>
           {% endif %}
           {% if site.data.socials.github_username %}
-            <a href="https://github.com/{{ site.data.socials.github_username }}" title="GitHub" rel="external nofollow noopener" target="_blank"><i class="fa-brands fa-github"></i></a>
+            <a href="https://github.com/{{ site.data.socials.github_username }}" title="GitHub" rel="external nofollow noopener" target="_blank"
+              ><i class="fa-brands fa-github"></i
+            ></a>
           {% endif %}
           {% if site.data.socials.scholar_userid %}
-            <a href="https://scholar.google.com/citations?user={{ site.data.socials.scholar_userid }}" title="Google Scholar" rel="external nofollow noopener" target="_blank"><i class="ai ai-google-scholar"></i></a>
+            <a
+              href="https://scholar.google.com/citations?user={{ site.data.socials.scholar_userid }}"
+              title="Google Scholar"
+              rel="external nofollow noopener"
+              target="_blank"
+              ><i class="ai ai-google-scholar"></i
+            ></a>
           {% endif %}
           {% if site.data.socials.linkedin_username %}
-            <a href="https://www.linkedin.com/in/{{ site.data.socials.linkedin_username }}" title="LinkedIn" rel="external nofollow noopener" target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+            <a
+              href="https://www.linkedin.com/in/{{ site.data.socials.linkedin_username }}"
+              title="LinkedIn"
+              rel="external nofollow noopener"
+              target="_blank"
+              ><i class="fa-brands fa-linkedin"></i
+            ></a>
           {% endif %}
           {% if site.data.socials.x_username %}
-            <a href="https://twitter.com/{{ site.data.socials.x_username }}" title="X" rel="external nofollow noopener" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://twitter.com/{{ site.data.socials.x_username }}" title="X" rel="external nofollow noopener" target="_blank"
+              ><i class="fa-brands fa-x-twitter"></i
+            ></a>
           {% endif %}
         </div>
       {% endif %}
