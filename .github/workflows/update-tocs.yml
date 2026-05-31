@@ -60,8 +60,15 @@ jobs:
 
       - name: Run Prettier on changed files
         if: steps.changed-files.outputs.any_changed == 'true'
+        # NOTE: this env block is REQUIRED. Without it, `${ALL_CHANGED_FILES}`
+        # below is empty and the loop silently does nothing — the cause of the
+        # push/auto-commit loop where unformatted TOC updates kept landing in
+        # main.
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           npx --no-install prettier --version
+          echo "Files to format: ${ALL_CHANGED_FILES}"
           for file in ${ALL_CHANGED_FILES}; do
             if [[ "$file" == *.md ]]; then
               npx --no-install prettier --write "$file"
