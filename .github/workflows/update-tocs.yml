@@ -45,14 +45,26 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.changed-files.outputs.any_changed == 'true'
+        # Use `npm ci` so the exact prettier version from package-lock.json is
+        # installed, matching what runs locally via the pre-commit hook.
+        # Otherwise differing prettier versions can produce different output,
+        # causing local pre-commit and this workflow to overwrite each other
+        # in a push/auto-commit loop.
+        run: npm ci
 
       - name: Run Prettier on changed files
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          npm install --save-dev --save-exact prettier @shopify/prettier-plugin-liquid
+          npx --no-install prettier --version
           for file in ${ALL_CHANGED_FILES}; do
             if [[ "$file" == *.md ]]; then
-              npx prettier --write "$file"
+              npx --no-install prettier --write "$file"
             fi
           done
 

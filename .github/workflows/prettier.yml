@@ -19,16 +19,23 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Node.js ⚙️
         uses: actions/setup-node@v4
-      - name: Install Prettier 💾
-        run: npm install --save-dev --save-exact prettier @shopify/prettier-plugin-liquid
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies 💾
+        # Use `npm ci` so the exact versions from package-lock.json are installed,
+        # matching what runs locally via the pre-commit hook.
+        run: npm ci
+      - name: Show Prettier version 🧾
+        run: npx --no-install prettier --version
       - name: Prettier Check 🔎
         id: prettier
-        run: npx prettier . --check
+        run: npx --no-install prettier . --check
       - name: Create diff 📝
         # https://docs.github.com/en/actions/learn-github-actions/expressions#failure
         if: ${{ failure() }}
         run: |
-          npx prettier . --write
+          npx --no-install prettier . --write
           git diff -- . ':(exclude)package-lock.json' ':(exclude)package.json' > diff.txt
           npm install -g diff2html-cli
           diff2html -i file -s side -F diff.html -- diff.txt

@@ -41,7 +41,10 @@ repos:
     hooks:
       - id: prettier
         name: prettier
-        entry: npx prettier --write
+        # `--no-install` forces npx to use the local prettier from node_modules
+        # (pinned in package.json / package-lock.json) instead of silently
+        # downloading a different version. Run `npm ci` if this errors out.
+        entry: npx --no-install prettier --write
         language: system
         files: \.(js|jsx|ts|tsx|css|scss|md|mdx|html|liquid|json|yml|yaml)$
         exclude: |
@@ -59,7 +62,7 @@ repos:
       # Full repo check on push (matches CI: npx prettier . --check)
       - id: prettier-check-all
         name: prettier-check-all
-        entry: npx prettier . --check
+        entry: npx --no-install prettier . --check
         language: system
         pass_filenames: false
         always_run: true
