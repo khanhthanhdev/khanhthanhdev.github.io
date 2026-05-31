@@ -77,7 +77,7 @@ og_image: # The site-wide (default for all links) Open Graph preview image
 
 # For Google Search Console, see https://support.google.com/webmasters/answer/9008080?hl=en#meta_tag_verification&zippy=%2Chtml-tag
 google_site_verification: sWd4smjJdl-KZkpPgwCjbNkqM2EtpndNIjO4RpPziP8 # your google-site-verification ID (Google Search Console)
-bing_site_verification: # out your bing-site-verification ID (Bing Webmaster)
+bing_site_verification: 9BD01676291D450B44FD7AE11296134B # out your bing-site-verification ID (Bing Webmaster)
 
 # -----------------------------------------------------------------------------
 # Blog
@@ -398,7 +398,7 @@ lazy_loading_images: true # enables lazy loading of images (recommended)
 # -----------------------------------------------------------------------------
 
 enable_google_verification: true # enables google site verification
-enable_bing_verification: false # enables bing site verification
+enable_bing_verification: true # enables bing site verification
 enable_cookie_consent: false # enables GDPR-compliant cookie consent dialog (https://github.com/orestbida/cookieconsent)
 enable_masonry: true # enables automatic project cards arrangement
 enable_math: true # enables math typesetting (uses MathJax)
