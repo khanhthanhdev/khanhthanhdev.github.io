@@ -76,7 +76,7 @@ og_image: # The site-wide (default for all links) Open Graph preview image
 # -----------------------------------------------------------------------------
 
 # For Google Search Console, see https://support.google.com/webmasters/answer/9008080?hl=en#meta_tag_verification&zippy=%2Chtml-tag
-google_site_verification: sWd4smjJdl-KZkpPgwCjbNkqM2EtpndNIjO4RpPziP8 # your google-site-verification ID (Google Search Console)
+google_site_verification: 18haL3XuevigPYIw7bV8Wb2PV-vpmGZfnmiNFgq1mRs # your google-site-verification ID (Google Search Console)
 bing_site_verification: 9BD01676291D450B44FD7AE11296134B # out your bing-site-verification ID (Bing Webmaster)
 
 # -----------------------------------------------------------------------------
