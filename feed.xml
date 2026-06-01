@@ -1,4 +1,383 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://khanhthanhdev.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://khanhthanhdev.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-05-31T04:45:52+00:00</updated><id>https://khanhthanhdev.github.io/feed.xml</id><title type="html">blank</title><subtitle>My personal website about my academic research and personal life. </subtitle><entry><title type="html">how to write a blog post</title><link href="https://khanhthanhdev.github.io/blog/2026/how-to-write-blog/" rel="alternate" type="text/html" title="how to write a blog post"/><published>2026-05-30T00:00:00+00:00</published><updated>2026-05-30T00:00:00+00:00</updated><id>https://khanhthanhdev.github.io/blog/2026/how-to-write-blog</id><content type="html" xml:base="https://khanhthanhdev.github.io/blog/2026/how-to-write-blog/"><![CDATA[<p>This guide covers everything you need to know about writing blog posts on this site.</p> <h2 id="getting-started">Getting Started</h2> <h3 id="creating-a-new-post">Creating a New Post</h3> <p>Create a new file in the <code class="language-plaintext highlighter-rouge">_posts/</code> directory with the format:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>YYYY-MM-DD-title-with-hyphens.md
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://khanhthanhdev.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://khanhthanhdev.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-06-01T10:41:06+00:00</updated><id>https://khanhthanhdev.github.io/feed.xml</id><title type="html">blank</title><subtitle>My personal website about my academic research and personal life. </subtitle><entry><title type="html">Third-Party Libraries Demo</title><link href="https://khanhthanhdev.github.io/blog/2026/third-party-libraries-demo/" rel="alternate" type="text/html" title="Third-Party Libraries Demo"/><published>2026-05-30T12:00:00+00:00</published><updated>2026-05-30T12:00:00+00:00</updated><id>https://khanhthanhdev.github.io/blog/2026/third-party-libraries-demo</id><content type="html" xml:base="https://khanhthanhdev.github.io/blog/2026/third-party-libraries-demo/"><![CDATA[<p>This post demonstrates every third-party library configured in <code class="language-plaintext highlighter-rouge">_config.yml</code>. Each section shows the front matter flags, the Markdown/HTML syntax, and the rendered result.</p> <hr/> <h2 id="1-mathjax-global">1. MathJax (Global)</h2> <p>MathJax is enabled globally via <code class="language-plaintext highlighter-rouge">enable_math: true</code>. No front matter needed.</p> <p>Inline math: $E = mc^2$</p> <p>Display math:</p> \[\int_{-\infty}^{\infty} e^{-x^2} \, dx = \sqrt{\pi}\] <p>Numbered equation:</p> <p>\begin{equation} \label{eq:cauchy-schwarz} \left( \sum<em>{k=1}^n a_k b_k \right)^2 \leq \left( \sum</em>{k=1}^n a<em>k^2 \right) \left( \sum</em>{k=1}^n b_k^2 \right) \end{equation}</p> <p>Matrix:</p> \[\mathbf{A} = \begin{pmatrix} a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} \\ a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn} \end{pmatrix}\] <hr/> <h2 id="2-highlightjs-global">2. Highlight.js (Global)</h2> <p>Syntax highlighting is enabled globally. Just use fenced code blocks:</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="sh">"""</span><span class="s">Generate first n Fibonacci numbers.</span><span class="sh">"""</span>
+    <span class="n">fib</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">fib</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">fib</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">fib</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">fib</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
+</code></pre></div></div> <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">debounce</span> <span class="o">=</span> <span class="p">(</span><span class="nx">fn</span><span class="p">,</span> <span class="nx">delay</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">timer</span><span class="p">;</span>
+  <span class="k">return </span><span class="p">(...</span><span class="nx">args</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nf">clearTimeout</span><span class="p">(</span><span class="nx">timer</span><span class="p">);</span>
+    <span class="nx">timer</span> <span class="o">=</span> <span class="nf">setTimeout</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nf">fn</span><span class="p">(...</span><span class="nx">args</span><span class="p">),</span> <span class="nx">delay</span><span class="p">);</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+</code></pre></div></div> <div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="n">numbers</span><span class="p">:</span> <span class="nb">Vec</span><span class="o">&lt;</span><span class="nb">i32</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">..=</span><span class="mi">10</span><span class="p">)</span><span class="nf">.collect</span><span class="p">();</span>
+    <span class="k">let</span> <span class="n">sum</span><span class="p">:</span> <span class="nb">i32</span> <span class="o">=</span> <span class="n">numbers</span><span class="nf">.iter</span><span class="p">()</span><span class="nf">.sum</span><span class="p">();</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"Sum of 1 to 10: {}"</span><span class="p">,</span> <span class="n">sum</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div> <hr/> <h2 id="3-mermaid-diagrams">3. Mermaid Diagrams</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">mermaid: {enabled: true, zoomable: true}</code></p> <p>The <code class="language-plaintext highlighter-rouge">zoomable: true</code> flag also loads D3 for pan/zoom on diagrams.</p> <h3 id="flowchart">Flowchart</h3> <pre><code class="language-mermaid">graph TD
+    A[Start] --&gt; B{Is it working?}
+    B --&gt;|Yes| C[Great!]
+    B --&gt;|No| D[Debug]
+    D --&gt; E[Fix the bug]
+    E --&gt; B
+    C --&gt; F[Deploy]
+    F --&gt; G[End]
+</code></pre> <h3 id="sequence-diagram">Sequence Diagram</h3> <pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+    participant Database
+
+    User-&gt;&gt;Browser: Click login
+    Browser-&gt;&gt;Server: POST /api/login
+    Server-&gt;&gt;Database: Query user
+    Database--&gt;&gt;Server: User data
+    Server--&gt;&gt;Browser: JWT token
+    Browser--&gt;&gt;User: Redirect to dashboard
+</code></pre> <h3 id="class-diagram">Class Diagram</h3> <pre><code class="language-mermaid">classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    class Dog {
+        +fetch()
+        +bark()
+    }
+    class Cat {
+        +purr()
+        +scratch()
+    }
+    Animal &lt;|-- Dog
+    Animal &lt;|-- Cat
+</code></pre> <h3 id="pie-chart">Pie Chart</h3> <pre><code class="language-mermaid">pie title Programming Languages Used
+    "Python" : 40
+    "JavaScript" : 30
+    "Rust" : 15
+    "Go" : 10
+    "Other" : 5
+</code></pre> <hr/> <h2 id="4-chartjs">4. Chart.js</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">chart: {chartjs: true}</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">chartjs</code> containing valid Chart.js JSON config:</p> <pre><code class="language-chartjs">{
+  "type": "bar",
+  "data": {
+    "labels": ["Python", "JavaScript", "Rust", "Go", "TypeScript", "C++"],
+    "datasets": [{
+      "label": "GitHub Stars (thousands)",
+      "data": [45, 38, 22, 15, 18, 12],
+      "backgroundColor": [
+        "rgba(54, 162, 235, 0.7)",
+        "rgba(255, 206, 86, 0.7)",
+        "rgba(255, 99, 132, 0.7)",
+        "rgba(75, 192, 192, 0.7)",
+        "rgba(153, 102, 255, 0.7)",
+        "rgba(255, 159, 64, 0.7)"
+      ],
+      "borderColor": [
+        "rgba(54, 162, 235, 1)",
+        "rgba(255, 206, 86, 1)",
+        "rgba(255, 99, 132, 1)",
+        "rgba(75, 192, 192, 1)",
+        "rgba(153, 102, 255, 1)",
+        "rgba(255, 159, 64, 1)"
+      ],
+      "borderWidth": 1
+    }]
+  },
+  "options": {
+    "scales": {
+      "y": {
+        "beginAtZero": true
+      }
+    }
+  }
+}
+</code></pre> <h3 id="chartjs-line-chart">Chart.js Line Chart</h3> <pre><code class="language-chartjs">{
+  "type": "line",
+  "data": {
+    "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    "datasets": [{
+      "label": "Site Visitors",
+      "data": [1200, 1900, 3000, 5000, 4200, 6800],
+      "fill": true,
+      "borderColor": "rgb(75, 192, 192)",
+      "backgroundColor": "rgba(75, 192, 192, 0.2)",
+      "tension": 0.3
+    }]
+  },
+  "options": {
+    "scales": {
+      "y": {
+        "beginAtZero": true
+      }
+    }
+  }
+}
+</code></pre> <hr/> <h2 id="5-echarts">5. ECharts</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">chart: {echarts: true}</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">echarts</code> containing valid ECharts option JSON:</p> <h3 id="bar-chart">Bar Chart</h3> <pre><code class="language-echarts">{
+  "xAxis": {
+    "type": "category",
+    "data": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  },
+  "yAxis": {
+    "type": "value"
+  },
+  "series": [{
+    "data": [150, 230, 224, 218, 135, 147, 260],
+    "type": "bar",
+    "showBackground": true,
+    "backgroundStyle": {
+      "color": "rgba(180, 180, 180, 0.2)"
+    }
+  }],
+  "title": {
+    "text": "Weekly Activity"
+  },
+  "tooltip": {
+    "trigger": "axis"
+  }
+}
+</code></pre> <h3 id="pie-chart-1">Pie Chart</h3> <pre><code class="language-echarts">{
+  "title": {
+    "text": "Tech Stack Distribution",
+    "left": "center"
+  },
+  "tooltip": {
+    "trigger": "item"
+  },
+  "series": [{
+    "name": "Technology",
+    "type": "pie",
+    "radius": "50%",
+    "data": [
+      {"value": 1048, "name": "Search Engine"},
+      {"value": 735, "name": "Direct"},
+      {"value": 580, "name": "Email"},
+      {"value": 484, "name": "Social Media"},
+      {"value": 300, "name": "Referral"}
+    ],
+    "emphasis": {
+      "itemStyle": {
+        "shadowBlur": 10,
+        "shadowOffsetX": 0,
+        "shadowColor": "rgba(0, 0, 0, 0.5)"
+      }
+    }
+  }]
+}
+</code></pre> <hr/> <h2 id="6-plotly">6. Plotly</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">chart: {plotly: true}</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">plotly</code> containing <code class="language-plaintext highlighter-rouge">{data: [...], layout: {...}}</code>:</p> <h3 id="bar-chart-1">Bar Chart</h3> <pre><code class="language-plotly">{
+  "data": [
+    {
+      "x": ["AI/ML", "Web Dev", "Systems", "Data Science", "DevOps"],
+      "y": [85, 72, 60, 78, 45],
+      "type": "bar",
+      "marker": {
+        "color": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A"]
+      }
+    }
+  ],
+  "layout": {
+    "title": "Skill Proficiency (%)",
+    "xaxis": {"title": "Domain"},
+    "yaxis": {"title": "Proficiency", "range": [0, 100]}
+  }
+}
+</code></pre> <h3 id="scatter-plot">Scatter Plot</h3> <pre><code class="language-plotly">{
+  "data": [
+    {
+      "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "y": [2, 4, 5, 7, 6, 8, 9, 10, 12, 11],
+      "mode": "markers",
+      "type": "scatter",
+      "name": "Experiment A",
+      "marker": {"size": 10, "color": "#636efa"}
+    },
+    {
+      "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "y": [1, 3, 4, 6, 8, 7, 10, 11, 9, 13],
+      "mode": "lines+markers",
+      "type": "scatter",
+      "name": "Experiment B",
+      "marker": {"size": 10, "color": "#EF553B"}
+    }
+  ],
+  "layout": {
+    "title": "Experiment Comparison",
+    "xaxis": {"title": "Time"},
+    "yaxis": {"title": "Value"}
+  }
+}
+</code></pre> <hr/> <h2 id="7-vega-lite">7. Vega-Lite</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">chart: {vega_lite: true}</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">vega_lite</code> containing a Vega-Lite spec:</p> <pre><code class="language-vega_lite">{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "A simple bar chart",
+  "data": {
+    "values": [
+      {"a": "C", "b": 43},
+      {"a": "C++", "b": 12},
+      {"a": "Go", "b": 15},
+      {"a": "Java", "b": 35},
+      {"a": "JS", "b": 38},
+      {"a": "Python", "b": 45},
+      {"a": "Rust", "b": 22},
+      {"a": "TS", "b": 18}
+    ]
+  },
+  "mark": {"type": "bar", "tooltip": true},
+  "encoding": {
+    "x": {"field": "a", "type": "nominal", "title": "Language", "sort": "-y"},
+    "y": {"field": "b", "type": "quantitative", "title": "Stars (thousands)"},
+    "color": {"field": "a", "type": "nominal", "legend": null}
+  }
+}
+</code></pre> <hr/> <h2 id="8-leaflet-maps">8. Leaflet Maps</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">map: true</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">geojson</code> containing valid GeoJSON:</p> <pre><code class="language-geojson">{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hanoi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.85,
+          21.03
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ho Chi Minh City"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.63,
+          10.82
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Da Nang"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.21,
+          16.07
+        ]
+      }
+    }
+  ]
+}
+</code></pre> <hr/> <h2 id="9-diff2html">9. Diff2HTML</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">code_diff: true</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">diff2html</code> containing a unified diff:</p> <pre><code class="language-diff2html">--- a/src/utils.js
++++ b/src/utils.js
+@@ -1,8 +1,12 @@
+-function add(a, b) {
+-  return a + b;
++function add(...numbers) {
++  return numbers.reduce((sum, n) =&gt; sum + n, 0);
+ }
+
+-function multiply(a, b) {
+-  return a * b;
++function multiply(...numbers) {
++  return numbers.reduce((product, n) =&gt; product * n, 1);
+ }
++
++function average(...numbers) {
++  return add(...numbers) / numbers.length;
++}
+</code></pre> <hr/> <h2 id="10-bootstrap-table">10. Bootstrap Table</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">pretty_table: true</code></p> <h3 id="simple-markdown-table">Simple Markdown Table</h3> <table> <thead> <tr> <th style="text-align: left">Library</th> <th style="text-align: center">Version</th> <th style="text-align: right">Purpose</th> </tr> </thead> <tbody> <tr> <td style="text-align: left">MathJax</td> <td style="text-align: center">3.2.2</td> <td style="text-align: right">Math rendering</td> </tr> <tr> <td style="text-align: left">Mermaid</td> <td style="text-align: center">10.7.0</td> <td style="text-align: right">Diagrams</td> </tr> <tr> <td style="text-align: left">Chart.js</td> <td style="text-align: center">4.4.1</td> <td style="text-align: right">Charts</td> </tr> <tr> <td style="text-align: left">Leaflet</td> <td style="text-align: center">1.9.4</td> <td style="text-align: right">Maps</td> </tr> <tr> <td style="text-align: left">D3</td> <td style="text-align: center">7.8.5</td> <td style="text-align: right">Visualization</td> </tr> </tbody> </table> <h3 id="interactive-table-from-json-data">Interactive Table (from JSON data)</h3> <p>This table loads data from <code class="language-plaintext highlighter-rouge">assets/json/libraries_demo_data.json</code> with search, sort, and pagination:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;table</span>
+  <span class="na">data-toggle=</span><span class="s">"table"</span>
+  <span class="na">data-url=</span><span class="s">"{{ '/assets/json/libraries_demo_data.json' | relative_url }}"</span>
+  <span class="na">data-pagination=</span><span class="s">"true"</span>
+  <span class="na">data-search=</span><span class="s">"true"</span>
+  <span class="na">data-page-size=</span><span class="s">"10"</span>
+<span class="nt">&gt;</span>
+  <span class="nt">&lt;thead&gt;</span>
+    <span class="nt">&lt;tr&gt;</span>
+      <span class="nt">&lt;th</span> <span class="na">data-field=</span><span class="s">"id"</span> <span class="na">data-sortable=</span><span class="s">"true"</span><span class="nt">&gt;</span>ID<span class="nt">&lt;/th&gt;</span>
+      <span class="nt">&lt;th</span> <span class="na">data-field=</span><span class="s">"name"</span> <span class="na">data-sortable=</span><span class="s">"true"</span><span class="nt">&gt;</span>Name<span class="nt">&lt;/th&gt;</span>
+      <span class="nt">&lt;th</span> <span class="na">data-field=</span><span class="s">"type"</span> <span class="na">data-sortable=</span><span class="s">"true"</span><span class="nt">&gt;</span>Type<span class="nt">&lt;/th&gt;</span>
+      <span class="nt">&lt;th</span> <span class="na">data-field=</span><span class="s">"version"</span> <span class="na">data-sortable=</span><span class="s">"true"</span><span class="nt">&gt;</span>Version<span class="nt">&lt;/th&gt;</span>
+      <span class="nt">&lt;th</span> <span class="na">data-field=</span><span class="s">"license"</span><span class="nt">&gt;</span>License<span class="nt">&lt;/th&gt;</span>
+    <span class="nt">&lt;/tr&gt;</span>
+  <span class="nt">&lt;/thead&gt;</span>
+<span class="nt">&lt;/table&gt;</span>
+</code></pre></div></div> <table data-toggle="table" data-url="/assets/json/libraries_demo_data.json" data-pagination="true" data-search="true" data-page-size="10"> <thead> <tr> <th data-field="id" data-sortable="true">ID</th> <th data-field="name" data-sortable="true">Name</th> <th data-field="type" data-sortable="true">Type</th> <th data-field="version" data-sortable="true">Version</th> <th data-field="license">License</th> </tr> </thead> </table> <hr/> <h2 id="11-pseudocode">11. Pseudocode</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">pseudocode: true</code></p> <p>Use a code block with language <code class="language-plaintext highlighter-rouge">pseudocode</code> containing LaTeX-style algorithm pseudocode:</p> <pre><code class="language-pseudocode">\begin{algorithm}
+\caption{Quicksort}
+\begin{algorithmic}
+\PROCEDURE{Quicksort}{$A, lo, hi$}
+  \IF{$lo &lt; hi$}
+    \STATE $p \gets$ \CALL{Partition}{$A, lo, hi$}
+    \CALL{Quicksort}{$A, lo, p - 1$}
+    \CALL{Quicksort}{$A, p + 1, hi$}
+  \ENDIF
+\ENDPROCEDURE
+\PROCEDURE{Partition}{$A, lo, hi$}
+  \STATE $pivot \gets A[hi]$
+  \STATE $i \gets lo - 1$
+  \FOR{$j \gets lo$ \TO $hi - 1$}
+    \IF{$A[j] &lt; pivot$}
+      \STATE $i \gets i + 1$
+      \STATE \CALL{Swap}{$A[i], A[j]$}
+    \ENDIF
+  \ENDFOR
+  \STATE \CALL{Swap}{$A[i + 1], A[hi]$}
+  \STATE \RETURN $i + 1$
+\ENDPROCEDURE
+\end{algorithmic}
+\end{algorithm}
+</code></pre> <hr/> <h2 id="12-medium-zoom-global">12. Medium Zoom (Global)</h2> <p><strong>Config:</strong> <code class="language-plaintext highlighter-rouge">enable_medium_zoom: true</code> (already enabled globally)</p> <p>Images with the <code class="language-plaintext highlighter-rouge">data-zoomable</code> attribute can be clicked to zoom:</p> <p>{% include figure.liquid loading=”eager” path=”assets/img/avt.webp” class=”img-fluid rounded z-depth-1” zoomable=true caption=”Click this image to zoom (Medium Zoom)” %}</p> <figure> <picture> <source class="responsive-img-srcset" srcset="/assets/img/avt.webp" sizes="95vw"/> <img src="/assets/img/avt.webp" class="img-fluid rounded z-depth-1" width="100%" height="auto" data-zoomable="" loading="eager" onerror="this.onerror=null; $('.responsive-img-srcset').remove();"/> </picture> <figcaption class="caption">Click this image to zoom (Medium Zoom)</figcaption> </figure> <hr/> <h2 id="13-image-comparison-slider">13. Image Comparison Slider</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">images: {compare: true}</code></p> <p>Use the <code class="language-plaintext highlighter-rouge">&lt;img-comparison-slider&gt;</code> HTML element:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;img-comparison-slider&gt;</span>
+  <span class="nt">&lt;img</span> <span class="na">slot=</span><span class="s">"first"</span> <span class="na">src=</span><span class="s">"before.jpg"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;img</span> <span class="na">slot=</span><span class="s">"second"</span> <span class="na">src=</span><span class="s">"after.jpg"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/img-comparison-slider&gt;</span>
+</code></pre></div></div> <p>Below is a demo using the same image as both sides (replace with your own before/after images):</p> <img-comparison-slider> <img slot="first" src="/assets/img/avt.webp" alt="Before"/> <img slot="second" src="/assets/img/avt.webp" alt="After"/> </img-comparison-slider> <hr/> <h2 id="14-lightbox2">14. Lightbox2</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">images: {lightbox2: true}</code></p> <p>Wrap images in <code class="language-plaintext highlighter-rouge">&lt;a&gt;</code> tags with <code class="language-plaintext highlighter-rouge">data-lightbox</code> to create a gallery:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"image.jpg"</span> <span class="na">data-lightbox=</span><span class="s">"gallery"</span> <span class="na">data-title=</span><span class="s">"Caption"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"thumb.jpg"</span> <span class="na">alt=</span><span class="s">"Description"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/a&gt;</span>
+</code></pre></div></div> <p>Demo:</p> <p><a href="/assets/img/avt.webp" data-lightbox="demo-gallery" data-title="Lightbox2 Demo Image"> <img src="/assets/img/avt.webp" alt="Click to open Lightbox2" style="max-width: 300px;"/> </a></p> <hr/> <h2 id="15-photoswipe">15. PhotoSwipe</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">images: {photoswipe: true}</code></p> <p>PhotoSwipe requires a specific HTML structure with <code class="language-plaintext highlighter-rouge">data-pswp-src</code> and <code class="language-plaintext highlighter-rouge">data-pswp-width</code>/<code class="language-plaintext highlighter-rouge">data-pswp-height</code>:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"pswp-gallery"</span> <span class="na">id=</span><span class="s">"gallery"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"image.jpg"</span> <span class="na">data-pswp-src=</span><span class="s">"image.jpg"</span> <span class="na">data-pswp-width=</span><span class="s">"800"</span> <span class="na">data-pswp-height=</span><span class="s">"600"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"thumb.jpg"</span> <span class="na">alt=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;/a&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div></div> <p>Demo:</p> <div class="pswp-gallery" id="photoswipe-demo"> <a href="/assets/img/avt.webp" data-pswp-src="/assets/img/avt.webp" data-pswp-width="800" data-pswp-height="800" target="_blank"> <img src="/assets/img/avt.webp" alt="PhotoSwipe Demo" style="max-width: 300px;"/> </a> </div> <hr/> <h2 id="16-swiper-image-slidercarousel">16. Swiper (Image Slider/Carousel)</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">images: {slider: true}</code></p> <p>Use the Swiper web component:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;swiper-container</span> <span class="na">slides-per-view=</span><span class="s">"1"</span> <span class="na">navigation=</span><span class="s">"true"</span> <span class="na">pagination=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;swiper-slide&gt;&lt;img</span> <span class="na">src=</span><span class="s">"1.jpg"</span> <span class="nt">/&gt;&lt;/swiper-slide&gt;</span>
+  <span class="nt">&lt;swiper-slide&gt;&lt;img</span> <span class="na">src=</span><span class="s">"2.jpg"</span> <span class="nt">/&gt;&lt;/swiper-slide&gt;</span>
+<span class="nt">&lt;/swiper-container&gt;</span>
+</code></pre></div></div> <p>Demo:</p> <swiper-container slides-per-view="1" navigation="true" pagination="true" loop="true"> <swiper-slide> <img src="/assets/img/avt.webp" alt="Slide 1" style="width: 100%; max-height: 400px; object-fit: cover;"/> </swiper-slide> <swiper-slide> <img src="/assets/img/avt.webp" alt="Slide 2" style="width: 100%; max-height: 400px; object-fit: cover;"/> </swiper-slide> <swiper-slide> <img src="/assets/img/avt.webp" alt="Slide 3" style="width: 100%; max-height: 400px; object-fit: cover;"/> </swiper-slide> </swiper-container> <hr/> <h2 id="17-spotlight">17. Spotlight</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">images: {spotlight: true}</code></p> <p>Spotlight provides a minimal lightbox. Wrap images in <code class="language-plaintext highlighter-rouge">&lt;a&gt;</code> tags:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"image.jpg"</span> <span class="na">data-spotlight</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"thumb.jpg"</span> <span class="na">alt=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/a&gt;</span>
+</code></pre></div></div> <p>Demo:</p> <p><a href="/assets/img/avt.webp" data-spotlight=""> <img src="/assets/img/avt.webp" alt="Spotlight Demo" style="max-width: 300px;"/> </a></p> <hr/> <h2 id="18-venobox">18. VenoBox</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">images: {venobox: true}</code></p> <p>VenoBox auto-initializes on elements with <code class="language-plaintext highlighter-rouge">data-venbox</code> or <code class="language-plaintext highlighter-rouge">data-gall</code>:</p> <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"image.jpg"</span> <span class="na">data-gall=</span><span class="s">"gallery"</span> <span class="na">class=</span><span class="s">"venobox"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"thumb.jpg"</span> <span class="na">alt=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/a&gt;</span>
+</code></pre></div></div> <p>Demo:</p> <p><a href="/assets/img/avt.webp" data-gall="venobox-demo" class="venobox"> <img src="/assets/img/avt.webp" alt="VenoBox Demo" style="max-width: 300px;"/> </a></p> <hr/> <h2 id="19-d3-loaded-with-mermaid">19. D3 (loaded with Mermaid)</h2> <p><strong>Front matter:</strong> <code class="language-plaintext highlighter-rouge">mermaid: {enabled: true, zoomable: true}</code></p> <p>D3 is loaded automatically when <code class="language-plaintext highlighter-rouge">zoomable: true</code> is set on mermaid. It enables pan and zoom on mermaid diagrams. The flowchart in the Mermaid section above supports zoom via D3.</p> <hr/> <h2 id="20-jquery--mdb-global">20. jQuery &amp; MDB (Global)</h2> <p>jQuery and MDB (Material Design Bootstrap) are loaded on every page. They power Bootstrap components, DOM manipulation, and Material Design styles used throughout the site. No special front matter needed.</p> <hr/> <h2 id="21-masonry--imagesloaded-global">21. Masonry &amp; ImagesLoaded (Global)</h2> <p><strong>Config:</strong> <code class="language-plaintext highlighter-rouge">enable_masonry: true</code> (already enabled globally)</p> <p>Masonry is used for the project cards layout on the projects page. ImagesLoaded ensures images are loaded before the grid is arranged. No special usage in posts — it powers the <code class="language-plaintext highlighter-rouge">projects.liquid</code> include automatically.</p> <hr/> <h2 id="22-progress-bar-global">22. Progress Bar (Global)</h2> <p><strong>Config:</strong> <code class="language-plaintext highlighter-rouge">enable_progressbar: true</code> (already enabled globally)</p> <p>The horizontal progress bar at the top of the page tracks scroll position. It is visible on every page automatically. Scroll down to see it in action.</p> <hr/> <h2 id="23-google-fonts-global">23. Google Fonts (Global)</h2> <p><strong>Config:</strong> Always loaded.</p> <p>The site uses <strong>Roboto</strong> (body), <strong>Roboto Slab</strong> (headings), and <strong>Material Icons</strong> from Google Fonts. These are loaded automatically on every page.</p> <hr/> <h2 id="24-polyfill-global">24. Polyfill (Global)</h2> <p>Loaded alongside MathJax to ensure ES6+ compatibility in older browsers. No special usage needed.</p> <hr/> <h2 id="summary-front-matter-cheat-sheet">Summary: Front Matter Cheat Sheet</h2> <p>To enable all libraries in a single post, use this front matter:</p> <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">layout</span><span class="pi">:</span> <span class="s">post</span>
+<span class="na">title</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Your</span><span class="nv"> </span><span class="s">Post</span><span class="nv"> </span><span class="s">Title"</span>
+<span class="na">date</span><span class="pi">:</span> <span class="s">2026-05-30 12:00:00</span>
+<span class="na">pretty_table</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Bootstrap Table</span>
+<span class="na">mermaid</span><span class="pi">:</span>
+  <span class="na">enabled</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Mermaid diagrams</span>
+  <span class="na">zoomable</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># D3 zoom on mermaid</span>
+<span class="na">code_diff</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Diff2HTML</span>
+<span class="na">map</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Leaflet maps</span>
+<span class="na">chart</span><span class="pi">:</span>
+  <span class="na">chartjs</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Chart.js</span>
+  <span class="na">echarts</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># ECharts</span>
+  <span class="na">plotly</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Plotly</span>
+  <span class="na">vega_lite</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Vega-Lite</span>
+<span class="na">pseudocode</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Pseudocode rendering</span>
+<span class="na">images</span><span class="pi">:</span>
+  <span class="na">compare</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Image comparison slider</span>
+  <span class="na">lightbox2</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Lightbox2 gallery</span>
+  <span class="na">photoswipe</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># PhotoSwipe gallery</span>
+  <span class="na">slider</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Swiper carousel</span>
+  <span class="na">spotlight</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># Spotlight lightbox</span>
+  <span class="na">venobox</span><span class="pi">:</span> <span class="kc">true</span> <span class="c1"># VenoBox lightbox</span>
+<span class="nn">---</span>
+</code></pre></div></div> <p>Libraries that are <strong>always active</strong> (no front matter needed): MathJax, Highlight.js, Medium Zoom, Masonry, jQuery, MDB, Google Fonts, Progress Bar, Back to Top.</p>]]></content><author><name></name></author><category term="guide"/><category term="demo"/><category term="libraries"/><category term="tutorial"/><category term="formatting"/><summary type="html"><![CDATA[A comprehensive demo of every third-party library available in this al-folio site]]></summary></entry><entry><title type="html">how to write a blog post</title><link href="https://khanhthanhdev.github.io/blog/2026/how-to-write-blog/" rel="alternate" type="text/html" title="how to write a blog post"/><published>2026-05-30T00:00:00+00:00</published><updated>2026-05-30T00:00:00+00:00</updated><id>https://khanhthanhdev.github.io/blog/2026/how-to-write-blog</id><content type="html" xml:base="https://khanhthanhdev.github.io/blog/2026/how-to-write-blog/"><![CDATA[<p>This guide covers everything you need to know about writing blog posts on this site.</p> <h2 id="getting-started">Getting Started</h2> <h3 id="creating-a-new-post">Creating a New Post</h3> <p>Create a new file in the <code class="language-plaintext highlighter-rouge">_posts/</code> directory with the format:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>YYYY-MM-DD-title-with-hyphens.md
 </code></pre></div></div> <p>For example: <code class="language-plaintext highlighter-rouge">2026-05-30-my-first-post.md</code></p> <h3 id="front-matter">Front Matter</h3> <p>Every post starts with YAML front matter between <code class="language-plaintext highlighter-rouge">---</code> delimiters:</p> <div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
 <span class="na">layout</span><span class="pi">:</span> <span class="s">post</span>
 <span class="na">title</span><span class="pi">:</span> <span class="s">your post title</span>

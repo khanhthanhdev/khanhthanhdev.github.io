@@ -39,7 +39,7 @@ ninja.data = [{
           },
         },{id: "nav-cv",
           title: "CV",
-          description: "This is a description of the page. You can modify it in &#39;_pages/cv.md&#39;. You can also change or remove the top pdf download button.",
+          description: "",
           section: "Navigation",
           handler: () => {
             window.location.href = "/cv/";
@@ -79,7 +79,18 @@ ninja.data = [{
               handler: () => {
                 window.location.href = "/blog/";
               },
-            },{id: "post-how-to-write-a-blog-post",
+            },{id: "post-third-party-libraries-demo",
+        
+          title: "Third-Party Libraries Demo",
+        
+        description: "A comprehensive demo of every third-party library available in this al-folio site",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/third-party-libraries-demo/";
+          
+        },
+      },{id: "post-how-to-write-a-blog-post",
         
           title: "how to write a blog post",
         
@@ -137,9 +148,9 @@ ninja.data = [{
           description: "A Jekyll-based academic portfolio site with blog, publications, and project pages.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/portfolio-site/";
-            },},{id: "projects-infi",
-          title: 'Infi',
-          description: "AI-powered stock and portfolio research desktop app built with Rust and Tauri. Source-backed claims, structured reports, no black boxes.",
+            },},{id: "projects-building-infi-how-we-solved-the-trust-problem-in-ai-powered-financial-research",
+          title: 'Building Infi: How We Solved the Trust Problem in AI-Powered Financial Research',
+          description: "The story of building Infi - a local-first desktop app that forces AI agents to produce source-backed, structured investment reports. What broke, what we learned, and why MCP changed everything.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/infi/";
             },},{id: "teachings-data-science-fundamentals",
