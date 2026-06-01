@@ -167,6 +167,11 @@ latest_posts:
   scrollable: false # adds a vertical scroll bar if there are more than 3 new posts items
   limit: 3 # leave blank to include all the blog posts
 
+latest_projects:
+  enabled: true
+  scrollable: false # adds a vertical scroll bar if there are more than 3 projects items
+  limit: 3 # leave blank to include all the projects
+
 # -----------------------------------------------------------------------------
 # Jekyll settings
 # -----------------------------------------------------------------------------

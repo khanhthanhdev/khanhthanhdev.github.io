@@ -19,6 +19,10 @@ latest_posts:
   enabled: true
   scrollable: false
   limit: 3 # leave blank to include all the blog posts
+latest_projects:
+  enabled: true
+  scrollable: false
+  limit: 3 # leave blank to include all the projects
 ---
 
 I am a **first-year Electrical and Computer Engineering student at VinUniversity**. I am interested in **robotics**, **AI agents**, and **full-stack systems** that solve real-world problems.

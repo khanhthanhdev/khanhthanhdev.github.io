@@ -41,15 +41,6 @@ layout: default
 
     <div class="clearfix">{{ content }}</div>
 
-    <!-- Latest posts -->
-    {% if site.latest_posts.enabled %}
-      <br>
-      <h2>
-        <a href="{{ '/blog/' | relative_url }}" style="color: inherit">latest posts</a>
-      </h2>
-      {% include latest_posts.liquid %}
-    {% endif %}
-
     <!-- Selected papers -->
     {% if page.selected_papers %}
       <br>
@@ -59,12 +50,30 @@ layout: default
       {% include selected_papers.liquid %}
     {% endif %}
 
+    <!-- Latest projects -->
+    {% if site.latest_projects.enabled %}
+      <br>
+      <h2>
+        <a href="{{ '/projects/' | relative_url }}" style="color: inherit">latest projects</a>
+      </h2>
+      {% include latest_projects.liquid %}
+    {% endif %}
+
     <!-- News -->
     {% if page.news and site.announcements.enabled %}
       <h2>
         <a href="{{ '/news/' | relative_url }}" style="color: inherit">news</a>
       </h2>
       {% include news.liquid limit=true %}
+    {% endif %}
+
+    <!-- Latest posts -->
+    {% if site.latest_posts.enabled %}
+      <br>
+      <h2>
+        <a href="{{ '/blog/' | relative_url }}" style="color: inherit">latest posts</a>
+      </h2>
+      {% include latest_posts.liquid %}
     {% endif %}
 
     <!-- Social -->
