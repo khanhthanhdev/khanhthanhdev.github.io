@@ -124,6 +124,16 @@
             </a>
           </li>
 
+          <!-- CV -->
+          <li class="nav-item {% if page.url contains '/cv/' %}active{% endif %}">
+            <a class="nav-link" href="{{ '/cv/' | relative_url }}">
+              cv
+              {% if page.url contains '/cv/' %}
+                <span class="sr-only">(current)</span>
+              {% endif %}
+            </a>
+          </li>
+
           {% if site.search_enabled %}
             <!-- Search -->
             <li class="nav-item">
