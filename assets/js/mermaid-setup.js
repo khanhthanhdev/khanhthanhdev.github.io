@@ -41,13 +41,14 @@ function openMermaidLightbox(svgElement) {
   var overlay = document.createElement("div");
   overlay.className = "mermaid-lightbox";
 
-  var bg = getComputedStyle(document.documentElement).getPropertyValue("--global-bg-color").trim();
-  if (!bg) bg = "#fff";
+  var isDark = document.documentElement.getAttribute("data-theme") === "dark" || document.documentElement.classList.contains("dark-mode");
+  var overlayBg = isDark ? "rgba(18,18,18,0.92)" : "rgba(255,255,255,0.92)";
   overlay.style.cssText =
     "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;" +
     "background:" +
-    bg +
-    "ee;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);" +
+    overlayBg +
+    ";" +
+    "backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);" +
     "display:flex;align-items:center;justify-content:center;" +
     "cursor:zoom-out;overflow:hidden;";
 
@@ -55,6 +56,12 @@ function openMermaidLightbox(svgElement) {
   var container = document.createElement("div");
   container.style.cssText = "width:90vw;height:90vh;cursor:grab;overflow:hidden;";
   var clonedSvg = svgElement.cloneNode(true);
+  /* Remove original inline size constraints so the clone can fill the container */
+  clonedSvg.removeAttribute("style");
+  clonedSvg.removeAttribute("width");
+  clonedSvg.removeAttribute("height");
+  clonedSvg.style.width = "100%";
+  clonedSvg.style.height = "100%";
   container.appendChild(clonedSvg);
   overlay.appendChild(container);
 
@@ -92,8 +99,6 @@ function openMermaidLightbox(svgElement) {
   /* Size the SVG to fill the container, then compute a scale to fit */
   var containerW = container.clientWidth;
   var containerH = container.clientHeight;
-  clonedSvg.setAttribute("width", containerW);
-  clonedSvg.setAttribute("height", containerH);
   if (!viewBox) {
     clonedSvg.setAttribute("viewBox", "0 0 " + svgW + " " + svgH);
   }
