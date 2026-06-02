@@ -6,6 +6,7 @@ description: "Detailed project workflow for StemFun: classic generation, render 
 tags: [typescript, react, express, manim, ai-agents, education, workflow]
 category: work
 github: https://github.com/khanhthanhdev/StemFun
+img: /assets/img/projects/stemfun/landing.png
 toc:
   sidebar: true
 mermaid:
