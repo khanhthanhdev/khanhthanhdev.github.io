@@ -158,6 +158,11 @@ ninja.data = [{
           description: "The story of building Infi - a local-first desktop app that forces AI agents to produce source-backed, structured investment reports. What broke, what we learned, and why MCP changed everything.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/infi/";
+            },},{id: "projects-building-ai-knowledge-cloud-a-bilingual-ai-tool-directory-with-semantic-search",
+          title: 'Building AI Knowledge Cloud: A Bilingual AI Tool Directory with Semantic Search',
+          description: "How I built a full-stack AI tool directory with hybrid vector search, conversational AI, and automated content pipelines using Next.js, Qdrant, and Inngest.",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/2026-06-02-ai-knowledge-cloud/";
             },},{id: "teachings-data-science-fundamentals",
           title: 'Data Science Fundamentals',
           description: "This course covers the foundational aspects of data science, including data collection, cleaning, analysis, and visualization. Students will learn practical skills for working with real-world datasets.",
