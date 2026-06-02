@@ -133,6 +133,11 @@ ninja.data = [{
           description: "A basic chess engine with minimax and alpha-beta pruning.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/chess-engine/";
+            },},{id: "projects-stemfun-project-architecture-and-workflow",
+          title: 'StemFun Project Architecture and Workflow',
+          description: "Detailed project workflow for StemFun: classic generation, render repair, queue management, and multi-agent Studio sessions.",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/stemfun/";
             },},{id: "projects-rust-cli-tool",
           title: 'Rust CLI Tool',
           description: "A fast command-line file organizer written in Rust.",
@@ -198,4 +203,30 @@ ninja.data = [{
         handler: () => {
           window.open("https://twitter.com/Kevintr275", "_blank");
         },
-      },];
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
