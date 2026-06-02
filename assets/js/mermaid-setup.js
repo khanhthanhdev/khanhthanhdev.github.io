@@ -47,7 +47,8 @@ function openMermaidLightbox(svgElement) {
     "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;" +
     "background:" +
     bg +
-    "ee;display:flex;align-items:center;justify-content:center;" +
+    "ee;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);" +
+    "display:flex;align-items:center;justify-content:center;" +
     "cursor:zoom-out;overflow:hidden;";
 
   /* Clone the SVG */
