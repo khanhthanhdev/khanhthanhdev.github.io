@@ -31,6 +31,7 @@ repos:
       - id: check-yaml
         args: [--allow-multiple-documents]
       - id: check-added-large-files
+        exclude: ^assets/video/
       - id: check-merge-conflict
       - id: check-json
         exclude: \.devcontainer/devcontainer\.json$

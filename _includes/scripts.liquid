@@ -30,7 +30,13 @@
   <script defer src="{{ '/assets/js/masonry.js' | relative_url | bust_file_cache }}" type="text/javascript"></script>
 {% endif %}
 
-{% if page.mermaid and page.mermaid.enabled %}
+{% assign mermaid_enabled = false %}
+{% if page.mermaid and page.mermaid.enabled != false %}
+  {% assign mermaid_enabled = true %}
+{% elsif page.layout == 'post' or page.layout == 'page' %}
+  {% assign mermaid_enabled = true %}
+{% endif %}
+{% if mermaid_enabled %}
   <!-- Mermaid and D3 -->
   <script
     defer
@@ -38,14 +44,12 @@
     integrity="{{ site.third_party_libraries.mermaid.integrity.js }}"
     crossorigin="anonymous"
   ></script>
-  {% if page.mermaid.zoomable %}
-    <script
-      defer
-      src="{{ site.third_party_libraries.d3.url.js }}"
-      integrity="{{ site.third_party_libraries.d3.integrity.js }}"
-      crossorigin="anonymous"
-    ></script>
-  {% endif %}
+  <script
+    defer
+    src="{{ site.third_party_libraries.d3.url.js }}"
+    integrity="{{ site.third_party_libraries.d3.integrity.js }}"
+    crossorigin="anonymous"
+  ></script>
   <script defer src="{{ '/assets/js/mermaid-setup.js' | relative_url | bust_file_cache }}" type="text/javascript"></script>
 {% endif %}
 
