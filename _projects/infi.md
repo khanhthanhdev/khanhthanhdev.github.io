@@ -6,7 +6,6 @@ description: "The story of building Infi - a local-first desktop app that forces
 tags: [rust, tauri, ai-agents, mcp, acp, financial-analysis, open-source]
 category: work
 github: https://github.com/khanhthanhdev/infi
-img: /assets/img/projects/infi/landing.png
 toc:
   sidebar: true
 mermaid:

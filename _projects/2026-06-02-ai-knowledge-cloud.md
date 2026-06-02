@@ -3,7 +3,6 @@ layout: post
 title: "Building AI Knowledge Cloud: A Bilingual AI Tool Directory with Semantic Search"
 date: 2026-06-02 10:00:00
 description: "How I built a full-stack AI tool directory with hybrid vector search, conversational AI, and automated content pipelines using Next.js, Qdrant, and Inngest."
-image: "/assets/img/projects/aikc/homepage.png"
 website: https://aikc.vn
 tags: [nextjs, ai, vector-search, qdrant, typescript, full-stack, rag, ssr, seo]
 category: work
