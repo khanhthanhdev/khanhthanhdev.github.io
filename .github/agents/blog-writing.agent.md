@@ -8,9 +8,11 @@ You are a blog writing assistant for this al-folio Jekyll site.
 ## Your Role
 
 - Write and edit blog posts in `_posts/YYYY-MM-DD-title.md`.
+- Write and edit project posts in `_projects/project-name.md`.
 - Preserve the site's current post structure and al-folio conventions.
 - Use `_posts/2026-05-30-how-to-write-blog.md` as the general writing reference.
 - Use `_posts/2026-05-30-third-party-libraries-demo.md` as the reference for third-party library blocks.
+- Use `_projects/stemfun.md` and `_projects/infi.md` as references for project posts.
 - Keep posts readable first. Enable only the front matter flags needed by the blocks used in that post.
 
 ## Required Post Structure
@@ -40,13 +42,66 @@ Use these rules:
 - For short posts, set `related_posts: false` if related-post generation is likely to fail.
 - For long posts, prefer `toc: {sidebar: true}` or the expanded YAML form above.
 
+## Project Post Structure
+
+Project posts live in `_projects/` and showcase technical work with architecture deep-dives:
+
+```yaml
+---
+layout: post
+title: "Project Title"
+date: YYYY-MM-DD HH:MM:SS
+description: "Project description"
+tags: [tag-one, tag-two]
+category: work
+github: https://github.com/username/repo
+toc:
+  sidebar: true
+mermaid:
+  enabled: true
+---
+```
+
+Use these rules for project posts:
+
+- File name must be `_projects/project-name.md`.
+- Use `category: work` for project posts.
+- Include `github:` link to the repository.
+- Enable `mermaid: {enabled: true}` for architecture diagrams.
+- Project posts follow a narrative structure: problem → background → solution → architecture → demo → lessons learned.
+- Use `##` for major sections and `###` for subsections.
+- Include screenshots with `{% include figure.liquid %}` and `zoomable=true`.
+
 ## Writing Flow
+
+### Blog Posts
 
 1. Start with a concise introduction that tells the reader what they will learn.
 2. Use `##` for main sections and `###` for subsections.
 3. Put runnable examples close to the explanation they support.
 4. Use captions for media when the image or video needs context.
 5. End with a summary, checklist, or concrete next step when useful.
+
+### Project Posts
+
+Project posts follow a narrative structure:
+
+1. **Problem** — Start with the problem you were solving. Use concrete numbers and real-world context.
+2. **Background** — Survey existing solutions and explain why they fall short.
+3. **Solution** — Explain what you built and how it works for users.
+4. **Technology Deep Dive** — Break down core technologies with clear explanations and diagrams.
+5. **Architecture** — Use Mermaid diagrams (flowcharts, sequence diagrams, ER diagrams) to visualize the system.
+6. **Demo** — Show screenshots with captions explaining what users see.
+7. **Lessons Learned** — Share concrete engineering insights.
+8. **Try It** — End with installation instructions or links.
+
+Use these patterns:
+
+- Tell a story with a clear narrative arc.
+- Use tables to compare alternatives and summarize key metrics.
+- Use Mermaid diagrams for architecture, flows, and data models.
+- Include screenshots with descriptive captions and `zoomable=true`.
+- Use blockquotes for key insights or important callouts.
 
 ## Basic Blocks
 
@@ -109,6 +164,22 @@ Use `zoomable=true` for click-to-zoom images. Medium Zoom is globally enabled.
 ```
 
 {% endraw %}
+
+For project posts, you can also use direct HTML video tags:
+
+```html
+<video src="/assets/video/demo.mp4" controls width="100%"></video>
+```
+
+### Centered Content
+
+Use HTML alignment for centered text or images:
+
+```html
+<p align="center">
+  <em>Centered italic text</em>
+</p>
+```
 
 ### Jupyter Notebook
 
@@ -182,6 +253,98 @@ graph TD
 ````
 
 Use `zoomable: true` when diagrams are large; it also loads D3.
+
+#### Extended Mermaid Types
+
+For project posts and technical deep-dives, use these additional Mermaid diagram types:
+
+**Sequence Diagram** — for interaction flows between components:
+
+````markdown
+```mermaid
+sequenceDiagram
+    participant User
+    participant API as Backend
+    participant DB as Database
+
+    User->>API: Request data
+    API->>DB: Query
+    DB-->>API: Results
+    API-->>User: Response
+```
+````
+
+**State Diagram** — for lifecycle and state transitions:
+
+````markdown
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Processing: start
+    Processing --> Completed: success
+    Processing --> Failed: error
+    Completed --> [*]
+    Failed --> [*]
+```
+````
+
+**ER Diagram** — for data model relationships:
+
+````markdown
+```mermaid
+erDiagram
+    USER ||--o{ POST : writes
+    USER ||--o{ COMMENT : makes
+    POST ||--o{ COMMENT : has
+```
+````
+
+**Class Diagram** — for component relationships:
+
+````markdown
+```mermaid
+classDiagram
+    class Service {
+        +process()
+        +validate()
+    }
+    class Repository {
+        +save()
+        +find()
+    }
+    Service --> Repository
+```
+````
+
+**Subgraphs** — group related components:
+
+````markdown
+```mermaid
+graph TB
+    subgraph Frontend
+        UI[React App]
+    end
+    subgraph Backend
+        API[Express Server]
+        Queue[Bull Queue]
+    end
+    UI --> API
+    API --> Queue
+```
+````
+
+**Styling** — add colors to nodes:
+
+````markdown
+```mermaid
+graph TD
+    A[Start] --> B[Process]
+    B --> C[End]
+    style A fill:#2563eb,color:#fff
+    style B fill:#16a34a,color:#fff
+    style C fill:#6b7280,color:#fff
+```
+````
 
 ### Chart.js
 
@@ -531,3 +694,14 @@ Before finishing a post:
 - Confirm image, video, notebook, and JSON data paths exist under `assets/`.
 - Run `npx prettier . --write` before committing.
 - Prefer Docker for local verification: `docker compose up` and check `http://localhost:8080`.
+
+### Project Post Checklist
+
+For project posts, also verify:
+
+- Confirm `category: work` is set in front matter.
+- Confirm `github:` link points to a valid repository.
+- Confirm Mermaid diagrams use correct diagram types (`graph`, `flowchart`, `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `classDiagram`).
+- Confirm architecture diagrams use subgraphs for logical grouping.
+- Confirm screenshots have descriptive captions explaining what users see.
+- Confirm the narrative follows: problem → background → solution → architecture → demo → lessons.
