@@ -228,32 +228,42 @@
 
   <script type="application/ld+json">
     {
-        "author":
-        {
-            "@type": "Person",
-            "name": "{{ author_name }}",
-            "givenName": "{{ site.first_name }}",
-            "additionalName": "{{ site.middle_name }}",
-            "familyName": "{{ site.last_name }}",
-            "alternateName": [
-              "Thanh Tran",
-              "Thành Trần",
-              "Trần Khánh Thành",
-              "Tran Khanh Thanh",
-              "thanhkt",
-              "khanhthanhdev",
-              "Khanh Thanh"
-            ]
-        },
-        "url": "{{ page.url | prepend: site.baseurl | prepend: site.url }}",
-        "@type": "{% if is_blog_post %}BlogPosting{% else %}WebSite{% endif %}",
-        "description": "{% if page.description %}{{ page.description }}{% else if site.description %}{{ site.description }}{% endif %}",
-        "headline": "{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}",
-        {% if sameaslinks != blank %}
-        "sameAs": {{ sameaslinks | jsonify }},
-        {% endif %}
-        "name": "{{ author_name }}",
-        "@context": "https://schema.org"
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": "{{ site.url }}/#person",
+      "name": "{{ author_name }}",
+      "givenName": "{{ site.first_name }}",
+      "additionalName": "{{ site.middle_name }}",
+      "familyName": "{{ site.last_name }}",
+      "url": "{{ site.url }}",
+      "image": "{% if site.og_image %}{{ site.og_image | prepend: site.baseurl | prepend: site.url }}{% endif %}",
+      "alternateName": [
+        "Thanh Tran",
+        "Thành Trần",
+        "Trần Khánh Thành",
+        "Tran Khanh Thanh",
+        "thanhkt",
+        "khanhthanhdev",
+        "Khanh Thanh"
+      ],
+      {% if sameaslinks != blank %}
+      "sameAs": {{ sameaslinks | jsonify }},
+      {% endif %}
+      "description": "{% if page.description %}{{ page.description }}{% else if site.description %}{{ site.description }}{% endif %}"
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "{% if is_blog_post %}BlogPosting{% else %}WebSite{% endif %}",
+      "author": {
+        "@id": "{{ site.url }}/#person"
+      },
+      "url": "{{ page.url | prepend: site.baseurl | prepend: site.url }}",
+      "description": "{% if page.description %}{{ page.description }}{% else if site.description %}{{ site.description }}{% endif %}",
+      "headline": "{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}",
+      "name": "{{ author_name }}"
     }
   </script>
 {% endif %}

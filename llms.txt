@@ -1,0 +1,12 @@
+# Tran Khanh Thanh
+
+Academic website of Tran Khanh Thanh (khanhthanhdev / thanhkt), Electrical and Computer Engineering student at VinUniversity, showcasing research and projects in AI agents, robotics, and systems.
+
+## Links
+
+- [Homepage](https://khanhthanhdev.github.io/)
+- [Academics](https://khanhthanhdev.github.io/academics/)
+- [Publications](https://khanhthanhdev.github.io/publications/)
+- [Projects](https://khanhthanhdev.github.io/projects/)
+- [CV](https://khanhthanhdev.github.io/cv/)
+- [Blog](https://khanhthanhdev.github.io/blog/)
