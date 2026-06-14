@@ -231,7 +231,19 @@
         "author":
         {
             "@type": "Person",
-            "name": "{{ author_name }}"
+            "name": "{{ author_name }}",
+            "givenName": "{{ site.first_name }}",
+            "additionalName": "{{ site.middle_name }}",
+            "familyName": "{{ site.last_name }}",
+            "alternateName": [
+              "Thanh Tran",
+              "Thành Trần",
+              "Trần Khánh Thành",
+              "Tran Khanh Thanh",
+              "thanhkt",
+              "khanhthanhdev",
+              "Khanh Thanh"
+            ]
         },
         "url": "{{ page.url | prepend: site.baseurl | prepend: site.url }}",
         "@type": "{% if is_blog_post %}BlogPosting{% else %}WebSite{% endif %}",

@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Building Infi: How We Solved the Trust Problem in AI-Powered Financial Research"
+title: "Infi: Trustworthy AI Financial Research"
 date: 2026-05-31 10:00:00
-description: "The story of building Infi - a local-first desktop app that forces AI agents to produce source-backed, structured investment reports. What broke, what we learned, and why MCP changed everything."
+description: "Building Infi: A local-first desktop app forcing AI agents to produce source-backed, structured investment reports."
 tags: [rust, tauri, ai-agents, mcp, acp, financial-analysis, open-source]
 category: work
 github: https://github.com/khanhthanhdev/infi

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Building AI Knowledge Cloud: A Bilingual AI Tool Directory with Semantic Search"
+title: "AI Knowledge Cloud: Directory & Semantic Search"
 date: 2026-06-02 10:00:00
 description: "How I built a full-stack AI tool directory with hybrid vector search, conversational AI, and automated content pipelines using Next.js, Qdrant, and Inngest."
 website: https://aikc.vn
@@ -881,6 +881,8 @@ The `SoftwareApplication` schema includes name, description, URL, application ca
 
 The `<JsonLd>` component renders a `<script type="application/ld+json">` tag:
 
+{% raw %}
+
 ```typescript
 export function JsonLd<T extends Thing>({ data }: JsonLdProps<T>) {
   return (
@@ -891,6 +893,8 @@ export function JsonLd<T extends Thing>({ data }: JsonLdProps<T>) {
   );
 }
 ```
+
+{% endraw %}
 
 ### Dynamic Metadata Generation
 
