@@ -79,7 +79,18 @@ ninja.data = [{
               handler: () => {
                 window.location.href = "/blog/";
               },
-            },{id: "post-third-party-libraries-demo",
+            },{id: "post-linear-regression-amp-normal-equation",
+        
+          title: "Linear Regression &amp; Normal Equation",
+        
+        description: "Interactive visualization and derivation comparing the Normal Equation and Gradient Descent for Linear Regression.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/interactive-gradient-descent/";
+          
+        },
+      },{id: "post-third-party-libraries-demo",
         
           title: "Third-Party Libraries Demo",
         
@@ -153,24 +164,24 @@ ninja.data = [{
           description: "A Jekyll-based academic portfolio site with blog, publications, and project pages.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/portfolio-site/";
-            },},{id: "projects-building-infi-how-we-solved-the-trust-problem-in-ai-powered-financial-research",
-          title: 'Building Infi: How We Solved the Trust Problem in AI-Powered Financial Research',
-          description: "The story of building Infi - a local-first desktop app that forces AI agents to produce source-backed, structured investment reports. What broke, what we learned, and why MCP changed everything.",
+            },},{id: "projects-infi-trustworthy-ai-financial-research",
+          title: 'Infi: Trustworthy AI Financial Research',
+          description: "Building Infi: A local-first desktop app forcing AI agents to produce source-backed, structured investment reports.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/infi/";
-            },},{id: "projects-building-ai-knowledge-cloud-a-bilingual-ai-tool-directory-with-semantic-search",
-          title: 'Building AI Knowledge Cloud: A Bilingual AI Tool Directory with Semantic Search',
+            },},{id: "projects-ai-knowledge-cloud-directory-amp-semantic-search",
+          title: 'AI Knowledge Cloud: Directory &amp;amp; Semantic Search',
           description: "How I built a full-stack AI tool directory with hybrid vector search, conversational AI, and automated content pipelines using Next.js, Qdrant, and Inngest.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/2026-06-02-ai-knowledge-cloud/";
             },},{id: "teachings-data-science-fundamentals",
           title: 'Data Science Fundamentals',
-          description: "This course covers the foundational aspects of data science, including data collection, cleaning, analysis, and visualization. Students will learn practical skills for working with real-world datasets.",
+          description: "Foundations of data science: collection, cleaning, analysis, and visualization with practical real-world datasets.",
           section: "Teachings",handler: () => {
               window.location.href = "/teachings/data-science-fundamentals/";
             },},{id: "teachings-introduction-to-machine-learning",
           title: 'Introduction to Machine Learning',
-          description: "This course provides an introduction to machine learning concepts, algorithms, and applications. Students will learn about supervised and unsupervised learning, model evaluation, and practical implementations.",
+          description: "Introduction to machine learning concepts, algorithms, supervised/unsupervised learning, and practical models.",
           section: "Teachings",handler: () => {
               window.location.href = "/teachings/introduction-to-machine-learning/";
             },},{
