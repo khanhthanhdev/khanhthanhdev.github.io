@@ -25,7 +25,7 @@ ninja.data = [{
           },
         },{id: "nav-projects",
           title: "projects",
-          description: "A growing collection of your cool projects.",
+          description: "Projects by Tran Khanh Thanh (khanhthanhdev) in AI agents, robotics, and full-stack systems.",
           section: "Navigation",
           handler: () => {
             window.location.href = "/projects/";
@@ -39,7 +39,7 @@ ninja.data = [{
           },
         },{id: "nav-cv",
           title: "CV",
-          description: "",
+          description: "Curriculum vitae of Tran Khanh Thanh (Trần Khánh Thành / khanhthanhdev), Electrical and Computer Engineering student at VinUniversity.",
           section: "Navigation",
           handler: () => {
             window.location.href = "/cv/";
