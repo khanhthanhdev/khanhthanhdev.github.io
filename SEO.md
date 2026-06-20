@@ -472,22 +472,22 @@ Before considering your site "SEO optimized":
 
 **Basic Setup:**
 
-- [ ] `_config.yml` has `title`, `description`, `author`, `url`
-- [ ] Sitemap accessible at `/sitemap.xml`
-- [ ] `robots.txt` accessible at `/robots.txt`
-- [ ] Mobile-friendly (test on phone)
+- [x] `_config.yml` has `title`, `description`, `author`, `url`
+- [x] Sitemap accessible at `/sitemap.xml`
+- [x] `robots.txt` accessible at `/robots.txt`
+- [x] Mobile-friendly (test on phone)
 
 **Search Console:**
 
-- [ ] Google Search Console linked
-- [ ] Bing Webmaster Tools linked (optional but recommended)
+- [x] Google Search Console linked
+- [x] Bing Webmaster Tools linked (optional but recommended)
 - [ ] No major indexing errors
 - [ ] Sitemaps submitted
 
 **Schema/Open Graph:**
 
-- [ ] `serve_og_meta: true` (for social sharing)
-- [ ] `serve_schema_org: true` (for structured data)
+- [x] `serve_og_meta: true` (for social sharing)
+- [x] `serve_schema_org: true` (for structured data)
 - [ ] Test OG with [Facebook Debugger](https://developers.facebook.com/tools/debug/sharing/)
 - [ ] Validate schema at [Schema.org Validator](https://validator.schema.org/)
 
@@ -495,9 +495,9 @@ Before considering your site "SEO optimized":
 
 - [ ] Every page has unique title (under 60 chars)
 - [ ] Every page has description (120-160 chars)
-- [ ] Blog posts have proper dates
-- [ ] Images have descriptive alt text
-- [ ] Headings follow proper hierarchy
+- [x] Blog posts have proper dates
+- [x] Images have descriptive alt text
+- [x] Headings follow proper hierarchy
 
 **Publications:**
 
@@ -510,7 +510,7 @@ Before considering your site "SEO optimized":
 
 - [ ] Site loads under 3 seconds (check PageSpeed)
 - [ ] No broken links (use lighthouse or similar)
-- [ ] RSS feed works (check `/feed.xml`)
+- [x] RSS feed works (check `/feed.xml`)
 
 ---
 

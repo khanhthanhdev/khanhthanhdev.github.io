@@ -39,7 +39,10 @@
   {% endif %}
 </title>
 <meta name="author" content="{{ author_name }}">
-<meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+<meta
+  name="description"
+  content="{% if page.description %}{{ page.description | strip_newlines | strip }}{% else %}{{ site.description | strip_newlines | strip }}{% endif %}"
+>
 {% if page.keywords or site.keywords %}
   <meta name="keywords" content="{% if page.keywords %}{{ page.keywords }}{% else %}{{ site.keywords }}{% endif %}">
 {% endif %}
@@ -57,9 +60,14 @@
   <meta property="og:type" content="{% if is_blog_post %}article{% else %}website{% endif %}">
   <meta property="og:title" content="{% if page.title %}{{ title }} | {{ page.title }}{% else %}{{ title }}{% endif %}">
   <meta property="og:url" content="{{ page.url | prepend: site.baseurl | prepend: site.url | remove_first: 'index.html' }}">
-  <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+  <meta
+    property="og:description"
+    content="{% if page.description %}{{ page.description | strip_newlines | strip }}{% else %}{{ site.description | strip_newlines | strip }}{% endif %}"
+  >
   {% if page.og_image or site.og_image %}
-    <meta property="og:image" content="{% if page.og_image %}{{ page.og_image }}{% else %}{{ site.og_image }}{% endif %}">
+    {% assign og_image_path = page.og_image | default: site.og_image %}
+    <meta property="og:image" content="{{ og_image_path | prepend: site.baseurl | prepend: site.url }}">
+    <meta property="og:image:alt" content="{{ author_name }}">
   {% endif %}
   <meta property="og:locale" content="{{ site.lang }}">
 
@@ -68,11 +76,12 @@
   <meta name="twitter:title" content="{% if page.title %}{{ page.title }}{% else %}{{ title }}{% endif %}">
   <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
   {% if page.og_image or site.og_image %}
-    <meta name="twitter:image" content="{% if page.og_image %}{{ page.og_image }}{% else %}{{ site.og_image }}{% endif %}">
+    <meta name="twitter:image" content="{{ og_image_path | prepend: site.baseurl | prepend: site.url }}">
+    <meta name="twitter:image:alt" content="{{ author_name }}">
   {% endif %}
-  {% if site.x_username %}
-    <meta name="twitter:site" content="@{{ site.x_username }}">
-    <meta name="twitter:creator" content="@{{ site.x_username }}">
+  {% if site.data.socials.x_username %}
+    <meta name="twitter:site" content="@{{ site.data.socials.x_username }}">
+    <meta name="twitter:creator" content="@{{ site.data.socials.x_username }}">
   {% endif %}
 {% endif %}
 
@@ -238,18 +247,39 @@
       "url": "{{ site.url }}",
       "image": "{% if site.og_image %}{{ site.og_image | prepend: site.baseurl | prepend: site.url }}{% endif %}",
       "alternateName": [
-        "Thanh Tran",
-        "Thành Trần",
         "Trần Khánh Thành",
+        "Thành Trần",
         "Tran Khanh Thanh",
-        "thanhkt",
+        "Thanh Tran",
+        "Khanh Thanh",
         "khanhthanhdev",
-        "Khanh Thanh"
+        "thanhkt"
       ],
+      "jobTitle": "Electrical and Computer Engineering Student",
+      "affiliation": {
+        "@type": "CollegeOrUniversity",
+        "name": "VinUniversity",
+        "url": "https://vinuni.edu.vn/"
+      },
+      "alumniOf": {
+        "@type": "CollegeOrUniversity",
+        "name": "VinUniversity",
+        "url": "https://vinuni.edu.vn/"
+      },
+      "knowsAbout": [
+        "Artificial Intelligence",
+        "AI Agents",
+        "Robotics",
+        "Machine Learning",
+        "Full-stack Development",
+        "Electrical and Computer Engineering"
+      ],
+      "knowsLanguage": ["en", "vi"],
+      "nationality": "Vietnamese",
       {% if sameaslinks != blank %}
       "sameAs": {{ sameaslinks | jsonify }},
       {% endif %}
-      "description": "{% if page.description %}{{ page.description }}{% else if site.description %}{{ site.description }}{% endif %}"
+      "description": "{% if page.description %}{{ page.description | strip_newlines | strip }}{% else if site.description %}{{ site.description | strip_newlines | strip }}{% endif %}"
     }
   </script>
 
@@ -261,7 +291,7 @@
         "@id": "{{ site.url }}/#person"
       },
       "url": "{{ page.url | prepend: site.baseurl | prepend: site.url }}",
-      "description": "{% if page.description %}{{ page.description }}{% else if site.description %}{{ site.description }}{% endif %}",
+      "description": "{% if page.description %}{{ page.description | strip_newlines | strip }}{% else if site.description %}{{ site.description | strip_newlines | strip }}{% endif %}",
       "headline": "{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}",
       "name": "{{ author_name }}"
     }
