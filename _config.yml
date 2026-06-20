@@ -6,6 +6,7 @@ title: blank # the website title (if blank, full name will be used instead)
 first_name: Tran
 middle_name: Khanh
 last_name: Thanh
+name_native: Trần Khánh Thành # native-script full name, used to strengthen exact-name SEO
 contact_note: >
   Please send me an email if you have any questions or contact directly on X, Facebook
 description: >
