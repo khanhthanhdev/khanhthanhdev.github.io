@@ -3,5 +3,6 @@ permalink: /robots.txt
 ---
 User-agent: *
 Disallow:
+Content-Signal: ai-train=yes, search=yes, ai-input=no
 
 Sitemap: {{ site.baseurl | prepend: site.url }}/sitemap.xml
