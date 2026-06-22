@@ -2,6 +2,7 @@
 layout: post
 title: "Third-Party Libraries Demo"
 date: 2026-05-30 12:00:00
+published: false
 description: "A comprehensive demo of every third-party library available in this al-folio site"
 tags: [demo, libraries, tutorial, formatting]
 categories: [guide]

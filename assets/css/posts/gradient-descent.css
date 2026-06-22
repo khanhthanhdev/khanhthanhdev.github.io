@@ -1,199 +1,104 @@
-/* Gradient Descent Interactive Visualizer — clean academic style */
-
 .ml-playground {
   margin: 2rem 0;
-  font-family: inherit;
 }
 
-/* Full-width stacked layout */
 .playground-card {
-  background: var(--global-card-bg, transparent);
   border: 1px solid var(--global-divider-color);
   border-radius: 4px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding: 1rem;
 }
 
-.playground-card h5 {
-  font-weight: 600;
-  border-bottom: 2px solid var(--global-theme-color);
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  color: var(--global-text-color);
-  font-size: 1rem;
-}
-
-/* Top control bar: controls inline */
-.control-bar {
+.control-bar,
+.metrics-row,
+.canvas-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.control-bar {
   align-items: flex-end;
+  margin-bottom: 1rem;
 }
 
 .control-group {
   flex: 1 1 180px;
-  min-width: 140px;
 }
 
 .control-group label {
   display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
   font-size: 0.82rem;
   font-weight: 500;
-  margin-bottom: 0.35rem;
-  color: var(--global-text-color);
 }
 
-.control-group label span {
-  font-weight: 600;
+.control-group span,
+.metric-value {
   color: var(--global-theme-color);
+  font-weight: 700;
 }
 
-/* Custom Select */
-.playground-select {
-  display: block;
+.custom-slider {
   width: 100%;
-  padding: 0.45rem 2rem 0.45rem 0.6rem;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  color: var(--global-text-color);
-  background-color: var(--global-card-bg, transparent);
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.6rem center;
-  background-size: 14px 10px;
-  border: 1px solid var(--global-divider-color);
-  border-radius: 4px;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
 }
 
-[data-theme="dark"] .playground-select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-}
-
-.playground-select:focus {
-  border-color: var(--global-theme-color);
-  outline: 0;
-}
-
-.playground-select option {
-  background-color: var(--global-bg-color, #fff);
-  color: var(--global-text-color, #333);
-}
-
-/* Slider */
-input[type="range"].custom-slider {
-  -webkit-appearance: none;
-  width: 100%;
-  background: transparent;
-}
-
-input[type="range"].custom-slider:focus {
-  outline: none;
-}
-
-input[type="range"].custom-slider::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 5px;
-  cursor: pointer;
-  background: var(--global-divider-color, #e0e0e0);
-  border-radius: 3px;
-}
-
-input[type="range"].custom-slider::-webkit-slider-thumb {
-  height: 15px;
-  width: 15px;
-  border-radius: 50%;
-  background: var(--global-theme-color);
-  cursor: pointer;
-  -webkit-appearance: none;
-  margin-top: -5px;
-}
-
-/* Button row */
 .button-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .playground-btn {
-  border: 1px solid var(--global-divider-color);
-  border-radius: 4px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.4rem;
+  border: 1px solid var(--global-divider-color);
+  border-radius: 4px;
+  padding: 0.45rem 0.85rem;
   background: var(--global-card-bg, transparent);
   color: var(--global-text-color);
-  white-space: nowrap;
+  font-size: 0.82rem;
+  cursor: pointer;
 }
 
 .playground-btn-primary {
+  border-color: var(--global-theme-color);
   background: var(--global-theme-color);
   color: var(--global-card-bg, #fff);
-  border-color: var(--global-theme-color);
-}
-
-.playground-btn-primary:hover {
-  opacity: 0.85;
-}
-
-.playground-btn-secondary:hover {
-  background: var(--global-divider-color);
-}
-
-/* Metrics inline */
-.metrics-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
 }
 
 .metric-item {
-  flex: 1 1 100px;
-  background: var(--global-card-bg, transparent);
+  flex: 1 1 120px;
   border: 1px solid var(--global-divider-color);
   border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  text-align: center;
+  padding: 0.5rem 0.65rem;
 }
 
 .metric-label {
+  display: block;
   font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: var(--global-text-color);
   opacity: 0.65;
-  margin-bottom: 0.15rem;
 }
 
 .metric-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--global-theme-color);
+  display: block;
+  font-size: 1.05rem;
 }
 
-/* Canvas */
 .canvas-wrapper {
   position: relative;
   width: 100%;
-  background: var(--global-bg-color);
+  margin-top: 1rem;
   border: 1px solid var(--global-divider-color);
   border-radius: 4px;
   overflow: hidden;
-  cursor: crosshair;
-  aspect-ratio: 16 / 9;
+  background: var(--global-bg-color);
+  aspect-ratio: 92 / 43;
 }
 
 .canvas-wrapper canvas {
@@ -202,95 +107,26 @@ input[type="range"].custom-slider::-webkit-slider-thumb {
   height: 100%;
 }
 
-.canvas-instruction {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-size: 0.75rem;
-  background: var(--global-divider-color);
-  color: var(--global-text-color);
-  padding: 3px 7px;
-  border-radius: 3px;
-  pointer-events: none;
-  opacity: 0.85;
-}
-
-/* Charts grid: 2 columns on desktop */
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-}
-
-@media (min-width: 768px) {
-  .charts-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.chart-cell {
-  background: var(--global-card-bg, transparent);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 4px;
-  padding: 1rem;
-}
-
-.chart-cell h6 {
-  font-weight: 600;
-  font-size: 0.85rem;
-  margin-bottom: 0.5rem;
-  color: var(--global-text-color);
-}
-
-.chart-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-}
-
-/* Loss contour canvas */
-.contour-wrapper {
-  position: relative;
-  width: 100%;
-  background: var(--global-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 4px;
-  overflow: hidden;
-  aspect-ratio: 1 / 1;
-}
-
-.contour-wrapper canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* Legend for canvas */
 .canvas-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
+  margin-top: 0.65rem;
   color: var(--global-text-color);
+  font-size: 0.8rem;
 }
 
 .legend-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.35rem;
 }
 
 .legend-swatch {
-  width: 20px;
+  width: 22px;
   height: 3px;
   border-radius: 2px;
-  display: inline-block;
+  background: var(--global-theme-color);
 }
 
 .legend-swatch-dashed {
-  width: 20px;
-  height: 0;
-  border-top: 2px dashed;
-  display: inline-block;
+  width: 22px;
+  border-top: 2px dashed #2196f3;
 }

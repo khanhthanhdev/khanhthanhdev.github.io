@@ -2,6 +2,7 @@
 layout: post
 title: test sidebar table of contents
 date: 2026-05-29 12:00:00
+published: false
 description: testing the new sidebar TOC feature
 tags: [test, toc]
 categories: [guide]

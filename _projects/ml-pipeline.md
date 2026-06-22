@@ -1,6 +1,7 @@
 ---
 layout: page
 title: ML Training Pipeline
+published: false
 description: End-to-end machine learning pipeline for image classification using PyTorch and MLflow.
 importance: 2
 date: 2025-09-20

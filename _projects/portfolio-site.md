@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Personal Portfolio Website
+published: false
 description: A Jekyll-based academic portfolio site with blog, publications, and project pages.
 importance: 1
 date: 2026-01-15

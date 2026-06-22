@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Chess Engine
+published: false
 description: A basic chess engine with minimax and alpha-beta pruning.
 importance: 4
 date: 2024-12-05

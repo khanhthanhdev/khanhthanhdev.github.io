@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Rust CLI Tool
+published: false
 description: A fast command-line file organizer written in Rust.
 importance: 3
 date: 2025-06-10

@@ -2,6 +2,7 @@
 layout: post
 title: how to write a blog post
 date: 2026-05-30 00:00:00
+published: false
 description: a comprehensive guide to writing blog posts on this site
 tags: guide blog
 categories: guide

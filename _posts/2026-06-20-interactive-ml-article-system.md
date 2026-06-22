@@ -2,6 +2,7 @@
 layout: post
 title: "Interactive Machine Learning Article Template"
 date: 2026-06-20 09:00:00
+published: false
 description: "A starter post for ML and deep learning articles with interactive visualizations."
 tags: [machine-learning, visualization, interactive, tutorials]
 categories: [explanation]

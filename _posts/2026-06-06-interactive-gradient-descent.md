@@ -6,8 +6,6 @@ description: "Interactive visualization and derivation comparing the Normal Equa
 tags: [machine-learning, optimization, tutorials, interactive]
 categories: [explanation]
 enable_math: true
-chart:
-  chartjs: true
 css:
   - /assets/css/posts/gradient-descent.css
 js:
@@ -94,95 +92,42 @@ $$ \mathbf{w} \leftarrow \mathbf{w} - \alpha \frac{\partial \mathcal{L}}{\partia
 
 ### Interactive Demonstration
 
-Test these two optimization approaches below:
-
-- **Click the canvas** to add data points (click near an existing point to delete it)
-- **Run GD** to watch gradient descent iterate toward the minimum
-- **Closed-form Fit** to instantly compute the Normal Equation solution
+Watch a linear model train toward the closed-form least-squares solution.
 
 <div class="ml-playground">
 
-  <!-- Controls -->
   <div class="playground-card">
-    <h5>Configuration</h5>
     <div class="control-bar">
       <div class="control-group">
-        <label for="select-preset">Dataset</label>
-        <select id="select-preset" class="playground-select">
-          <option value="noisy">Noisy Linear</option>
-          <option value="clean">Clean Linear</option>
-          <option value="outliers">With Outliers</option>
-        </select>
+        <label for="slider-lr">Learning rate <span id="val-lr">0.005</span></label>
+        <input type="range" id="slider-lr" class="custom-slider" min="0.001" max="0.05" step="0.001" value="0.005">
       </div>
       <div class="control-group">
-        <label for="slider-lr">Learning Rate ($\alpha$): <span id="val-lr">0.01</span></label>
-        <input type="range" id="slider-lr" class="custom-slider" min="0.001" max="0.1" step="0.001" value="0.01">
-      </div>
-      <div class="control-group">
-        <label for="slider-speed">Speed (FPS): <span id="val-speed">30</span></label>
-        <input type="range" id="slider-speed" class="custom-slider" min="1" max="60" step="1" value="30">
+        <label for="slider-noise">Training noise <span id="val-noise">0.60</span></label>
+        <input type="range" id="slider-noise" class="custom-slider" min="0" max="1.5" step="0.05" value="0.60">
       </div>
     </div>
+
     <div class="button-row">
-      <button id="btn-run" class="playground-btn playground-btn-primary"><i class="fa-solid fa-play"></i> Run GD</button>
+      <button id="btn-run" class="playground-btn playground-btn-primary"><i class="fa-solid fa-play"></i> Run</button>
       <button id="btn-step" class="playground-btn playground-btn-secondary"><i class="fa-solid fa-forward-step"></i> Step</button>
-      <button id="btn-closed-form" class="playground-btn playground-btn-secondary"><i class="fa-solid fa-bolt"></i> Closed-form Fit</button>
-      <button id="btn-reset" class="playground-btn playground-btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Reset</button>
-      <button id="btn-clear" class="playground-btn playground-btn-secondary"><i class="fa-solid fa-trash-can"></i> Clear</button>
+      <button id="btn-reset" class="playground-btn playground-btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Reset data</button>
     </div>
+
     <div class="metrics-row">
       <div class="metric-item"><span class="metric-label">Epoch</span><span id="metric-epoch" class="metric-value">0</span></div>
       <div class="metric-item"><span class="metric-label">Loss (MSE)</span><span id="metric-loss" class="metric-value">0.0000</span></div>
       <div class="metric-item"><span class="metric-label">w₁ (slope)</span><span id="metric-m" class="metric-value">0.000</span></div>
       <div class="metric-item"><span class="metric-label">w₀ (bias)</span><span id="metric-b" class="metric-value">0.000</span></div>
     </div>
-  </div>
 
-  <!-- Data & Regression Visualizer -->
-  <div class="playground-card">
-    <h5>Data & Regression Line</h5>
     <div class="canvas-wrapper">
       <canvas id="ml-canvas"></canvas>
-      <div class="canvas-instruction">Click to add/remove points</div>
     </div>
     <div class="canvas-legend">
       <div class="legend-item"><span class="legend-swatch" style="background: var(--global-theme-color)"></span> Gradient Descent fit</div>
-      <div class="legend-item"><span class="legend-swatch-dashed" style="border-color: #2196f3"></span> Closed-form optimal</div>
-      <div class="legend-item"><span class="legend-swatch" style="background: rgba(0,0,0,0.12)"></span> Residuals</div>
-    </div>
-  </div>
-
-  <!-- Analysis Charts -->
-  <div class="charts-grid">
-
-    <!-- Loss Contour -->
-    <div class="chart-cell">
-      <h6>Loss Surface & GD Path</h6>
-      <div class="contour-wrapper">
-        <canvas id="contour-canvas"></canvas>
-      </div>
-      <div class="canvas-legend" style="margin-top: 0.4rem">
-        <div class="legend-item"><span class="legend-swatch" style="background: var(--global-theme-color)"></span> GD trajectory</div>
-        <div class="legend-item"><span class="legend-swatch" style="background: #2196f3; border-radius: 50%; width: 10px; height: 10px"></span> Optimal w*</div>
-      </div>
-    </div>
-
-    <!-- Loss History -->
-    <div class="chart-cell">
-      <h6>Loss (MSE) over Epochs</h6>
-      <div class="chart-container"><canvas id="loss-chart"></canvas></div>
-    </div>
-
-    <!-- Weight Trajectory -->
-    <div class="chart-cell">
-      <h6>Weight Convergence</h6>
-      <div class="chart-container"><canvas id="weight-chart"></canvas></div>
-    </div>
-
-    <!-- Gradient Magnitude -->
-    <div class="chart-cell">
-      <h6>Gradient Magnitude ‖∇L‖</h6>
-      <div class="chart-container"><canvas id="grad-chart"></canvas></div>
+      <div class="legend-item"><span class="legend-swatch-dashed"></span> Closed-form fit</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: var(--global-divider-color)"></span> Residuals</div>
     </div>
 
   </div>
@@ -191,23 +136,22 @@ Test these two optimization approaches below:
 
 ---
 
-### What the Charts Show
+### What the Demo Shows
 
-| Chart                      | What It Reveals                                                                                                                          |
-| :------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
-| **Data & Regression Line** | The model's current linear fit overlaid on the data. Watch the solid line converge onto the dashed optimal.                              |
-| **Loss Surface & GD Path** | A heatmap of $\mathcal{L}(w_1, w_0)$ centered around the optimal point. The GD trajectory crawls downhill toward the minimum (blue dot). |
-| **Loss over Epochs**       | The classic training curve. Should decrease monotonically if $\alpha$ is well-chosen.                                                    |
-| **Weight Convergence**     | Tracks $w_1$ and $w_0$ independently over training iterations. Both should stabilize at the closed-form values.                          |
-| **Gradient Magnitude**     | $\|\nabla \mathcal{L}\|$ shrinks toward zero as the model approaches the minimum — the hallmark of convergence.                          |
+| Signal              | What It Reveals                                                                                              |
+| :------------------ | :----------------------------------------------------------------------------------------------------------- |
+| **Training points** | The generated dataset used for the current regression problem.                                               |
+| **Solid line**      | The model learned by gradient descent at the current epoch.                                                  |
+| **Dashed line**     | The exact least-squares solution computed directly from the same data.                                       |
+| **Residuals**       | Each vertical error term. These shrink as the gradient descent line approaches the best possible linear fit. |
 
 ---
 
 ### Key Observations to Try
 
-- **Learning rate too small** ($\alpha \approx 0.001$): Training is stable but very slow. The GD path on the loss surface takes tiny steps.
-- **Learning rate too large** ($\alpha > 0.05$): The weights overshoot the minimum and oscillate. The gradient magnitude chart spikes instead of decaying.
-- **Outlier sensitivity**: Load the _With Outliers_ preset. The optimal fit line gets pulled toward the outliers — a well-known weakness of MSE-based regression.
+- **Learning rate too small** ($\alpha \approx 0.001$): Training is stable but slow.
+- **Learning rate too large** ($\alpha \approx 0.05$): The weights can overshoot and the loss may diverge.
+- **Noise sensitivity**: Increase noise and reset the data to see the fitted line move away from the clean trend.
 
 ---
 
