@@ -1,0 +1,1 @@
+export function fmt(t,e=3){return Number.isFinite(t)?t.toFixed(e):"n/a"}export function clamp(t,e,n){return Math.max(e,Math.min(n,t))}export function cssVar(t,e){return getComputedStyle(document.documentElement).getPropertyValue(t).trim()||e}export function onReady(t){"loading"===document.readyState?document.addEventListener("DOMContentLoaded",t,{once:!0}):t()}

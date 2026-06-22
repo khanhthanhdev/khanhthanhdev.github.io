@@ -90,39 +90,6 @@ ninja.data = [{
             window.location.href = "/blog/2026/interactive-gradient-descent/";
           
         },
-      },{id: "post-third-party-libraries-demo",
-        
-          title: "Third-Party Libraries Demo",
-        
-        description: "A comprehensive demo of every third-party library available in this al-folio site",
-        section: "Posts",
-        handler: () => {
-          
-            window.location.href = "/blog/2026/third-party-libraries-demo/";
-          
-        },
-      },{id: "post-how-to-write-a-blog-post",
-        
-          title: "how to write a blog post",
-        
-        description: "a comprehensive guide to writing blog posts on this site",
-        section: "Posts",
-        handler: () => {
-          
-            window.location.href = "/blog/2026/how-to-write-blog/";
-          
-        },
-      },{id: "post-test-sidebar-table-of-contents",
-        
-          title: "test sidebar table of contents",
-        
-        description: "testing the new sidebar TOC feature",
-        section: "Posts",
-        handler: () => {
-          
-            window.location.href = "/blog/2026/test-sidebar-toc/";
-          
-        },
       },{id: "books-the-godfather",
           title: 'The Godfather',
           description: "",
@@ -139,31 +106,11 @@ ninja.data = [{
             },},{id: "news-a-simple-inline-announcement-with-markdown-emoji-sparkles-smile",
           title: 'A simple inline announcement with Markdown emoji! :sparkles: :smile:',
           description: "",
-          section: "News",},{id: "projects-chess-engine",
-          title: 'Chess Engine',
-          description: "A basic chess engine with minimax and alpha-beta pruning.",
-          section: "Projects",handler: () => {
-              window.location.href = "/projects/chess-engine/";
-            },},{id: "projects-stemfun-project-architecture-and-workflow",
+          section: "News",},{id: "projects-stemfun-project-architecture-and-workflow",
           title: 'StemFun Project Architecture and Workflow',
           description: "Detailed project workflow for StemFun: classic generation, render repair, queue management, and multi-agent Studio sessions.",
           section: "Projects",handler: () => {
               window.location.href = "/projects/stemfun/";
-            },},{id: "projects-rust-cli-tool",
-          title: 'Rust CLI Tool',
-          description: "A fast command-line file organizer written in Rust.",
-          section: "Projects",handler: () => {
-              window.location.href = "/projects/rust-cli/";
-            },},{id: "projects-ml-training-pipeline",
-          title: 'ML Training Pipeline',
-          description: "End-to-end machine learning pipeline for image classification using PyTorch and MLflow.",
-          section: "Projects",handler: () => {
-              window.location.href = "/projects/ml-pipeline/";
-            },},{id: "projects-personal-portfolio-website",
-          title: 'Personal Portfolio Website',
-          description: "A Jekyll-based academic portfolio site with blog, publications, and project pages.",
-          section: "Projects",handler: () => {
-              window.location.href = "/projects/portfolio-site/";
             },},{id: "projects-infi-trustworthy-ai-financial-research",
           title: 'Infi: Trustworthy AI Financial Research',
           description: "Building Infi: A local-first desktop app forcing AI agents to produce source-backed, structured investment reports.",
