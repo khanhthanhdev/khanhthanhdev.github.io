@@ -1,0 +1,12 @@
+- slug: foundations
+  title: "Machine Learning Foundations"
+  description: "Visual explanations of optimization, linear models, and core learning dynamics."
+  order: 1
+  posts:
+    - interactive-ml-article-system
+
+- slug: deep-learning
+  title: "Deep Learning Mechanics"
+  description: "Interactive notes on neural networks, backpropagation, attention, and model scaling."
+  order: 2
+  posts: []

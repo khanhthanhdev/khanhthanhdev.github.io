@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/assets/interactive/shared/figure.css" />
+    <title>Gradient descent playground</title>
+  </head>
+  <body>
+    <main class="figure-root">
+      <section class="figure-panel">
+        <div class="figure-toolbar">
+          <div class="figure-control">
+            <label for="learning-rate">Learning rate: <span id="learning-rate-value">0.005</span></label>
+            <input id="learning-rate" type="range" min="0.001" max="0.05" step="0.001" value="0.005" />
+          </div>
+          <div class="figure-control">
+            <label for="noise">Noise: <span id="noise-value">0.60</span></label>
+            <input id="noise" type="range" min="0" max="1.5" step="0.05" value="0.6" />
+          </div>
+          <button class="figure-button" data-primary="true" id="run">Run</button>
+          <button class="figure-button" id="step">Step</button>
+          <button class="figure-button" id="reset">Reset data</button>
+        </div>
+
+        <div class="figure-metrics">
+          <div class="figure-metric"><span>Iteration</span><strong id="metric-iter">0</strong></div>
+          <div class="figure-metric"><span>Loss</span><strong id="metric-loss">0.000</strong></div>
+          <div class="figure-metric"><span>Slope</span><strong id="metric-slope">0.000</strong></div>
+          <div class="figure-metric"><span>Bias</span><strong id="metric-bias">0.000</strong></div>
+        </div>
+
+        <div class="figure-canvas" id="chart"></div>
+        <p class="figure-note">
+          The blue line is the current model. The pink line is the closed-form least-squares solution. Run with different learning rates to see
+          convergence, slow movement, or overshooting.
+        </p>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+    <script type="module">
+      import { fmt, onReady } from "/assets/interactive/shared/figure-utils.js";
+
+      onReady(() => {
+        const width = 920;
+        const height = 430;
+        const margin = { top: 24, right: 28, bottom: 44, left: 50 };
+        const plotW = width - margin.left - margin.right;
+        const plotH = height - margin.top - margin.bottom;
+        const x = d3.scaleLinear().domain([0, 10]).range([0, plotW]);
+        const y = d3.scaleLinear().domain([0, 10]).range([plotH, 0]);
+
+        const chart = d3
+          .select("#chart")
+          .append("svg")
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("role", "img")
+          .attr("aria-label", "Interactive gradient descent visualization");
+
+        const g = chart.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        const pathHistory = g.append("path").attr("fill", "none").attr("stroke", "var(--figure-good)").attr("stroke-width", 2).attr("opacity", 0.8);
+        const residualLayer = g.append("g");
+        const pointLayer = g.append("g");
+        const optimalLine = g.append("line").attr("stroke", "var(--figure-accent-2)").attr("stroke-width", 2).attr("stroke-dasharray", "7 5");
+        const modelLine = g.append("line").attr("stroke", "var(--figure-accent)").attr("stroke-width", 3);
+
+        g.append("g").attr("transform", `translate(0,${plotH})`).call(d3.axisBottom(x));
+        g.append("g").call(d3.axisLeft(y));
+        g.append("text")
+          .attr("x", plotW / 2)
+          .attr("y", plotH + 36)
+          .attr("text-anchor", "middle")
+          .attr("fill", "var(--figure-muted)")
+          .attr("font-size", 12)
+          .text("x");
+        g.append("text")
+          .attr("x", -plotH / 2)
+          .attr("y", -34)
+          .attr("transform", "rotate(-90)")
+          .attr("text-anchor", "middle")
+          .attr("fill", "var(--figure-muted)")
+          .attr("font-size", 12)
+          .text("y");
+
+        const lrInput = document.querySelector("#learning-rate");
+        const noiseInput = document.querySelector("#noise");
+        const lrValue = document.querySelector("#learning-rate-value");
+        const noiseValue = document.querySelector("#noise-value");
+        const runButton = document.querySelector("#run");
+        const stepButton = document.querySelector("#step");
+        const resetButton = document.querySelector("#reset");
+        const metricIter = document.querySelector("#metric-iter");
+        const metricLoss = document.querySelector("#metric-loss");
+        const metricSlope = document.querySelector("#metric-slope");
+        const metricBias = document.querySelector("#metric-bias");
+
+        let points = [];
+        let w = { slope: -0.8, bias: 8.3 };
+        let optimum = { slope: 0, bias: 0 };
+        let iter = 0;
+        let running = false;
+        let history = [];
+
+        function seededNoise(i) {
+          return (Math.sin(i * 12.9898) * 43758.5453) % 1;
+        }
+
+        function makeData() {
+          const noise = Number(noiseInput.value);
+          points = d3.range(16).map((i) => {
+            const px = 0.75 + i * 0.58;
+            const centered = seededNoise(i + 3) - 0.5;
+            return { x: px, y: 1.7 + 0.62 * px + centered * noise * 2.2 };
+          });
+          optimum = closedForm();
+          w = { slope: -0.8, bias: 8.3 };
+          iter = 0;
+          history = [{ ...w }];
+          render();
+        }
+
+        function closedForm() {
+          const n = points.length;
+          const sx = d3.sum(points, (p) => p.x);
+          const sy = d3.sum(points, (p) => p.y);
+          const sxx = d3.sum(points, (p) => p.x * p.x);
+          const sxy = d3.sum(points, (p) => p.x * p.y);
+          const denom = n * sxx - sx * sx;
+          return {
+            slope: (n * sxy - sx * sy) / denom,
+            bias: (sxx * sy - sx * sxy) / denom,
+          };
+        }
+
+        function loss(model = w) {
+          return d3.mean(points, (p) => {
+            const err = model.slope * p.x + model.bias - p.y;
+            return err * err;
+          });
+        }
+
+        function step() {
+          const lr = Number(lrInput.value);
+          const n = points.length;
+          let gradSlope = 0;
+          let gradBias = 0;
+          for (const p of points) {
+            const err = w.slope * p.x + w.bias - p.y;
+            gradSlope += (2 / n) * err * p.x;
+            gradBias += (2 / n) * err;
+          }
+          w = {
+            slope: w.slope - lr * gradSlope,
+            bias: w.bias - lr * gradBias,
+          };
+          iter += 1;
+          history.push({ ...w });
+          if (history.length > 120) history.shift();
+          render();
+        }
+
+        function lineEndpoints(model) {
+          return {
+            x1: x(0),
+            y1: y(model.bias),
+            x2: x(10),
+            y2: y(model.slope * 10 + model.bias),
+          };
+        }
+
+        function render() {
+          lrValue.textContent = fmt(Number(lrInput.value), 3);
+          noiseValue.textContent = fmt(Number(noiseInput.value), 2);
+          metricIter.textContent = String(iter);
+          metricLoss.textContent = fmt(loss(), 3);
+          metricSlope.textContent = fmt(w.slope, 3);
+          metricBias.textContent = fmt(w.bias, 3);
+
+          const model = lineEndpoints(w);
+          const opt = lineEndpoints(optimum);
+          modelLine.attr("x1", model.x1).attr("y1", model.y1).attr("x2", model.x2).attr("y2", model.y2);
+          optimalLine.attr("x1", opt.x1).attr("y1", opt.y1).attr("x2", opt.x2).attr("y2", opt.y2);
+
+          residualLayer
+            .selectAll("line")
+            .data(points)
+            .join("line")
+            .attr("x1", (p) => x(p.x))
+            .attr("x2", (p) => x(p.x))
+            .attr("y1", (p) => y(p.y))
+            .attr("y2", (p) => y(w.slope * p.x + w.bias))
+            .attr("stroke", "var(--figure-border)")
+            .attr("stroke-width", 1.5);
+
+          pointLayer
+            .selectAll("circle")
+            .data(points)
+            .join("circle")
+            .attr("cx", (p) => x(p.x))
+            .attr("cy", (p) => y(p.y))
+            .attr("r", 5)
+            .attr("fill", "var(--figure-text)")
+            .attr("stroke", "var(--figure-bg)")
+            .attr("stroke-width", 2);
+
+          const historyLine = d3
+            .line()
+            .x((p) => x(5))
+            .y((p) => y(p.slope * 5 + p.bias));
+          pathHistory.attr("d", historyLine(history));
+        }
+
+        function tick() {
+          if (!running) return;
+          step();
+          const currentLoss = loss();
+          if (iter >= 500 || currentLoss < 0.01 || !Number.isFinite(currentLoss) || currentLoss > 1000000) {
+            running = false;
+            runButton.textContent = "Run";
+            return;
+          }
+          requestAnimationFrame(tick);
+        }
+
+        runButton.addEventListener("click", () => {
+          running = !running;
+          runButton.textContent = running ? "Pause" : "Run";
+          if (running) requestAnimationFrame(tick);
+        });
+        stepButton.addEventListener("click", step);
+        resetButton.addEventListener("click", makeData);
+        lrInput.addEventListener("input", render);
+        noiseInput.addEventListener("input", makeData);
+
+        makeData();
+      });
+    </script>
+  </body>
+</html>
