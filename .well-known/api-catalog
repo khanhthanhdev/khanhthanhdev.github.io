@@ -1,0 +1,13 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://khanhthanhdev.github.io/",
+      "describedby": [
+        {
+          "href": "https://khanhthanhdev.github.io/llms.txt",
+          "type": "text/plain"
+        }
+      ]
+    }
+  ]
+}
