@@ -7,6 +7,10 @@
     slot="{{ include.slot }}"
   {% endif %}
 >
+  {% assign size = include.path | image_size %}
+  {% assign img_width = size[0] %}
+  {% assign img_height = size[1] %}
+
   <picture>
     <!-- Auto scaling with imagemagick -->
     <!--
@@ -38,13 +42,13 @@
       {% endif %}
       {% if include.width %}
         width="{{ include.width }}"
-      {% else %}
-        width="100%"
+      {% elsif img_width %}
+        width="{{ img_width }}"
       {% endif %}
       {% if include.height %}
         height="{{ include.height }}"
-      {% else %}
-        height="auto"
+      {% elsif img_height %}
+        height="{{ img_height }}"
       {% endif %}
       {% if include['min-width'] or include['min-height'] or include['max-width'] or include['max-height'] %}
         style="

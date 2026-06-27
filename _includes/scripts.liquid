@@ -1,13 +1,15 @@
 <!-- jQuery -->
 <script
+  defer
   src="{{ site.third_party_libraries.jquery.url.js }}"
   integrity="{{ site.third_party_libraries.jquery.integrity.js }}"
   crossorigin="anonymous"
 ></script>
 
 <!-- Bootsrap & MDB scripts -->
-<script src="{{ '/assets/js/bootstrap.bundle.min.js' | relative_url }}"></script>
+<script defer src="{{ '/assets/js/bootstrap.bundle.min.js' | relative_url }}"></script>
 <script
+  defer
   src="{{ site.third_party_libraries.mdb.url.js }}"
   integrity="{{ site.third_party_libraries.mdb.integrity.js }}"
   crossorigin="anonymous"
@@ -57,6 +59,7 @@
   <!-- Diff2HTML -->
   <!-- diff2html doesn't go well with Bootstrap Table -->
   <script
+    defer
     src="{{ site.third_party_libraries.diff2html.url.js }}"
     integrity="{{ site.third_party_libraries.diff2html.integrity.js }}"
     crossorigin="anonymous"
@@ -67,6 +70,7 @@
 {% if page.map %}
   <!-- Leaflet -->
   <script
+    defer
     src="{{ site.third_party_libraries.leaflet.url.js }}"
     integrity="{{ site.third_party_libraries.leaflet.integrity.js }}"
     crossorigin="anonymous"
@@ -88,12 +92,14 @@
 {% if page.chart and page.chart.echarts %}
   <!-- ECharts -->
   <script
+    defer
     src="{{ site.third_party_libraries.echarts.url.js.library }}"
     integrity="{{ site.third_party_libraries.echarts.integrity.js.library }}"
     crossorigin="anonymous"
   ></script>
   {% if site.enable_darkmode %}
     <script
+      defer
       src="{{ site.third_party_libraries.echarts.url.js.dark_theme }}"
       integrity="{{ site.third_party_libraries.echarts.integrity.js.dark_theme }}"
       crossorigin="anonymous"
@@ -148,12 +154,12 @@
 
 {% if page.typograms %}
   <!-- Typograms -->
-  <script src="{{ '/assets/js/typograms.js' | relative_url | bust_file_cache }}"></script>
+  <script defer src="{{ '/assets/js/typograms.js' | relative_url | bust_file_cache }}"></script>
 {% endif %}
 
 {% if site.enable_tooltips %}
   <!-- Tooltips -->
-  <script src="{{ '/assets/js/tooltips-setup.js' | relative_url | bust_file_cache }}"></script>
+  <script defer src="{{ '/assets/js/tooltips-setup.js' | relative_url | bust_file_cache }}"></script>
 {% endif %}
 
 {% if site.enable_medium_zoom %}
@@ -184,7 +190,7 @@
 {% endif %}
 
 <!-- Load Common JS -->
-<script src="{{ '/assets/js/no_defer.js' | relative_url | bust_file_cache }}"></script>
+<script defer src="{{ '/assets/js/no_defer.js' | relative_url | bust_file_cache }}"></script>
 <script defer src="{{ '/assets/js/common.js' | relative_url | bust_file_cache }}"></script>
 <script defer src="{{ '/assets/js/copy_code.js' | relative_url | bust_file_cache }}" type="text/javascript"></script>
 
@@ -193,7 +199,7 @@
 
 <!-- Badges -->
 {% if site.enable_publication_badges.altmetric %}
-  <script type="text/javascript" src="https://embed.altmetric.com/assets/embed.js"></script>
+  <script defer type="text/javascript" src="https://embed.altmetric.com/assets/embed.js"></script>
 {% endif %}
 {% if site.enable_publication_badges.dimensions %}
   <script async src="https://badge.dimensions.ai/badge.js"></script>
@@ -210,15 +216,16 @@
     crossorigin="anonymous"
   ></script>
   {% unless page.pseudocode %}
-    <script src="{{ '/assets/js/mathjax-setup.js' | relative_url | bust_file_cache }}"></script>
+    <script defer src="{{ '/assets/js/mathjax-setup.js' | relative_url | bust_file_cache }}"></script>
     <script
       defer
       src="{{ site.third_party_libraries.polyfill.url.js }}"
       crossorigin="anonymous"
     ></script>
   {% else %}
-    <script src="{{ '/assets/js/pseudocode-setup.js' | relative_url | bust_file_cache }}"></script>
+    <script defer src="{{ '/assets/js/pseudocode-setup.js' | relative_url | bust_file_cache }}"></script>
     <script
+      defer
       type="text/javascript"
       src="{{ site.third_party_libraries.pseudocode.url.js }}"
       integrity="{{ site.third_party_libraries.pseudocode.integrity.js }}"
@@ -292,14 +299,16 @@
 
 {% if page.tabs %}
   <!-- Jekyll Tabs -->
-  <script src="{{ '/assets/js/tabs.min.js' | relative_url | bust_file_cache }}"></script>
+  <script defer src="{{ '/assets/js/tabs.min.js' | relative_url | bust_file_cache }}"></script>
 {% endif %}
 
 {% if site.back_to_top %}
   <!-- Back to Top -->
-  <script src="{{ '/assets/js/vanilla-back-to-top.min.js' | relative_url | bust_file_cache }}"></script>
+  <script defer src="{{ '/assets/js/vanilla-back-to-top.min.js' | relative_url | bust_file_cache }}"></script>
   <script>
-    addBackToTop();
+    document.addEventListener('DOMContentLoaded', function () {
+      addBackToTop();
+    });
   </script>
 {% endif %}
 
@@ -307,9 +316,9 @@
   <!-- Search -->
   <script type="module" src="{{ '/assets/js/search/ninja-keys.min.js' | relative_url | bust_file_cache }}"></script>
   <ninja-keys hideBreadcrumbs noAutoLoadMdIcons placeholder="Type to start searching"></ninja-keys>
-  <script src="{{ '/assets/js/search-setup.js' | relative_url | bust_file_cache }}"></script>
-  <script src="{{ '/assets/js/search-data.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/shortcut-key.js' | relative_url | bust_file_cache }}"></script>
+  <script defer src="{{ '/assets/js/search-setup.js' | relative_url | bust_file_cache }}"></script>
+  <script defer src="{{ '/assets/js/search-data.js' | relative_url }}"></script>
+  <script defer src="{{ '/assets/js/shortcut-key.js' | relative_url | bust_file_cache }}"></script>
 {% endif %}
 
 {% if site.newsletter.enabled %}
