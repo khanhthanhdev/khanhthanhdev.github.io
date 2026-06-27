@@ -332,3 +332,5 @@ let updateCalendarUrl = () => {
     iframe.src = getCalendarUrl(iframe.dataset.calendarId, iframe.dataset.timezone || "UTC");
   }
 };
+
+initTheme();

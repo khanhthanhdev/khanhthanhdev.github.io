@@ -9,6 +9,10 @@
   content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"
 >
 
+<!-- Resource Hints -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
 <!-- Bootstrap & MDB -->
 <link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}">
 <link
@@ -16,7 +20,17 @@
   href="{{ site.third_party_libraries.mdb.url.css }}"
   integrity="{{ site.third_party_libraries.mdb.integrity.css }}"
   crossorigin="anonymous"
+  media="print"
+  onload="this.media='all'"
 >
+<noscript>
+  <link
+    rel="stylesheet"
+    href="{{ site.third_party_libraries.mdb.url.css }}"
+    integrity="{{ site.third_party_libraries.mdb.integrity.css }}"
+    crossorigin="anonymous"
+  >
+</noscript>
 
 {% if page.pretty_table %}
   <!-- Bootstrap Table -->
@@ -89,16 +103,25 @@
 
 {% if site.enable_darkmode %}
   <!-- Dark Mode -->
-  <script src="{{ '/assets/js/theme.js' | relative_url | bust_file_cache }}"></script>
+  <script>
+    // Tiny script to set theme immediately to prevent FOUC
+    (function () {
+      var themeSetting = localStorage.getItem('theme') || 'light';
+      var computedTheme = themeSetting;
+      if (themeSetting === 'system') {
+        computedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme-setting', themeSetting);
+      document.documentElement.setAttribute('data-theme', computedTheme);
+    })();
+  </script>
+  <script defer src="{{ '/assets/js/theme.js' | relative_url | bust_file_cache }}"></script>
   <link
     rel="stylesheet"
     href="{{ '/assets/css/jekyll-pygments-themes-native.css' | relative_url | bust_file_cache }}"
     media="none"
     id="highlight_theme_dark"
   >
-  <script>
-    initTheme();
-  </script>
 {% endif %}
 
 {% if page.map %}
