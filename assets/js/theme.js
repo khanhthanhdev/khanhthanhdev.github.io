@@ -13,19 +13,27 @@ let toggleThemeSetting = () => {
 };
 
 // Change the theme setting and apply the theme.
-let setThemeSetting = (themeSetting) => {
-  localStorage.setItem("theme", themeSetting);
+let setThemeSetting = (themeSetting, init = false) => {
+  try {
+    if (localStorage.getItem("theme") !== themeSetting) {
+      localStorage.setItem("theme", themeSetting);
+    }
+  } catch (e) {
+    console.debug("localStorage is not available:", e);
+  }
 
   document.documentElement.setAttribute("data-theme-setting", themeSetting);
 
-  applyTheme();
+  applyTheme(init);
 };
 
 // Apply the computed dark or light theme to the website.
-let applyTheme = () => {
+let applyTheme = (init = false) => {
   let theme = determineComputedTheme();
 
-  transTheme();
+  if (!init) {
+    transTheme();
+  }
   setHighlight(theme);
   setGiscusTheme(theme);
   setSearchTheme(theme);
@@ -72,18 +80,24 @@ let applyTheme = () => {
   // Set jupyter notebooks themes.
   let jupyterNotebooks = document.getElementsByClassName("jupyter-notebook-iframe-container");
   for (let i = 0; i < jupyterNotebooks.length; i++) {
-    let bodyElement = jupyterNotebooks[i].getElementsByTagName("iframe")[0].contentWindow.document.body;
-    if (theme == "dark") {
-      bodyElement.setAttribute("data-jp-theme-light", "false");
-      bodyElement.setAttribute("data-jp-theme-name", "JupyterLab Dark");
-    } else {
-      bodyElement.setAttribute("data-jp-theme-light", "true");
-      bodyElement.setAttribute("data-jp-theme-name", "JupyterLab Light");
+    try {
+      let bodyElement = jupyterNotebooks[i].getElementsByTagName("iframe")[0].contentWindow.document.body;
+      if (bodyElement) {
+        if (theme == "dark") {
+          bodyElement.setAttribute("data-jp-theme-light", "false");
+          bodyElement.setAttribute("data-jp-theme-name", "JupyterLab Dark");
+        } else {
+          bodyElement.setAttribute("data-jp-theme-light", "true");
+          bodyElement.setAttribute("data-jp-theme-name", "JupyterLab Light");
+        }
+      }
+    } catch (e) {
+      console.warn("Could not access jupyter notebook iframe document:", e);
     }
   }
 
   // Updates the background of medium-zoom overlay.
-  if (typeof medium_zoom !== "undefined") {
+  if (!init && typeof medium_zoom !== "undefined") {
     medium_zoom.update({
       background: getComputedStyle(document.documentElement).getPropertyValue("--global-bg-color") + "ee", // + 'ee' for trasparency.
     });
@@ -292,7 +306,7 @@ let determineComputedTheme = () => {
 let initTheme = () => {
   let themeSetting = determineThemeSetting();
 
-  setThemeSetting(themeSetting);
+  setThemeSetting(themeSetting, true);
 
   // Theme toggle button is removed - no event listener needed
   // Users cannot manually change the theme
