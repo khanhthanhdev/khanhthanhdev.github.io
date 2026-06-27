@@ -49,7 +49,7 @@ $stack-width           : ($fw-width * 2) !default;
 $stack-z-index         : auto !default;
 
 // web fonts-related variables
-$font-display          : block !default;
+$font-display          : swap !default;
 $font-path             : "../webfonts" !default;
 
 // deprecated: these older SCSS variables will be removed with Font Awesome's next major release

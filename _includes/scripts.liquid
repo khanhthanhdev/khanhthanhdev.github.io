@@ -198,14 +198,14 @@
 <script defer src="{{ '/assets/js/jupyter_new_tab.js' | relative_url | bust_file_cache }}"></script>
 
 <!-- Badges -->
-{% if site.enable_publication_badges.altmetric %}
+{% if site.enable_publication_badges.altmetric and (page.selected_papers or page.publications or page.layout == 'about' or page.layout == 'publications') %}
   <script defer type="text/javascript" src="https://embed.altmetric.com/assets/embed.js"></script>
 {% endif %}
-{% if site.enable_publication_badges.dimensions %}
+{% if site.enable_publication_badges.dimensions and (page.selected_papers or page.publications or page.layout == 'about' or page.layout == 'publications') %}
   <script async src="https://badge.dimensions.ai/badge.js"></script>
 {% endif %}
 
-{% if site.enable_math %}
+{% if site.enable_math and (page.enable_math or page.math) %}
   <!-- MathJax -->
   <script
     defer

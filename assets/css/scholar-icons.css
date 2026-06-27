@@ -13,7 +13,7 @@
     url("../fonts/scholar-icons.svg") format("svg");
   font-style: normal;
   font-weight: normal;
-  font-display: block;
+  font-display: swap;
 }
 
 .si {
