@@ -6,14 +6,17 @@
   crossorigin="anonymous"
 ></script>
 
-<!-- Bootsrap & MDB scripts -->
+<!-- Bootstrap scripts -->
 <script defer src="{{ '/assets/js/bootstrap.bundle.min.js' | relative_url }}"></script>
-<script
-  defer
-  src="{{ site.third_party_libraries.mdb.url.js }}"
-  integrity="{{ site.third_party_libraries.mdb.integrity.js }}"
-  crossorigin="anonymous"
-></script>
+<!-- MDB script is disabled to reduce unused JavaScript -->
+<!--
+  <script
+    defer
+    src="{{ site.third_party_libraries.mdb.url.js }}"
+    integrity="{{ site.third_party_libraries.mdb.integrity.js }}"
+    crossorigin="anonymous"
+  ></script>
+-->
 
 {% if site.enable_masonry %}
   <!-- Masonry & imagesLoaded -->
@@ -199,10 +202,28 @@
 
 <!-- Badges -->
 {% if site.enable_publication_badges.altmetric and (page.selected_papers or page.publications or page.layout == 'about' or page.layout == 'publications') %}
-  <script defer type="text/javascript" src="https://embed.altmetric.com/assets/embed.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.querySelector('.altmetric-embed')) {
+        var script = document.createElement('script');
+        script.src = 'https://embed.altmetric.com/assets/embed.js';
+        script.defer = true;
+        document.body.appendChild(script);
+      }
+    });
+  </script>
 {% endif %}
 {% if site.enable_publication_badges.dimensions and (page.selected_papers or page.publications or page.layout == 'about' or page.layout == 'publications') %}
-  <script async src="https://badge.dimensions.ai/badge.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.querySelector('.__dimensions_badge_embed__')) {
+        var script = document.createElement('script');
+        script.src = 'https://badge.dimensions.ai/badge.js';
+        script.async = true;
+        document.body.appendChild(script);
+      }
+    });
+  </script>
 {% endif %}
 
 {% if site.enable_math and (page.enable_math or page.math) %}

@@ -6,14 +6,17 @@
   crossorigin="anonymous"
 ></script>
 
-<!-- Bootsrap & MDB scripts -->
+<!-- Bootstrap scripts -->
 <script defer src="{{ '/assets/js/bootstrap.bundle.min.js' | relative_url }}"></script>
-<script
-  defer
-  src="{{ site.third_party_libraries.mdb.url.js }}"
-  integrity="{{ site.third_party_libraries.mdb.integrity.js }}"
-  crossorigin="anonymous"
-></script>
+<!-- MDB script is disabled to reduce unused JavaScript -->
+<!--
+  <script
+    defer
+    src="{{ site.third_party_libraries.mdb.url.js }}"
+    integrity="{{ site.third_party_libraries.mdb.integrity.js }}"
+    crossorigin="anonymous"
+  ></script>
+-->
 
 <!-- Custom overrides -->
 <script defer src="{{ '/assets/js/distillpub/overrides.js' | relative_url }}"></script>
