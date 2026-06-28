@@ -1,0 +1,62 @@
+<!-- Search -->
+<ninja-keys hideBreadcrumbs noAutoLoadMdIcons placeholder="Type to start searching"></ninja-keys>
+<script>
+  let searchLoaded = false;
+  const openSearchModal = () => {
+    // collapse navbarNav if expanded on mobile
+    const $navbarNav = $('#navbarNav');
+    if ($navbarNav.hasClass('show')) {
+      $navbarNav.collapse('hide');
+    }
+
+    const ninjaKeys = document.querySelector('ninja-keys');
+    if (!ninjaKeys) return;
+
+    if (searchLoaded) {
+      ninjaKeys.open();
+      return;
+    }
+
+    searchLoaded = true;
+
+    // Apply current theme
+    const searchTheme = typeof determineComputedTheme === 'function' ? determineComputedTheme() : 'light';
+    if (searchTheme === 'dark') {
+      ninjaKeys.classList.add('dark');
+    } else {
+      ninjaKeys.classList.remove('dark');
+    }
+
+    // Dynamic loading of search scripts
+    const searchDataScript = document.createElement('script');
+    searchDataScript.src = "{{ '/assets/js/search-data.js' | relative_url }}";
+    searchDataScript.onload = () => {
+      const ninjaKeysScript = document.createElement('script');
+      ninjaKeysScript.type = 'module';
+      ninjaKeysScript.src = "{{ '/assets/js/search/ninja-keys.min.js' | relative_url | bust_file_cache }}";
+      ninjaKeysScript.onload = () => {
+        // Allow dynamic component upgrade to complete before calling open
+        setTimeout(() => {
+          ninjaKeys.open();
+        }, 50);
+      };
+      document.body.appendChild(ninjaKeysScript);
+    };
+    document.body.appendChild(searchDataScript);
+  };
+
+  // Hotkey listener (Ctrl+K, Cmd+K, or /)
+  document.addEventListener('keydown', (e) => {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isHotkey = (isMac ? e.metaKey : e.ctrlKey) && e.key === 'k';
+    const isSlash = e.key === '/';
+    const activeEl = document.activeElement;
+    const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+
+    if ((isHotkey || isSlash) && !isInput) {
+      e.preventDefault();
+      openSearchModal();
+    }
+  });
+</script>
+<script defer src="{{ '/assets/js/shortcut-key.js' | relative_url | bust_file_cache }}"></script>
