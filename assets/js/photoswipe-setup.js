@@ -1,1 +1,1 @@
-import PhotoSwipeLightbox from"/assets/libs/photoswipe-lightbox/photoswipe-lightbox.esm.min.js";import PhotoSwipe from"/assets/libs/photoswipe/photoswipe.esm.min.js";const photoswipe=new PhotoSwipeLightbox({gallery:".pswp-gallery",children:"a",pswpModule:PhotoSwipe});photoswipe.init();
+import PhotoSwipeLightbox from"";import PhotoSwipe from"";const photoswipe=new PhotoSwipeLightbox({gallery:".pswp-gallery",children:"a",pswpModule:PhotoSwipe});photoswipe.init();
