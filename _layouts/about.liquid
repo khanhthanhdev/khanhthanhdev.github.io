@@ -59,14 +59,6 @@ layout: default
       {% include latest_projects.liquid %}
     {% endif %}
 
-    <!-- News -->
-    {% if page.news and site.announcements.enabled %}
-      <h2>
-        <a href="{{ '/news/' | relative_url }}" style="color: inherit">news</a>
-      </h2>
-      {% include news.liquid limit=true %}
-    {% endif %}
-
     <!-- Latest posts -->
     {% if site.latest_posts.enabled %}
       <br>
