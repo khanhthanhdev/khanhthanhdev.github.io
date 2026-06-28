@@ -181,18 +181,18 @@
 
 {% if site.enable_math and (page.enable_math or page.math) %}
   <!-- MathJax -->
+  <script defer src="{{ '/assets/js/mathjax-setup.js' | relative_url | bust_file_cache }}"></script>
+  <script
+    defer
+    src="{{ site.third_party_libraries.polyfill.url.js }}"
+    crossorigin="anonymous"
+  ></script>
   <script
     defer
     type="text/javascript"
     id="MathJax-script"
     src="{{ site.third_party_libraries.mathjax.url.js }}"
     integrity="{{ site.third_party_libraries.mathjax.integrity.js }}"
-    crossorigin="anonymous"
-  ></script>
-  <script defer src="{{ '/assets/js/mathjax-setup.js' | relative_url | bust_file_cache }}"></script>
-  <script
-    defer
-    src="{{ site.third_party_libraries.polyfill.url.js }}"
     crossorigin="anonymous"
   ></script>
   <!-- Removed Pseudocode -->

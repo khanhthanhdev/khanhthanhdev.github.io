@@ -23,24 +23,24 @@ Following the formulation from the classic article on **[Machine Learning CÆ¡ Bá
 
 ### The Mathematical Formulation
 
-Let our dataset consist of $N$ training examples: $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$, where $\mathbf{x}_i$ is the input vector and $y_i$ is the target value.
+Let our dataset consist of $$N$$ training examples: $$\{(\mathbf{x}_i, y_i)\}_{i=1}^N$$, where $$\mathbf{x}_i$$ is the input vector and $$y_i$$ is the target value.
 
 For simple linear regression (1D feature), we express the model output as:
 
 <!-- prettier-ignore -->
 $$ y_i \approx f(\mathbf{x}_i) = w_1 x_i + w_0 $$
 
-To simplify calculations, we define the parameter vector $\mathbf{w} = [w_1, w_0]^T$ and augment the input feature vector with a bias coordinate $1$, forming $\mathbf{\bar{x}}_i = [x_i, 1]^T$. The prediction becomes:
+To simplify calculations, we define the parameter vector $$\mathbf{w} = [w_1, w_0]^T$$ and augment the input feature vector with a bias coordinate $$1$$, forming $$\mathbf{\bar{x}}_i = [x_i, 1]^T$$. The prediction becomes:
 
 <!-- prettier-ignore -->
 $$ f(\mathbf{\bar{x}}_i) = \mathbf{\bar{x}}_i^T \mathbf{w} $$
 
-We can group all training inputs into a single **design matrix** $\mathbf{\bar{X}}$ of shape $N \times 2$, and all target labels into a column vector $\mathbf{y}$ of shape $N \times 1$:
+We can group all training inputs into a single **design matrix** $$\mathbf{\bar{X}}$$ of shape $$N \times 2$$, and all target labels into a column vector $$\mathbf{y}$$ of shape $$N \times 1$$:
 
 <!-- prettier-ignore -->
 $$ \mathbf{\bar{X}} = \begin{bmatrix} \mathbf{\bar{x}}_1^T \\ \mathbf{\bar{x}}_2^T \\ \vdots \\ \mathbf{\bar{x}}_N^T \end{bmatrix} = \begin{bmatrix} x_1 & 1 \\ x_2 & 1 \\ \vdots & \vdots \\ x_N & 1 \end{bmatrix}, \quad \mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{bmatrix} $$
 
-Our predictions vector is $\mathbf{\hat{y}} = \mathbf{\bar{X}}\mathbf{w}$. The difference between predictions and targets is the error vector: $\mathbf{e} = \mathbf{\bar{X}}\mathbf{w} - \mathbf{y}$.
+Our predictions vector is $$\mathbf{\hat{y}} = \mathbf{\bar{X}}\mathbf{w}$$. The difference between predictions and targets is the error vector: $$\mathbf{e} = \mathbf{\bar{X}}\mathbf{w} - \mathbf{y}$$.
 
 ---
 
@@ -60,7 +60,7 @@ $$ \mathcal{L}(\mathbf{w}) = \frac{1}{2N} \left( \mathbf{w}^T \mathbf{\bar{X}}^T
 
 ### Solution 1: The Analytical Closed-form (Normal Equation)
 
-To minimize the loss function $\mathcal{L}(\mathbf{w})$, we compute its gradient with respect to $\mathbf{w}$ and set it to zero:
+To minimize the loss function $$\mathcal{L}(\mathbf{w})$$, we compute its gradient with respect to $$\mathbf{w}$$ and set it to zero:
 
 <!-- prettier-ignore -->
 $$ \frac{\partial \mathcal{L}}{\partial \mathbf{w}} = \frac{1}{N} \mathbf{\bar{X}}^T (\mathbf{\bar{X}}\mathbf{w} - \mathbf{y}) = 0 $$
@@ -68,25 +68,25 @@ $$ \frac{\partial \mathcal{L}}{\partial \mathbf{w}} = \frac{1}{N} \mathbf{\bar{X
 <!-- prettier-ignore -->
 $$ \mathbf{\bar{X}}^T \mathbf{\bar{X}} \mathbf{w} = \mathbf{\bar{X}}^T \mathbf{y} $$
 
-This is known as the **Normal Equation**. If the matrix $\mathbf{\bar{X}}^T \mathbf{\bar{X}}$ is invertible (non-singular), we obtain the analytical optimal solution $\mathbf{w}_{\text{opt}}$ in a single step:
+This is known as the **Normal Equation**. If the matrix $$\mathbf{\bar{X}}^T \mathbf{\bar{X}}$$ is invertible (non-singular), we obtain the analytical optimal solution $$\mathbf{w}_{\text{opt}}$$ in a single step:
 
 <!-- prettier-ignore -->
 $$ \mathbf{w}_{\text{opt}} = (\mathbf{\bar{X}}^T \mathbf{\bar{X}})^{-1} \mathbf{\bar{X}}^T \mathbf{y} $$
 
-- **Pros**: No need to choose a learning rate ($\alpha$), no convergence thresholds or iterations. Finds the mathematically exact global minimum.
-- **Cons**: Computing the inverse $(\mathbf{\bar{X}}^T \mathbf{\bar{X}})^{-1}$ takes $O(D^3)$ time, where $D$ is the number of features. For datasets with hundreds of thousands of features, it is extremely slow. Also, if features are collinear (redundant), the matrix is singular and cannot be inverted.
+- **Pros**: No need to choose a learning rate ($$\alpha$$), no convergence thresholds or iterations. Finds the mathematically exact global minimum.
+- **Cons**: Computing the inverse $$(\mathbf{\bar{X}}^T \mathbf{\bar{X}})^{-1}$$ takes $$O(D^3)$$ time, where $$D$$ is the number of features. For datasets with hundreds of thousands of features, it is extremely slow. Also, if features are collinear (redundant), the matrix is singular and cannot be inverted.
 
 ---
 
 ### Solution 2: The Iterative Numerical Approach (Gradient Descent)
 
-For large datasets, we use **Gradient Descent**. Starting from an initial point (e.g. $\mathbf{w} = [0, 0]^T$), we update parameters iteratively:
+For large datasets, we use **Gradient Descent**. Starting from an initial point (e.g. $$\mathbf{w} = [0, 0]^T$$), we update parameters iteratively:
 
 <!-- prettier-ignore -->
 $$ \mathbf{w} \leftarrow \mathbf{w} - \alpha \frac{\partial \mathcal{L}}{\partial \mathbf{w}} = \mathbf{w} - \frac{\alpha}{N} \mathbf{\bar{X}}^T (\mathbf{\bar{X}}\mathbf{w} - \mathbf{y}) $$
 
-- **Pros**: Extremely efficient for massive datasets. Time complexity per step is $O(N D)$. Works even when the design matrix is not invertible.
-- **Cons**: Requires careful tuning of hyperparameters ($\alpha$) and monitoring of convergence.
+- **Pros**: Extremely efficient for massive datasets. Time complexity per step is $$O(N D)$$. Works even when the design matrix is not invertible.
+- **Cons**: Requires careful tuning of hyperparameters ($$\alpha$$) and monitoring of convergence.
 
 ---
 
@@ -149,8 +149,8 @@ Watch a linear model train toward the closed-form least-squares solution.
 
 ### Key Observations to Try
 
-- **Learning rate too small** ($\alpha \approx 0.001$): Training is stable but slow.
-- **Learning rate too large** ($\alpha \approx 0.05$): The weights can overshoot and the loss may diverge.
+- **Learning rate too small** ($$\alpha \approx 0.001$$): Training is stable but slow.
+- **Learning rate too large** ($$\alpha \approx 0.05$$): The weights can overshoot and the loss may diverge.
 - **Noise sensitivity**: Increase noise and reset the data to see the fitted line move away from the clean trend.
 
 ---

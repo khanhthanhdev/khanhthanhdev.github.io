@@ -228,14 +228,6 @@
 
 {% if site.enable_math and (page.enable_math or page.math) %}
   <!-- MathJax -->
-  <script
-    defer
-    type="text/javascript"
-    id="MathJax-script"
-    src="{{ site.third_party_libraries.mathjax.url.js }}"
-    integrity="{{ site.third_party_libraries.mathjax.integrity.js }}"
-    crossorigin="anonymous"
-  ></script>
   {% unless page.pseudocode %}
     <script defer src="{{ '/assets/js/mathjax-setup.js' | relative_url | bust_file_cache }}"></script>
     <script
@@ -243,8 +235,24 @@
       src="{{ site.third_party_libraries.polyfill.url.js }}"
       crossorigin="anonymous"
     ></script>
+    <script
+      defer
+      type="text/javascript"
+      id="MathJax-script"
+      src="{{ site.third_party_libraries.mathjax.url.js }}"
+      integrity="{{ site.third_party_libraries.mathjax.integrity.js }}"
+      crossorigin="anonymous"
+    ></script>
   {% else %}
     <script defer src="{{ '/assets/js/pseudocode-setup.js' | relative_url | bust_file_cache }}"></script>
+    <script
+      defer
+      type="text/javascript"
+      id="MathJax-script"
+      src="{{ site.third_party_libraries.mathjax.url.js }}"
+      integrity="{{ site.third_party_libraries.mathjax.integrity.js }}"
+      crossorigin="anonymous"
+    ></script>
     <script
       defer
       type="text/javascript"
