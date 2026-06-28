@@ -129,7 +129,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const plotY = (y) => pad.top + plotH - (y / 10) * plotH;
 
   function render() {
-    readTheme();
     lrValue.textContent = fmt(Number(lrInput.value), 3);
     noiseValue.textContent = fmt(Number(noiseInput.value), 2);
     metricEpoch.textContent = String(epoch);
@@ -216,6 +215,10 @@ document.addEventListener("DOMContentLoaded", () => {
   lrInput.addEventListener("input", render);
   noiseInput.addEventListener("input", makeData);
 
-  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  new MutationObserver(() => {
+    readTheme();
+    render();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  readTheme();
   makeData();
 });

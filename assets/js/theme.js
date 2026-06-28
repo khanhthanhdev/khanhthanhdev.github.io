@@ -95,13 +95,6 @@ let applyTheme = (init = false) => {
       console.warn("Could not access jupyter notebook iframe document:", e);
     }
   }
-
-  // Updates the background of medium-zoom overlay.
-  if (!init && typeof medium_zoom !== "undefined") {
-    medium_zoom.update({
-      background: getComputedStyle(document.documentElement).getPropertyValue("--global-bg-color") + "ee", // + 'ee' for trasparency.
-    });
-  }
 };
 
 let setHighlight = (theme) => {
