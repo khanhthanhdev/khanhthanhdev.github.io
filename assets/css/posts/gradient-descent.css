@@ -1,14 +1,23 @@
 .ml-playground {
+  --gd-bg: #202124;
+  --gd-surface: #17181c;
+  --gd-surface-raised: #292b30;
+  --gd-text: #f7f7f8;
+  --gd-muted: #b8bac1;
+  --gd-border: #3b3d43;
+  --gd-blue: #55adff;
+  --gd-red: #ff5058;
+
   margin: 2rem 0;
-  color: var(--global-text-color);
+  color: var(--gd-text);
 }
 
 .playground-card {
   padding: clamp(0.8rem, 2vw, 1.25rem);
-  border: 1px solid var(--global-divider-color);
+  border: 1px solid var(--gd-border);
   border-radius: 10px;
-  background: var(--global-card-bg, var(--global-bg-color));
-  box-shadow: 0 8px 24px rgb(0 0 0 / 5%);
+  background: var(--gd-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
 }
 
 .control-bar,
@@ -35,7 +44,7 @@
   flex: 1 1 165px;
   gap: 0.3rem;
   min-width: 0;
-  color: var(--global-text-color);
+  color: var(--gd-text);
   font-size: 0.84rem;
   font-weight: 600;
 }
@@ -47,22 +56,22 @@
 
 .ml-playground output,
 .ml-playground strong {
-  color: var(--global-theme-color);
+  color: var(--gd-blue);
   font-variant-numeric: tabular-nums;
 }
 
 .ml-playground input[type="range"] {
   width: 100%;
-  accent-color: var(--global-theme-color);
+  accent-color: var(--gd-red);
 }
 
 .ml-playground select {
   max-width: 100%;
   padding: 0.35rem;
-  border: 1px solid var(--global-divider-color);
+  border: 1px solid var(--gd-border);
   border-radius: 5px;
-  background: var(--global-bg-color);
-  color: var(--global-text-color);
+  background: var(--gd-surface-raised);
+  color: var(--gd-text);
 }
 
 .button-row {
@@ -71,33 +80,33 @@
 
 .playground-btn {
   padding: 0.48rem 0.9rem;
-  border: 1px solid var(--global-divider-color);
+  border: 1px solid var(--gd-border);
   border-radius: 6px;
-  background: var(--global-bg-color);
-  color: var(--global-text-color);
+  background: var(--gd-surface-raised);
+  color: var(--gd-text);
   cursor: pointer;
 }
 
 .playground-btn:hover,
 .playground-btn:focus-visible,
 .playground-btn.is-active {
-  border-color: var(--global-theme-color);
-  color: var(--global-theme-color);
+  border-color: var(--gd-blue);
+  color: var(--gd-blue);
 }
 
 .playground-btn-primary {
-  border-color: var(--global-theme-color);
-  background: var(--global-theme-color);
-  color: var(--global-bg-color);
+  border-color: var(--gd-blue);
+  background: var(--gd-blue);
+  color: var(--gd-surface);
 }
 
 .canvas-wrapper {
   width: 100%;
   margin-top: 0.8rem;
   overflow: hidden;
-  border: 1px solid var(--global-divider-color);
+  border: 1px solid var(--gd-border);
   border-radius: 7px;
-  background: var(--global-bg-color);
+  background: var(--gd-bg);
   aspect-ratio: 9 / 5;
 }
 
@@ -126,13 +135,13 @@
   display: grid;
   flex: 1 1 105px;
   padding: 0.55rem 0.65rem;
-  border: 1px solid var(--global-divider-color);
+  border: 1px solid var(--gd-border);
   border-radius: 6px;
-  background: var(--global-bg-color);
+  background: var(--gd-surface-raised);
 }
 
 .metric-item small {
-  color: var(--global-text-color-light, var(--global-text-color));
+  color: var(--gd-muted);
   font-size: 0.68rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -142,8 +151,8 @@
 .equation-box {
   margin: 0.8rem 0 0;
   padding: 0.65rem;
-  border-left: 3px solid var(--global-theme-color);
-  background: color-mix(in srgb, var(--global-theme-color) 8%, transparent);
+  border-left: 3px solid var(--gd-blue);
+  background: color-mix(in srgb, var(--gd-blue) 12%, transparent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -169,14 +178,14 @@
   width: 44px;
   height: 44px;
   place-items: center;
-  border: 2px solid var(--global-theme-color);
+  border: 2px solid var(--gd-blue);
   border-radius: 50%;
-  color: var(--global-theme-color);
+  color: var(--gd-blue);
   font-weight: 700;
 }
 
 .node-flow b {
-  color: var(--global-text-color-light, var(--global-text-color));
+  color: var(--gd-muted);
   font-size: 0.72rem;
   white-space: nowrap;
 }
@@ -199,11 +208,11 @@
 }
 
 .class-zero {
-  background: #3979d8;
+  background: var(--gd-blue);
 }
 
 .class-one {
-  background: #ee8a30;
+  background: var(--gd-red);
 }
 
 @media (max-width: 620px) {

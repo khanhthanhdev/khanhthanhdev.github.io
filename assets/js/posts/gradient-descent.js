@@ -7,15 +7,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const redraw = [];
 
   function readTheme() {
-    const s = getComputedStyle(document.documentElement);
+    const playground = document.querySelector(".ml-playground");
+    const s = getComputedStyle(playground || document.documentElement);
     theme = {
-      bg: s.getPropertyValue("--global-bg-color").trim() || "#fff",
-      text: s.getPropertyValue("--global-text-color").trim() || "#222",
-      muted: s.getPropertyValue("--global-text-color-light").trim() || "#777",
-      border: s.getPropertyValue("--global-divider-color").trim() || "#ddd",
-      accent: s.getPropertyValue("--global-theme-color").trim() || "#d14",
-      blue: "#3979d8",
-      orange: "#ee8a30",
+      bg: s.getPropertyValue("--gd-bg").trim() || "#202124",
+      text: s.getPropertyValue("--gd-text").trim() || "#f7f7f8",
+      muted: s.getPropertyValue("--gd-muted").trim() || "#b8bac1",
+      border: s.getPropertyValue("--gd-border").trim() || "#3b3d43",
+      accent: s.getPropertyValue("--gd-blue").trim() || "#55adff",
+      blue: s.getPropertyValue("--gd-blue").trim() || "#55adff",
+      red: s.getPropertyValue("--gd-red").trim() || "#ff5058",
     };
   }
 
@@ -116,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
       points.forEach(([x, y, label]) => {
         correct += Number((w1 * x + w2 * y + b >= 0 ? 1 : 0) === label);
         ctx.beginPath();
-        ctx.fillStyle = label ? theme.orange : theme.blue;
+        ctx.fillStyle = label ? theme.red : theme.blue;
         ctx.arc(px(x), py(y), 9, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = theme.bg;
@@ -159,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
         i ? ctx.lineTo(X(x), Y(f(x))) : ctx.moveTo(X(x), Y(f(x)));
       }
       ctx.stroke();
-      ctx.fillStyle = theme.orange;
+      ctx.fillStyle = theme.red;
       ctx.beginPath();
       ctx.arc(X(z), Y(a), 7, 0, Math.PI * 2);
       ctx.fill();
@@ -202,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         i ? ctx.lineTo(X(x), Y((x - y) ** 2)) : ctx.moveTo(X(x), Y((x - y) ** 2));
       }
       ctx.stroke();
-      ctx.fillStyle = theme.orange;
+      ctx.fillStyle = theme.red;
       ctx.beginPath();
       ctx.arc(X(a), Y(cost), 8, 0, 7);
       ctx.fill();
@@ -234,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
         i ? ctx.lineTo(X(v), Y(loss(v))) : ctx.moveTo(X(v), Y(loss(v)));
       }
       ctx.stroke();
-      ctx.fillStyle = theme.orange;
+      ctx.fillStyle = theme.red;
       ctx.beginPath();
       ctx.arc(X(x), Y(loss(x)), 8, 0, 7);
       ctx.fill();
@@ -291,10 +292,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const X = (v) => ((v + 3) / 6) * c.width,
       Y = (v) => c.height - ((v + 3) / 6) * c.height;
     function render() {
+      clear(c, ctx);
       for (let yy = 0; yy < c.height; yy += 8)
         for (let xx = 0; xx < c.width; xx += 8) {
           const l = Math.min(1, loss(-3 + (6 * xx) / c.width, -3 + (6 * (c.height - yy)) / c.height) / 18);
-          ctx.fillStyle = `rgba(238,138,48,${0.08 + l * 0.75})`;
+          ctx.fillStyle = `rgba(255,80,88,${0.08 + l * 0.75})`;
           ctx.fillRect(xx, yy, 8, 8);
         }
       ctx.strokeStyle = theme.text;
@@ -458,17 +460,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!Object.values(net).flat(3).every(Number.isFinite)) reset();
     }
     function render() {
+      clear(c, ctx);
       const grid = 25,
         cellW = c.width / grid,
         cellH = c.height / grid;
       for (let iy = 0; iy < grid; iy++)
         for (let ix = 0; ix < grid; ix++) {
           const a = forward((ix / (grid - 1)) * 2 - 1, 1 - (iy / (grid - 1)) * 2).a;
-          ctx.fillStyle = `rgba(${Math.round(57 + (238 - 57) * a)},${Math.round(121 + (138 - 121) * a)},${Math.round(216 + (48 - 216) * a)},.42)`;
+          ctx.fillStyle = `rgba(${Math.round(85 + (255 - 85) * a)},${Math.round(173 + (80 - 173) * a)},${Math.round(255 + (88 - 255) * a)},.48)`;
           ctx.fillRect(ix * cellW, iy * cellH, cellW + 1, cellH + 1);
         }
       data.forEach(([x, y, t]) => {
-        ctx.fillStyle = t ? theme.orange : theme.blue;
+        ctx.fillStyle = t ? theme.red : theme.blue;
         ctx.strokeStyle = theme.bg;
         ctx.lineWidth = 2;
         ctx.beginPath();
