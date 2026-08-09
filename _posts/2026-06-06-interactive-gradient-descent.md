@@ -6,6 +6,7 @@ description: "A visual, interactive path through neurons, loss, gradient descent
 tags: [machine-learning, neural-networks, gradient-descent, backpropagation, interactive]
 categories: [explanation]
 enable_math: true
+tabs: true
 css:
   - /assets/css/posts/gradient-descent.css
 js:
