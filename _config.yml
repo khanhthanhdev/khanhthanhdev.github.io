@@ -445,7 +445,7 @@ third_party_libraries:
     version: "3.6.0"
   mathjax:
     integrity:
-      js: "sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="
+      js: "sha256-xMV5kSF6geYdPZ8RtrrrIkxuhEtqJj+H7h1EY+EUgPo="
     local:
       fonts: "output/chtml/fonts/woff-v2/"
     url:
