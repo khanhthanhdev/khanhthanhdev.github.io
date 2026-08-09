@@ -4,6 +4,7 @@ permalink: /blog/
 title: blog
 nav: true
 nav_order: 1
+enable_math: true
 pagination:
   enabled: true
   collection: posts
