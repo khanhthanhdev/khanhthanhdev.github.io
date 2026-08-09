@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/assets/interactive/shared/figure.css" />
+    <link rel="stylesheet" href="./mnist-playground.css" />
+    <title>MNIST neural network playground</title>
+  </head>
+  <body>
+    <main class="figure-root mnist-app">
+      <section class="figure-panel" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Browser experiment</p>
+            <h1 id="settings-title">Neural network settings</h1>
+          </div>
+          <p id="status" class="status" role="status" aria-live="polite">Ready to load MNIST.</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="figure-control">
+            <label for="training-split">Training split <span id="training-split-value">80%</span></label>
+            <input id="training-split" type="range" min="60" max="90" step="5" value="80" />
+          </div>
+          <div class="figure-control">
+            <label for="sample-count">Examples</label>
+            <select id="sample-count">
+              <option value="4000">4,000 (fast)</option>
+              <option value="8000" selected>8,000 (balanced)</option>
+              <option value="12000">12,000 (better)</option>
+            </select>
+          </div>
+          <div class="figure-control span-2">
+            <label for="layer-sizes">Layer sizes</label>
+            <input id="layer-sizes" type="text" value="784, 128, 10" inputmode="numeric" aria-describedby="layer-help" />
+            <small id="layer-help">Input 784 and output 10 are fixed; add up to three hidden layers.</small>
+          </div>
+          <div class="figure-control">
+            <label for="activation">Hidden activation</label>
+            <select id="activation">
+              <option value="relu" selected>ReLU</option>
+              <option value="tanh">Tanh</option>
+              <option value="sigmoid">Sigmoid</option>
+            </select>
+          </div>
+          <div class="figure-control">
+            <label for="output-activation">Output activation</label>
+            <select id="output-activation">
+              <option value="softmax" selected>Softmax</option>
+              <option value="sigmoid">Sigmoid</option>
+            </select>
+          </div>
+          <div class="figure-control">
+            <label for="cost">Cost function</label>
+            <select id="cost">
+              <option value="categoricalCrossentropy" selected>Cross-entropy</option>
+              <option value="meanSquaredError">Mean squared error</option>
+            </select>
+          </div>
+          <div class="figure-control">
+            <label for="learning-rate">Learning rate</label>
+            <input id="learning-rate" type="number" min="0.0001" max="1" step="0.001" value="0.05" />
+          </div>
+          <div class="figure-control">
+            <label for="momentum">Momentum</label>
+            <input id="momentum" type="number" min="0" max="0.99" step="0.05" value="0.9" />
+          </div>
+          <div class="figure-control">
+            <label for="batch-size">Mini-batch size</label>
+            <select id="batch-size">
+              <option value="16">16</option>
+              <option value="32">32</option>
+              <option value="64" selected>64</option>
+              <option value="128">128</option>
+            </select>
+          </div>
+          <div class="figure-control">
+            <label for="epochs">Epochs</label>
+            <input id="epochs" type="number" min="1" max="20" step="1" value="8" />
+          </div>
+          <div class="actions">
+            <button class="figure-button" data-primary="true" id="train">Load &amp; train</button>
+            <button class="figure-button" id="stop" disabled>Stop</button>
+          </div>
+        </div>
+
+        <div class="figure-metrics five-metrics">
+          <div class="figure-metric"><span>Epoch</span><strong id="metric-epoch">0 / 8</strong></div>
+          <div class="figure-metric"><span>Training accuracy</span><strong id="metric-train">—</strong></div>
+          <div class="figure-metric"><span>Validation accuracy</span><strong id="metric-validation">—</strong></div>
+          <div class="figure-metric"><span>Validation loss</span><strong id="metric-loss">—</strong></div>
+          <div class="figure-metric"><span>Macro AUC</span><strong id="metric-auc">—</strong></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h2>Evaluation</h2>
+              <p id="chart-description">Training and validation accuracy after each epoch.</p>
+            </div>
+            <div class="segmented" role="group" aria-label="Chart view">
+              <button class="chart-tab active" data-view="accuracy" aria-pressed="true">Accuracy</button>
+              <button class="chart-tab" data-view="loss" aria-pressed="false">Loss</button>
+              <button class="chart-tab" data-view="roc" aria-pressed="false">ROC / AUC</button>
+            </div>
+          </div>
+          <canvas id="metrics-chart" role="img" aria-label="Model evaluation chart"></canvas>
+          <div id="chart-legend" class="chart-legend" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="demo-section" aria-labelledby="demo-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Live inference</p>
+            <h2 id="demo-title">Draw a digit</h2>
+          </div>
+          <button class="figure-button" id="clear-drawing">Clear</button>
+        </div>
+        <div class="drawing-layout">
+          <div>
+            <canvas id="drawing-board" width="280" height="280" aria-label="Draw a handwritten digit here"></canvas>
+            <p class="figure-note">Draw with a mouse, pen, or finger. The image is centered and reduced to the same 28 × 28 format as MNIST.</p>
+          </div>
+          <div class="prediction-panel">
+            <p class="prediction-label">Prediction</p>
+            <output id="prediction" class="prediction">Train the model first</output>
+            <div id="probabilities" class="probabilities" aria-label="Probability for each digit"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="./mnist-playground.js"></script>
+  </body>
+</html>

@@ -9,4 +9,5 @@
   title: "Deep Learning Mechanics"
   description: "Interactive notes on neural networks, backpropagation, attention, and model scaling."
   order: 2
-  posts: []
+  posts:
+    - mnist-image-classification
