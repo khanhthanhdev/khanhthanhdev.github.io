@@ -5,7 +5,7 @@ Academic website of Tran Khanh Thanh (khanhthanhdev / thanhkt), Electrical and C
 ## Links
 
 - [Homepage](https://khanhthanhdev.github.io/)
-- [Academics](https://khanhthanhdev.github.io/academics/)
+- [Portfolio package](https://khanhthanhdev.github.io/portfolio/)
 - [Publications](https://khanhthanhdev.github.io/publications/)
 - [Projects](https://khanhthanhdev.github.io/projects/)
 - [CV](https://khanhthanhdev.github.io/cv/)
