@@ -11,6 +11,12 @@ on:
       - "_scripts/**"
       - ".well-known/**"
       - "_headers"
+      - "agent-content/**"
+      - "edge/**"
+      - "openapi.json"
+      - "wrangler.jsonc"
+      - "test/**"
+      - "package.json"
       - "**.bib"
       - "**.html"
       - "**.js"
@@ -42,6 +48,12 @@ on:
       - "_scripts/**"
       - ".well-known/**"
       - "_headers"
+      - "agent-content/**"
+      - "edge/**"
+      - "openapi.json"
+      - "wrangler.jsonc"
+      - "test/**"
+      - "package.json"
       - "**.bib"
       - "**.html"
       - "**.js"
@@ -98,6 +110,8 @@ jobs:
           pip3 install --upgrade nbconvert
           export JEKYLL_ENV=production
           bundle exec jekyll build
+      - name: Test agent-delivery contracts
+        run: npm run test:agentic
       - name: Purge unused CSS 🧹
         run: |
           npm install -g purgecss

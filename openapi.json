@@ -1,0 +1,137 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Tran Khanh Thanh Site API",
+    "version": "1.0.0",
+    "summary": "Read-only discovery metadata for khanhthanhdev.github.io.",
+    "description": "A small, read-only API that gives agents a machine-readable entry point to the site. Browse human-readable content through the resources returned by GET /api/site or through llms.txt and sitemap.xml.",
+    "contact": {
+      "url": "https://khanhthanhdev.github.io/"
+    },
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://khanhthanhdev.github.io",
+      "description": "Production"
+    }
+  ],
+  "security": [],
+  "paths": {
+    "/api/site": {
+      "get": {
+        "operationId": "getSiteDiscovery",
+        "summary": "Get site discovery metadata",
+        "description": "Returns canonical links to the site's primary agent-readable resources.",
+        "responses": {
+          "200": {
+            "description": "Site discovery metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteDiscovery"
+                }
+              }
+            }
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SiteDiscovery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description", "homepage", "resources"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "const": "Tran Khanh Thanh"
+          },
+          "description": {
+            "type": "string"
+          },
+          "homepage": {
+            "type": "string",
+            "format": "uri"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Resource"
+            }
+          }
+        }
+      },
+      "Resource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "url", "mediaType"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "mediaType": {
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message", "resolution"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "examples": ["not_found", "method_not_allowed"]
+              },
+              "message": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "MethodNotAllowed": {
+        "description": "The resource only accepts GET or HEAD requests.",
+        "headers": {
+          "Allow": {
+            "description": "Methods accepted by the resource.",
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}
