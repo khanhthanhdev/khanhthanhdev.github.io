@@ -13,8 +13,17 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
-<!-- Bootstrap & MDB -->
-<link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}">
+<!-- Critical stylesheets download at high priority without blocking first paint. -->
+<link rel="preload" href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}" as="style">
+<link
+  rel="stylesheet"
+  href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}"
+  media="print"
+  onload="this.media='all'"
+>
+<noscript>
+  <link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}">
+</noscript>
 <link rel="preload" href="{{ '/assets/css/mdb.min.css' | relative_url | bust_file_cache }}" as="style">
 <link
   rel="stylesheet"
@@ -87,7 +96,15 @@
 {% elsif site.icon != blank %}
   <link rel="shortcut icon" href="{{ site.icon | prepend: '/assets/img/' | relative_url | bust_file_cache}}">
 {% endif %}
-<link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url | bust_css_cache }}">
+<link rel="preload" href="{{ '/assets/css/main.css' | relative_url | bust_css_cache }}" as="style">
+<link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url | bust_css_cache }}" media="print" onload="this.media='all'">
+<noscript>
+  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url | bust_css_cache }}">
+</noscript>
+<link rel="stylesheet" href="{{ '/assets/css/icons.css' | relative_url | bust_css_cache }}" media="print" onload="this.media='all'">
+<noscript>
+  <link rel="stylesheet" href="{{ '/assets/css/icons.css' | relative_url | bust_css_cache }}">
+</noscript>
 {% if page.css %}
   {% for stylesheet in page.css %}
     <link rel="stylesheet" href="{{ stylesheet | relative_url | bust_file_cache }}">
