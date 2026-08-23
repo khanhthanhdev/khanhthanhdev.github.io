@@ -1,0 +1,8 @@
+---
+# Font Awesome loads after the initial page styles so its font files do not delay LCP.
+---
+
+@use "font-awesome/fontawesome";
+@use "font-awesome/brands";
+@use "font-awesome/solid";
+@use "font-awesome/regular";
