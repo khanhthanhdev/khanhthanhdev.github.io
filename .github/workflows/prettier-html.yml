@@ -3,6 +3,10 @@ name: Prettify gh-pages
 on:
   workflow_dispatch:
 
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
 jobs:
   format:
     runs-on: ubuntu-latest
