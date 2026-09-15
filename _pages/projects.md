@@ -1,36 +1,18 @@
 ---
-layout: page
-title: projects
+layout: none
 permalink: /projects/
-description: Projects by Tran Khanh Thanh (khanhthanhdev) in AI agents, robotics, and full-stack systems.
-nav: true
-nav_order: 3
-display_categories: [work, fun]
 ---
 
-<!-- pages/projects.md -->
-<div class="projects">
-{% if site.enable_project_categories and page.display_categories %}
-  {% for category in page.display_categories %}
-  <a id="{{ category }}" href=".#{{ category }}">
-    <h4 class="category">{{ category }}</h4>
-  </a>
-  {% assign categorized_projects = site.projects | where: "category", category %}
-  {% assign sorted_projects = categorized_projects | sort: "importance" %}
-  <ul>
-    {% for project in sorted_projects %}
-      {% include projects.liquid %}
-    {% endfor %}
-  </ul>
-  {% endfor %}
-
-{% else %}
-{% assign sorted_projects = site.projects | sort: "importance" %}
-
-<ul>
-  {% for project in sorted_projects %}
-    {% include projects.liquid %}
-  {% endfor %}
-</ul>
-{% endif %}
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting to Works...</title>
+  <link rel="canonical" href="{{ '/works/#projects' | relative_url }}">
+  <meta http-equiv="refresh" content="0; url={{ '/works/#projects' | relative_url }}">
+</head>
+<body>
+  <p>Redirecting to <a href="{{ '/works/#projects' | relative_url }}">Projects &amp; Systems</a>...</p>
+  <script>location.replace("{{ '/works/#projects' | relative_url }}");</script>
+</body>
+</html>

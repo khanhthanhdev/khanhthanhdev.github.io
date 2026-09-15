@@ -17,7 +17,7 @@ selected_papers: true # includes a list of papers marked as "selected={true}"
 social: false # includes social icons at the bottom of the page
 
 latest_posts:
-  enabled: true
+  enabled: false
   scrollable: false
   limit: 3 # leave blank to include all the blog posts
 latest_projects:
@@ -26,29 +26,17 @@ latest_projects:
   limit: 3 # leave blank to include all the projects
 ---
 
-Hi, I am **Tran Khanh Thanh** (Vietnamese: **Trần Khánh Thành**; also known as **Thanh Tran**, **khanhthanhdev**) - a **first-year Electrical and Computer Engineering student at VinUniversity** in Hanoi, Vietnam. I am interested in **robotics**, **AI agents**, and **full-stack systems** that solve real-world problems.
+Hi, I am **Tran Khanh Thanh** (Vietnamese: **Trần Khánh Thành**; also known as **khanhthanhdev**) - a **sophomore Electrical and Computer Engineering student at VinUniversity** in Hanoi, Vietnam. I am interested in **robotics**, **AI agents**, and **full-stack systems** that solve real-world problems.
 
 My current research focuses on **AI agents and robotics**, especially solving and accelerating traditional processes using AI Agents.
 
 Some notable things worth mentioning:
 
+- Top 10 Finalist (1%) and FPT Cloud Award at **[Vietnam AI Challenge 2026](https://www.vietnamaichallenge.com/)**, powered by **[AI For Vietnam](https://aiforvietnam.org/)**
 - Gained hands-on experience at **[STEAM for Vietnam](https://steamforvietnam.org/)**, contributing to projects related to **Robotics Tournament Management System**.
 - Won **First Prize** at **[Vietnam AI Contest 2024](https://vlabinnovation.com/tin-tuc-su-kien/chinh-thuc-mo-cong-dang-ky-vietnam-ai-contest-2024/)** .
 - Won a **Gold Medal** at the **[FIRST Global Challenge 2023](https://first.global/)** international robotics competition.
 
 ## Work and interests
 
-I build and study systems where AI has to interact with people, software, and
-the physical world reliably. That includes evaluating agent behavior,
-developing teleoperation-compatible robotics software, using MuJoCo for
-simulation, and building reproducible data pipelines. I am especially
-interested in the engineering around an agent: clear interfaces, measurable
-evaluation, robust failure handling, and workflows that collaborators can
-inspect and improve.
-
-This site is a server-rendered record of that work. The projects section
-collects software and research efforts, the blog explains technical work in
-more depth, and the academics, publications, and CV pages provide the
-corresponding background. Readers looking for a compact machine-readable map
-can use the [agent index](/llms.txt), [sitemap](/sitemap.xml), or
-[OpenAPI description](/openapi.json).
+I work on small, lightweight, and efficient edge robotics models, AI agents for human-AI collaboration, and full-stack systems.

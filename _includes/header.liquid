@@ -84,41 +84,11 @@
             </a>
           </li>
 
-          <!-- Blog -->
-          <li class="nav-item {% if page.url contains '/blog/' %}active{% endif %}">
-            <a class="nav-link" href="{{ '/blog/' | relative_url }}">
-              blog
-              {% if page.url contains '/blog/' %}
-                <span class="sr-only">(current)</span>
-              {% endif %}
-            </a>
-          </li>
-
-          <!-- Publications -->
-          <li class="nav-item {% if page.url contains '/publications/' %}active{% endif %}">
-            <a class="nav-link" href="{{ '/publications/' | relative_url }}">
-              publications
-              {% if page.url contains '/publications/' %}
-                <span class="sr-only">(current)</span>
-              {% endif %}
-            </a>
-          </li>
-
-          <!-- Projects -->
-          <li class="nav-item {% if page.url contains '/projects/' %}active{% endif %}">
-            <a class="nav-link" href="{{ '/projects/' | relative_url }}">
-              projects
-              {% if page.url contains '/projects/' %}
-                <span class="sr-only">(current)</span>
-              {% endif %}
-            </a>
-          </li>
-
-          <!-- Academics -->
-          <li class="nav-item {% if page.url contains '/academics/' %}active{% endif %}">
-            <a class="nav-link" href="{{ '/academics/' | relative_url }}">
-              academics
-              {% if page.url contains '/academics/' %}
+          <!-- Works -->
+          <li class="nav-item {% if page.url contains '/works/' or page.url contains '/projects/' or page.url contains '/publications/' %}active{% endif %}">
+            <a class="nav-link" href="{{ '/works/' | relative_url }}">
+              works
+              {% if page.url contains '/works/' or page.url contains '/projects/' or page.url contains '/publications/' %}
                 <span class="sr-only">(current)</span>
               {% endif %}
             </a>

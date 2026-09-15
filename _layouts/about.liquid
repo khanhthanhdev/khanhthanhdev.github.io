@@ -45,22 +45,22 @@ layout: default
     {% if page.selected_papers %}
       <br>
       <h2>
-        <a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a>
+        <a href="{{ '/works/#research' | relative_url }}" style="color: inherit">selected publications</a>
       </h2>
       {% include selected_papers.liquid %}
     {% endif %}
 
     <!-- Latest projects -->
-    {% if site.latest_projects.enabled %}
+    {% if page.latest_projects.enabled %}
       <br>
       <h2>
-        <a href="{{ '/projects/' | relative_url }}" style="color: inherit">latest projects</a>
+        <a href="{{ '/works/#projects' | relative_url }}" style="color: inherit">latest projects</a>
       </h2>
       {% include latest_projects.liquid %}
     {% endif %}
 
     <!-- Latest posts -->
-    {% if site.latest_posts.enabled %}
+    {% if page.latest_posts.enabled %}
       <br>
       <h2>
         <a href="{{ '/blog/' | relative_url }}" style="color: inherit">latest posts</a>

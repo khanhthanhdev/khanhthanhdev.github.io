@@ -3,8 +3,8 @@ layout: page
 permalink: /academics/
 title: academics
 description: Education, coursework, and academic achievements.
-nav: true
-nav_order: 6
+nav: false
+published: false
 ---
 
 _green = intro, blue = intermediate, orange = advanced, red = graduate_
