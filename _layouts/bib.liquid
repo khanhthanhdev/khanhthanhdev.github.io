@@ -323,8 +323,7 @@
               role="button"
             >
               {% assign citation_count = 0 %}
-              {% assign scholar_user_id = site.scholar_userid | default: site.data.socials.scholar_userid %}
-              {% assign scholar_id_key = scholar_user_id | append: ':' | append: entry.google_scholar_id %}
+              {% assign scholar_id_key = site.scholar_userid | append: ':' | append: entry.google_scholar_id %}
               {% assign publication_key = entry.google_scholar_id %}
 
               {% if site.data.citations.papers[scholar_id_key] %}
