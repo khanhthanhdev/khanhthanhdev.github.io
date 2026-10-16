@@ -3,6 +3,7 @@ services:
   jekyll:
     image: amirpourmand/al-folio:slim
     #build: .
+    command: ["bash", "bin/entry_point.sh"]
     ports:
       - 8080:8080
       - 35729:35729
