@@ -1,0 +1,46 @@
+#markdown-content {
+  position: relative;
+}
+.footnotes {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--global-divider-color);
+  font-size: 0.875rem;
+}
+.footnotes li {
+  padding-left: 0.25rem;
+}
+.footnotes li:target {
+  outline: 2px solid var(--global-theme-color);
+  outline-offset: 4px;
+}
+@media (min-width: 1280px) {
+  #markdown-content.has-sidenotes {
+    .footnotes {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .footnotes > ol {
+      margin: 0;
+      padding: 0;
+    }
+    .footnotes > ol > li {
+      position: absolute;
+      left: calc(100% + 32px);
+      top: var(--sidenote-top, 0px);
+      width: 220px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+    .footnotes p {
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+@media print {
+  #markdown-content.has-sidenotes .footnotes > ol > li {
+    position: static;
+    width: auto;
+  }
+}

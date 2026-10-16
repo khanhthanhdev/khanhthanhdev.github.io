@@ -61,7 +61,7 @@ ul.task-list input[type="checkbox"] {
   .more-info {
     margin-bottom: 5px;
     margin-top: 5px;
-    font-family: monospace;
+    font-family: "Noto Sans Mono", ui-monospace, monospace;
 
     p {
       display: inline-block;
@@ -143,6 +143,10 @@ ul.task-list input[type="checkbox"] {
     gap: 0.75rem;
     margin-bottom: 0.5rem;
 
+    > a {
+      flex: 0 0 80px;
+    }
+
     .project-thumb {
       width: 80px;
       height: 80px;
@@ -151,6 +155,8 @@ ul.task-list input[type="checkbox"] {
     }
 
     .project-info {
+      min-width: 0;
+
       a {
         color: var(--global-text-color);
 
@@ -162,101 +168,32 @@ ul.task-list input[type="checkbox"] {
   }
 }
 
-// Repositories
-
-@media (min-width: 768px) {
-  .repo {
-    max-width: 50%;
+// Match the publication and CV layouts to the quieter article design.
+.cv .card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid var(--global-divider-color);
+}
+.cv .card-body {
+  padding: 1.5rem 0;
+}
+.projects ul {
+  padding: 0;
+}
+.projects .project-item {
+  margin-bottom: 1.5rem;
+}
+.profile img {
+  border-radius: 3px;
+  box-shadow: none;
+}
+@media (max-width: 575px) {
+  .profile,
+  .profile.float-right,
+  .profile.float-left {
+    width: 180px;
+    float: none !important;
+    margin: 0 auto 1.5rem;
   }
-}
-
-// Social (bottom)
-
-.social {
-  text-align: center;
-
-  .contact-icons {
-    font-size: 4rem;
-
-    a {
-      img {
-        width: 3.2rem;
-        height: 3.2rem;
-        margin-bottom: 1rem;
-      }
-
-      svg {
-        width: 3.5rem;
-        height: 4rem;
-        margin-bottom: 0.5rem;
-
-        image {
-          width: 3.5rem;
-          height: 3.5rem;
-        }
-      }
-
-      i::before {
-        color: var(--global-text-color);
-        transition-property: all 0.2s ease-in-out;
-      }
-
-      &:hover {
-        text-decoration: none;
-
-        i::before {
-          color: var(--global-theme-color);
-        }
-      }
-    }
-  }
-
-  .contact-note {
-    font-size: 0.8rem;
-  }
-}
-
-.wechat-modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  padding-top: 100px;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgb(0, 0, 0);
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-.wechat-modal > img {
-  display: block;
-  position: relative;
-  top: 50%;
-  left: 50%;
-  width: 33%;
-  max-width: 400px;
-  transform: translate(-50%, -50%);
-}
-
-@media only screen and (max-width: 400px) {
-  .wechat-modal > img {
-    width: 100%;
-  }
-}
-
-// Distill
-
-.distill {
-  a:hover {
-    border-bottom-color: var(--global-theme-color);
-    text-decoration: none;
-  }
-}
-
-// diff2html
-
-.d2h-diff-table {
-  position: relative;
 }

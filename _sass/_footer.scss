@@ -1,41 +1,12 @@
-/*******************************************************************************
- * Footer styles
- ******************************************************************************/
-
-footer.fixed-bottom {
-  background-color: var(--global-footer-bg-color);
-  font-size: 0.75rem;
-
-  .container {
-    color: var(--global-footer-text-color);
-    padding-top: 9px;
-    padding-bottom: 8px;
-    text-align: center;
-  }
-
-  a {
-    color: var(--global-footer-link-color);
-
-    &:hover {
-      color: var(--global-theme-color);
-      text-decoration: none;
-    }
-  }
-}
-
-footer.sticky-bottom {
+footer[role="contentinfo"] {
+  margin-top: 4rem !important;
+  padding: 1.5rem 0 2rem;
   border-top: 1px solid var(--global-divider-color);
-  padding-top: 40px;
-  padding-bottom: 40px;
-  font-size: 0.9rem;
-
-  .container {
-    text-align: center;
-  }
-}
-
-footer.mt-5 {
-  .container {
-    text-align: center;
-  }
+  font:
+    0.75rem/1.8 "Noto Sans Mono",
+    ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  color: var(--global-text-color-light);
 }

@@ -28,11 +28,14 @@
 @use "components";
 @use "utilities";
 @use "toc-sidebar";
-@use "interactive";
+
 
 // Other specialized styles
-@use "distill";
+
 @use "cv";
-@use "tabs";
-@use "teachings";
-@use "typograms";
+
+
+
+
+@use "life-divider";
+@use "sidenotes";

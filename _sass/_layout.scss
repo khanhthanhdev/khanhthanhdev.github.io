@@ -1,55 +1,64 @@
-/******************************************************************************
- * Content
- ******************************************************************************/
-
 @use "variables" as v;
 
 body {
-  padding-bottom: 70px;
+  margin: 0;
+  padding: 0;
   color: var(--global-text-color);
-  background-color: var(--global-bg-color);
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    scroll-margin-top: 66px;
-  }
+  background: var(--global-bg-color);
 }
-
-body.fixed-top-nav {
-  // Add some padding for the nav-bar.
-  padding-top: 56px;
-}
-
-body.sticky-bottom-footer {
-  // Remove padding below footer.
-  padding-bottom: 0;
-}
-
 .container {
   max-width: v.$max-content-width;
 }
-
-// Profile
-.profile {
-  img {
-    width: 100%;
+.site-main {
+  margin-top: 3rem;
+  min-height: 55vh;
+}
+.site-main > .post {
+  max-width: 800px;
+  margin-inline: auto;
+}
+.site-main.wide-page > .post,
+.toc-sidebar-container .post {
+  max-width: none;
+}
+.article-page:not(:has(.toc-sidebar-container)) {
+  max-width: 848px;
+}
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -5rem;
+  z-index: 2000;
+  background: var(--global-bg-color);
+  padding: 0.5rem;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+:focus-visible {
+  outline: 2px solid var(--global-theme-color);
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+img,
+video {
+  max-width: 100%;
+}
+pre,
+.table-responsive {
+  overflow-x: auto;
+}
+h1,
+h2,
+h3,
+h4,
+[id] {
+  scroll-margin-top: 1.5rem;
+}
+@media (max-width: 575px) {
+  .site-main {
+    margin-top: 2rem;
   }
 }
-
-// TODO: redefine content layout.
-
-/******************************************************************************
- * Publications
- ******************************************************************************/
-
-// TODO: redefine publications layout.
-
-/*****************************************************************************
-* Projects
-*****************************************************************************/
-
-// TODO: redefine projects layout.

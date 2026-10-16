@@ -1,37 +1,37 @@
-let mermaidTheme = determineComputedTheme();
-
-/* Create mermaid diagram as another node and hide the code block, appending the mermaid node after it
-    this is done to enable retrieving the code again when changing theme between light/dark */
-document.addEventListener("readystatechange", () => {
-  if (document.readyState === "complete") {
-    document.querySelectorAll("pre>code.language-mermaid").forEach((elem) => {
-      const svgCode = elem.textContent;
-      const backup = elem.parentElement;
-      backup.classList.add("unloaded");
-      /* create mermaid node */
-      let mermaid = document.createElement("pre");
-      mermaid.classList.add("mermaid");
-      const text = document.createTextNode(svgCode);
-      mermaid.appendChild(text);
-      backup.after(mermaid);
-    });
-
-    mermaid.initialize({ theme: mermaidTheme });
-
-    /* Make mermaid diagrams clickable to open in lightbox */
-    if (typeof d3 !== "undefined") {
-      window.addEventListener("load", function () {
-        d3.selectAll(".mermaid svg").each(function () {
-          this.style.cursor = "zoom-in";
-          this.addEventListener("dblclick", function (e) {
-            e.preventDefault();
-            openMermaidLightbox(this);
-          });
-        });
+// Keep the source blocks intact for rerendering after a theme change.
+let diagramRender = Promise.resolve();
+function renderDiagrams() {
+  diagramRender = diagramRender
+    .then(async () => {
+      const theme = determineComputedTheme() === "dark" ? "dark" : "default";
+      const diagrams = [];
+      document.querySelectorAll("pre > code.language-mermaid").forEach((code) => {
+        const source = code.parentElement;
+        source.classList.add("unloaded");
+        let diagram = source.nextElementSibling;
+        if (!diagram?.classList.contains("mermaid")) {
+          diagram = document.createElement("pre");
+          diagram.className = "mermaid";
+          source.after(diagram);
+        }
+        diagram.removeAttribute("data-processed");
+        diagram.textContent = code.textContent;
+        diagrams.push(diagram);
       });
-    }
-  }
-});
+      mermaid.initialize({ startOnLoad: false, theme });
+      await mermaid.run({ nodes: diagrams });
+      diagrams.forEach((diagram) => {
+        const svg = diagram.querySelector("svg");
+        if (svg && typeof d3 !== "undefined") {
+          svg.style.cursor = "zoom-in";
+          svg.addEventListener("dblclick", () => openMermaidLightbox(svg));
+        }
+      });
+    })
+    .catch((error) => console.warn("Could not render diagram", error));
+}
+window.addEventListener("themechange", renderDiagrams);
+renderDiagrams();
 
 /* Mermaid lightbox: opens a fullscreen overlay with a zoomable clone of the diagram */
 function openMermaidLightbox(svgElement) {

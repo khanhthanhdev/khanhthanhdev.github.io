@@ -41,9 +41,11 @@ layout: default
 
     <div class="clearfix">{{ content }}</div>
 
+    {% include social-links.liquid %}
+    {% if page.life_divider %}{% include life-divider.liquid %}{% endif %}
+
     <!-- Selected papers -->
     {% if page.selected_papers %}
-      <br>
       <h2>
         <a href="{{ '/works/#research' | relative_url }}" style="color: inherit">selected publications</a>
       </h2>
@@ -52,7 +54,6 @@ layout: default
 
     <!-- Latest projects -->
     {% if page.latest_projects.enabled %}
-      <br>
       <h2>
         <a href="{{ '/works/#projects' | relative_url }}" style="color: inherit">latest projects</a>
       </h2>
@@ -61,24 +62,10 @@ layout: default
 
     <!-- Latest posts -->
     {% if page.latest_posts.enabled %}
-      <br>
       <h2>
         <a href="{{ '/blog/' | relative_url }}" style="color: inherit">latest posts</a>
       </h2>
       {% include latest_posts.liquid %}
-    {% endif %}
-
-    <!-- Social -->
-    {% if page.social %}
-      <div class="social">
-        <div class="contact-icons">{% include social.liquid %}</div>
-
-        <div class="contact-note">{{ site.contact_note }}</div>
-      </div>
-    {% endif %}
-
-    {% if site.newsletter.enabled and site.footer_fixed %}
-      {% include scripts/newsletter.liquid center=true %}
     {% endif %}
   </article>
 </div>

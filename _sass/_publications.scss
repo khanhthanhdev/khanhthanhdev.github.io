@@ -95,21 +95,10 @@
           border-bottom: 1px solid;
           font-style: normal;
         }
-
-        > span.more-authors {
-          color: var(--global-text-color-light);
-          border-bottom: 1px dashed var(--global-text-color-light);
-          cursor: pointer;
-
-          &:hover {
-            color: var(--global-text-color);
-            border-bottom: 1px dashed var(--global-text-color);
-          }
-        }
       }
 
       .links {
-        a.btn {
+        .btn {
           color: var(--global-text-color);
           border: 1px solid var(--global-text-color);
           padding-left: 1rem;
@@ -142,57 +131,63 @@
           }
         }
       }
-
-      .hidden {
-        font-size: 0.875rem;
-        max-height: 0px;
-        overflow: hidden;
-        text-align: justify;
-        transition-property: 0.15s ease;
-        -moz-transition: 0.15s ease;
-        -ms-transition: 0.15s ease;
-        -o-transition: 0.15s ease;
-        transition: all 0.15s ease;
-
-        p {
-          line-height: 1.4em;
-          margin: 10px;
-        }
-
-        pre {
-          font-size: 1em;
-          line-height: 1.4em;
-          padding: 10px;
-        }
-      }
-
-      .hidden.open {
-        max-height: 100em;
-        transition-property: 0.15s ease;
-        -moz-transition: 0.15s ease;
-        -ms-transition: 0.15s ease;
-        -o-transition: 0.15s ease;
-        transition: all 0.15s ease;
-      }
-
-      div.abstract.hidden {
-        border: dashed 1px var(--global-bg-color);
-      }
-
-      div.abstract.hidden.open {
-        border-color: var(--global-text-color);
-      }
-    }
-    div.award.hidden {
-      border: dashed 1px var(--global-bg-color);
-    }
-    div.award.hidden.open {
-      border-color: var(--global-highlight-color);
     }
   }
 }
 
+.author-details {
+  display: inline;
+}
+.author-details summary {
+  display: inline;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--global-theme-color);
+  text-decoration: underline dotted;
+}
+.author-details[open] > span {
+  display: inline;
+}
+.annotation-details {
+  margin-top: 0.5rem;
+}
+.publications .links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.publication-detail {
+  max-width: 100%;
+}
+.publication-detail[open] {
+  flex-basis: 100%;
+}
+.publication-detail summary {
+  cursor: pointer;
+}
+.publication-detail-content {
+  margin-block: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--global-divider-color);
+  overflow-wrap: anywhere;
+}
+.publication-detail-content pre {
+  max-width: 100%;
+}
 .citation,
 .citation-number {
   color: var(--global-theme-color);
+}
+
+.bibsearch-form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-block: 0.5rem 1rem;
+  color: var(--global-text-color);
+  background: var(--global-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 3px;
+  font: inherit;
 }

@@ -17,44 +17,45 @@
 
   <!-- Body -->
   <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} {% unless site.footer_fixed %}sticky-bottom-footer{% endunless %}">
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <!-- Header -->
     {% include header.liquid %}
 
     <!-- Content -->
-    <div class="container mt-5" role="main">
+    <main
+      id="main-content"
+      class="container site-main {% if page.layout == 'post' %}article-page{% endif %} {% if page.layout == 'cv' or page.permalink == '/works/' %}wide-page{% endif %}"
+    >
       {% if page.toc and page.toc.sidebar %}
-        {% capture toc_sidebar_col %}
-          <div class="col-lg-3 col-xl-2">
-            <aside id="toc-sidebar" class="toc-sidebar">
+        <div class="toc-sidebar-container {% if page.toc.sidebar == 'right' %}toc-sidebar-right{% endif %}">
+          <div class="toc-sidebar-controls">
+            <button id="open-sidebar-btn" type="button" class="toc-open-btn" aria-controls="toc-sidebar" aria-expanded="false" hidden>
+              Table of contents
+            </button>
+            <aside id="toc-sidebar" class="toc-sidebar" aria-labelledby="toc-title">
               <div class="toc-sidebar-header">
-                <span class="toc-title">Table of Contents</span>
-                <button id="close-sidebar-btn" class="toc-close-btn" aria-label="Collapse TOC">
-                  <i class="fa-solid fa-angle-down"></i>
+                <span id="toc-title" class="toc-title">On this page</span>
+                <button
+                  id="close-sidebar-btn"
+                  type="button"
+                  class="toc-close-btn"
+                  aria-label="Collapse TOC"
+                  aria-controls="toc-sidebar"
+                  aria-expanded="true"
+                  hidden
+                >
+                  Hide
                 </button>
               </div>
-              <nav id="toc-sidebar-nav" class="toc-nav"></nav>
+              <nav id="toc-sidebar-nav" class="toc-nav" aria-label="Table of contents"></nav>
             </aside>
-            <button id="open-sidebar-btn" class="toc-open-btn" aria-label="Open TOC" style="display: none;">
-              <i class="fa-solid fa-list"></i> Table of Contents
-            </button>
           </div>
-        {% endcapture %}
-        {% capture toc_main_col %}
-          <div class="col-lg-9 col-xl-10">{{ content }}</div>
-        {% endcapture %}
-        <div class="row toc-sidebar-container">
-          {% if page.toc.sidebar == 'right' %}
-            {{ toc_main_col }}
-            {{ toc_sidebar_col }}
-          {% else %}
-            {{ toc_sidebar_col }}
-            {{ toc_main_col }}
-          {% endif %}
+          <div class="toc-main-content">{{ content }}</div>
         </div>
       {% else %}
         {{ content }}
       {% endif %}
-    </div>
+    </main>
 
     <!-- Footer -->
     {% include footer.liquid %}

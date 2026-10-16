@@ -9,16 +9,15 @@
   --global-bg-color: #{v.$white-color};
   --global-code-bg-color: #{v.$code-bg-color-light};
   --global-text-color: #{v.$black-color};
-  --global-text-color-light: #{v.$grey-color};
+  --global-text-color-light: #626773;
   --global-text-color-lighter: #{v.$grey-color-light};
-  --global-theme-color: #4d74eb;
-  --global-theme-color-rgb: 77, 116, 235;
-  --global-hover-color: #4d74eb;
+  --global-theme-color: #1d4ed8;
+  --global-theme-color-rgb: 29, 78, 216;
+  --global-hover-color: #1e40af;
   --global-hover-text-color: #{v.$white-color};
   --global-footer-bg-color: #{v.$grey-color-dark};
   --global-footer-text-color: #{v.$grey-color-light};
   --global-footer-link-color: #{v.$white-color};
-  --global-distill-app-color: #{v.$grey-color};
   --global-divider-color: rgba(0, 0, 0, 0.1);
   --global-card-bg-color: #{v.$white-color};
   --global-highlight-color: #{v.$red-color-dark};
@@ -29,8 +28,6 @@
     0.4
   );
   --global-back-to-top-text-color: #{v.$white-color};
-  --global-newsletter-bg-color: #{v.$white-color};
-  --global-newsletter-text-color: #{v.$black-color};
 
   --global-tip-block: #42b983;
   --global-tip-block-bg: #e2f5ec;
@@ -88,16 +85,15 @@ html[data-theme="dark"] {
   --global-bg-color: #{v.$grey-color-dark};
   --global-code-bg-color: #{v.$code-bg-color-dark};
   --global-text-color: #{v.$grey-color-light};
-  --global-text-color-light: #{v.$grey-color};
+  --global-text-color-light: #aeb8c7;
   --global-text-color-lighter: #{v.$grey-color};
-  --global-theme-color: #{v.$cyan-color};
-  --global-theme-color-rgb: 38, 152, 186;
-  --global-hover-color: #{v.$cyan-color};
+  --global-theme-color: #93c5fd;
+  --global-theme-color-rgb: 147, 197, 253;
+  --global-hover-color: #bfdbfe;
   --global-hover-text-color: #{v.$white-color};
   --global-footer-bg-color: #{v.$grey-color-light};
   --global-footer-text-color: #{v.$grey-color-dark};
   --global-footer-link-color: #{v.$black-color};
-  --global-distill-app-color: #{v.$grey-color-light};
   --global-divider-color: #424246;
   --global-card-bg-color: #{v.$grey-900};
   --global-back-to-top-bg-color: rgba(
@@ -107,8 +103,6 @@ html[data-theme="dark"] {
     0.5
   );
   --global-back-to-top-text-color: #{v.$black-color};
-  --global-newsletter-bg-color: #{v.$grey-color-light};
-  --global-newsletter-text-color: #{v.$grey-color-dark};
 
   --global-tip-block: #42b983;
   --global-tip-block-bg: #215d42;
