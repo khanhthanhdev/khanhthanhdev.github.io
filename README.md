@@ -1,3 +1,17 @@
+# Tran Khanh Thanh — personal website
+
+A Jekyll site for research, projects, writing, and CV, based on a trimmed al-folio
+theme. The design uses system serif and monospace fonts, an ochre accent, and
+light/dark themes. A native Canvas Game of Life divider and opt-in Markdown
+sidenotes add small interactions without a frontend framework.
+
+See [site customization and authoring](docs/site-customization.md) for the current
+layout, feature flags, local preview commands, and checks. The older al-folio
+reference below describes upstream capabilities, including integrations removed
+from this checkout.
+
+---
+
 # al-folio
 
 <div align="center">
