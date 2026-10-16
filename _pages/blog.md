@@ -3,7 +3,6 @@ layout: default
 permalink: /blog/
 title: blog
 nav: false
-enable_math: true
 pagination:
   enabled: true
   collection: posts
@@ -87,6 +86,8 @@ pagination:
           {% endif %}
         </p>
       </li>
+    {% else %}
+      <li>No posts yet.</li>
     {% endfor %}
 
   </ul>

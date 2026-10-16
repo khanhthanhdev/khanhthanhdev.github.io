@@ -10,7 +10,7 @@
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-      "packages": "build-essential,imagemagick,inotify-tools,jupyter-nbconvert,procps,ruby-full,zlib1g-dev"
+      "packages": "build-essential,imagemagick,inotify-tools,procps,ruby-full,zlib1g-dev"
     },
     "ghcr.io/devcontainers-extra/features/prettier:1.0.2": {}
   },

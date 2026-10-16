@@ -59,7 +59,7 @@ These files help Copilot agents understand project conventions, build requiremen
 
 ### Copilot Environment Setup
 
-A GitHub Actions workflow (`.github/workflows/copilot-setup-steps.yml`) automatically configures the Copilot environment with required dependencies (Ruby 3.3.5, Python 3.13, Node.js, ImageMagick, nbconvert) before agent execution.
+A GitHub Actions workflow (`.github/workflows/copilot-setup-steps.yml`) automatically configures the Copilot environment with required dependencies (Ruby 3.3.5, Node.js, ImageMagick) before agent execution.
 
 ### Important: Verify Agent Output
 

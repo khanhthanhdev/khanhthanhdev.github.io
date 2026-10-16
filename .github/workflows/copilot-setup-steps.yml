@@ -33,12 +33,6 @@ jobs:
           ruby-version: "3.3.5"
           bundler-cache: true
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          cache: "pip"
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -49,10 +43,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
-
-      - name: Install Python dependencies
-        run: |
-          pip3 install --upgrade nbconvert
 
       - name: Install Node.js dependencies
         run: npm ci

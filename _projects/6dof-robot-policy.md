@@ -48,7 +48,20 @@ I designed an aluminum-extrusion gantry to hold the arm bases and cameras in fix
 An operator moves the unpowered leader arm while the powered follower copies the motion. The recording workflow captures the follower's actions and three synchronized RGB views, then combines completed sessions into a local dataset. The RealSense depth stream helps check the camera setup, but it is not part of the policy dataset.
 
 <div class="my-4">
-  <video src="/assets/video/teleop-demonstration.mp4" controls width="100%" class="rounded z-depth-1 shadow-sm"></video>
+  <video
+    src="{{ '/assets/video/teleop-demonstration.mp4' | relative_url | bust_file_cache }}"
+    poster="{{ '/assets/img/projects/6dof-robot/teleop-poster.webp' | relative_url | bust_file_cache }}"
+    controls
+    playsinline
+    preload="none"
+    width="720"
+    height="1280"
+    class="d-block mx-auto rounded z-depth-1 shadow-sm"
+    style="width: 100%; max-width: 420px; height: auto;"
+    aria-label="Leader–follower teleoperation during data collection"
+  >
+    <a href="{{ '/assets/video/teleop-demonstration.mp4' | relative_url | bust_file_cache }}">Watch the teleoperation demonstration.</a>
+  </video>
   <p class="text-muted mt-2 small">Leader–follower teleoperation during data collection.</p>
 </div>
 

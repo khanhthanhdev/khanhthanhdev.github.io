@@ -30,9 +30,7 @@ RUN apt-get update -y && \
         locales \
         nodejs \
         procps \
-        python3-pip \
-        zlib1g-dev && \
-    pip --no-cache-dir install --upgrade --break-system-packages nbconvert
+        zlib1g-dev
 
 # clean up
 RUN apt-get clean && \

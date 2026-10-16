@@ -604,15 +604,6 @@ footer.sticky-bottom {
   }
 }
 
-// Distill
-
-.distill {
-  a:hover {
-    border-bottom-color: var(--global-theme-color);
-    text-decoration: none;
-  }
-}
-
 // Projects
 
 .projects {
@@ -1103,11 +1094,6 @@ nav[data-toggle="toc"] {
 
 // NOTE: #toc-sidebar z-index is owned by _toc-sidebar.scss so the bottom-sheet
 // stacking on mobile works correctly. Don't add an ID-level override here.
-
-.echarts {
-  height: 400px;
-  width: 100%;
-}
 
 .map {
   height: 400px;

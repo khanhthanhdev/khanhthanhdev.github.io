@@ -1,3 +1,10 @@
+// Wait for every deferred script, including optional libraries, to finish.
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof addBackToTop === "function") {
+    addBackToTop();
+  }
+});
+
 $(document).ready(function () {
   // add toggle functionality to abstract, award and bibtex buttons
   $("a.abstract").click(function () {
@@ -63,27 +70,6 @@ $(document).ready(function () {
     handleResize();
     $(window).on("resize", handleResize);
   }
-
-  // add css to jupyter notebooks
-  const cssLink = document.createElement("link");
-  cssLink.href = "../css/jupyter.css";
-  cssLink.rel = "stylesheet";
-  cssLink.type = "text/css";
-
-  let jupyterTheme = determineComputedTheme();
-
-  $(".jupyter-notebook-iframe-container iframe").each(function () {
-    $(this).contents().find("head").append(cssLink);
-
-    if (jupyterTheme == "dark") {
-      $(this).bind("load", function () {
-        $(this).contents().find("body").attr({
-          "data-jp-theme-light": "false",
-          "data-jp-theme-name": "JupyterLab Dark",
-        });
-      });
-    }
-  });
 
   // trigger popovers
   $('[data-toggle="popover"]').popover({
