@@ -1,7 +1,3 @@
----
-published: false
----
-
 # Infi: AI-Powered Stock & Portfolio Research Workbench
 
 ---

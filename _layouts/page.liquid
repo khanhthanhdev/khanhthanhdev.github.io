@@ -30,4 +30,8 @@ layout: default
       {% bibliography --cited_in_order %}
     </div>
   {% endif %}
+
+  {% if site.giscus and page.giscus_comments %}
+    {% include giscus.liquid %}
+  {% endif %}
 </div>

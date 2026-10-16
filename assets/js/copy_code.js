@@ -1,26 +1,56 @@
-document.querySelectorAll("pre").forEach((block) => {
-  const code = block.querySelector("code");
-  if (!code || code.classList.contains("language-mermaid") || block.parentElement.closest("pre")) return;
-  const button = document.createElement("button");
-  button.className = "copy";
-  button.type = "button";
-  button.textContent = "Copy";
-  button.setAttribute("aria-label", "Copy code to clipboard");
-  button.setAttribute("aria-live", "polite");
-  button.addEventListener("click", async () => {
-    try {
-      const source = block.querySelector("pre:not(.lineno)") || code;
-      await navigator.clipboard.writeText(source.textContent);
-      button.textContent = "Copied";
-    } catch (error) {
-      button.textContent = "Copy failed";
-    }
-    setTimeout(() => {
-      button.textContent = "Copy";
-    }, 3000);
-  });
-  const wrapper = document.createElement("div");
-  wrapper.className = "code-display-wrapper";
-  block.before(wrapper);
-  wrapper.append(block, button);
+// create element for copy button in code blocks
+var codeBlocks = document.querySelectorAll("pre");
+codeBlocks.forEach(function (codeBlock) {
+  if (
+    (codeBlock.querySelector("pre:not(.lineno)") || codeBlock.querySelector("code")) &&
+    codeBlock.querySelector("code:not(.language-chartjs)") &&
+    codeBlock.querySelector("code:not(.language-diff2html)") &&
+    codeBlock.querySelector("code:not(.language-echarts)") &&
+    codeBlock.querySelector("code:not(.language-geojson)") &&
+    codeBlock.querySelector("code:not(.language-mermaid)") &&
+    codeBlock.querySelector("code:not(.language-plotly)") &&
+    codeBlock.querySelector("code:not(.language-vega_lite)")
+  ) {
+    // create copy button
+    var copyButton = document.createElement("button");
+    copyButton.className = "copy";
+    copyButton.type = "button";
+    copyButton.ariaLabel = "Copy code to clipboard";
+    copyButton.innerText = "Copy";
+    copyButton.innerHTML = '<i class="fa-solid fa-clipboard"></i>';
+
+    // get code from code block and copy to clipboard
+    copyButton.addEventListener("click", function () {
+      // check if code block has line numbers
+      // i.e. `kramdown.syntax_highlighter_opts.block.line_numbers` set to true in _config.yml
+      // or using `jekyll highlight` liquid tag with `linenos` option
+      if (codeBlock.querySelector("pre:not(.lineno)")) {
+        // get code from code block ignoring line numbers
+        var code = codeBlock.querySelector("pre:not(.lineno)").innerText.trim();
+      } else {
+        // if (codeBlock.querySelector('code')) {
+        // get code from code block when line numbers are not displayed
+        var code = codeBlock.querySelector("code").innerText.trim();
+      }
+      window.navigator.clipboard.writeText(code);
+      copyButton.innerText = "Copied";
+      copyButton.innerHTML = '<i class="fa-solid fa-clipboard-check"></i>';
+      var waitFor = 3000;
+
+      setTimeout(function () {
+        copyButton.innerText = "Copy";
+        copyButton.innerHTML = '<i class="fa-solid fa-clipboard"></i>';
+      }, waitFor);
+    });
+
+    // create wrapper div
+    var wrapper = document.createElement("div");
+    wrapper.className = "code-display-wrapper";
+
+    // add copy button and code block to wrapper div
+    const parent = codeBlock.parentElement;
+    parent.insertBefore(wrapper, codeBlock);
+    wrapper.append(codeBlock);
+    wrapper.append(copyButton);
+  }
 });

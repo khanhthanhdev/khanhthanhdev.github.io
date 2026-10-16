@@ -1,0 +1,13 @@
+{%- assign figure_src = include.src -%} {%- assign figure_title = include.title | default: "Interactive figure" -%} {%- assign figure_height =
+include.height | default: 560 -%} {%- assign figure_caption = include.caption -%} {%- assign figure_wide = include.wide | default: false -%}
+
+<figure class="interactive-embed{% if figure_wide %} interactive-embed--wide{% endif %}">
+  <div class="interactive-embed__frame" style="--interactive-embed-height: {{ figure_height }}px;">
+    <iframe src="{{ figure_src | relative_url }}" title="{{ figure_title | escape }}" loading="lazy" allowfullscreen></iframe>
+  </div>
+  {%- if figure_title or figure_caption -%}
+  <figcaption class="interactive-embed__caption">
+    {%- if figure_title -%}<strong>{{ figure_title }}</strong>{%- endif -%} {%- if figure_caption -%}<span>{{ figure_caption }}</span>{%- endif -%}
+  </figcaption>
+  {%- endif -%}
+</figure>

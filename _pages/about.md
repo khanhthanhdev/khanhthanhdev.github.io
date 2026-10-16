@@ -1,7 +1,6 @@
 ---
 layout: about
-title: Home
-life_divider: true
+title: about
 permalink: /
 subtitle: Electrical and Computer Engineering Student, VinUniversity, Hanoi, Vietnam
 description: >
@@ -15,9 +14,10 @@ profile:
     <p>VinUniversity, Vietnam</p>
 
 selected_papers: true # includes a list of papers marked as "selected={true}"
+social: false # includes social icons at the bottom of the page
 
 latest_posts:
-  enabled: true
+  enabled: false
   scrollable: false
   limit: 3 # leave blank to include all the blog posts
 latest_projects:
