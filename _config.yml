@@ -131,6 +131,9 @@ newsletter:
 collections:
   projects:
     output: true
+  robot_policies:
+    output: true
+    permalink: /works/robot-policy/:name/
 
 latest_posts:
   enabled: true
@@ -240,7 +243,9 @@ sass:
 jekyll-minifier:
   compress_javascript: true # set to true to ensure all javascript (including dynamic liquid scripts like search-data.js) is minified
   # Vendor bundles are already built; preserve their bytes and integrity hashes.
-  exclude: ["robots.txt", "assets/js/search/*.js", "assets/libs/**"]
+  # The robot-policy scripts are ES modules, which the JS compressor cannot parse, and the CSS
+  # compressor breaks var() inside calc() in the robot-policy stylesheet.
+  exclude: ["robots.txt", "assets/js/search/*.js", "assets/libs/**", "assets/js/robot-policy/**", "assets/css/robot-policy.css"]
 
 # -----------------------------------------------------------------------------
 # Jekyll Archives

@@ -39,6 +39,10 @@ display_categories: [work]
     <p class="text-muted">
       Interactive platforms, agentic workbenches, and robotics tournament management systems built for real-world impact.
     </p>
+    <p>
+      <a href="{{ '/works/robot-policy/' | relative_url }}"><i class="fa-solid fa-robot mr-1"></i>Robot policy explorer</a>:
+      interactive walkthroughs of the ACT and TurboVLA policies on the NexArm, with a 3D view of the arm.
+    </p>
 
     <div class="projects">
       {% assign sorted_projects = site.projects | sort: "importance" %}

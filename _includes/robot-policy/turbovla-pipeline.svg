@@ -1,0 +1,206 @@
+<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="tv-pipe-title tv-pipe-desc">
+  <title id="tv-pipe-title">TurboVLA inference pipeline on the NexArm</title>
+  <desc id="tv-pipe-desc">Up to three 224 by 224 camera views go through DINOv3 into 196 tokens each, and the instruction goes through a frozen BERT; six bi-attention layers exchange information between vision and text tokens; an ACT-style decoder with 16 queries reads those tokens plus two state tokens and outputs a 16 by 6 chunk through tanh; the arm runs the first 8 actions and then infers again.</desc>
+  <defs>
+    <filter id="tv-rough" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="11" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <pattern id="tv-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+      <line x1="0" y1="0" x2="0" y2="9" />
+    </pattern>
+    <marker id="tv-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path class="ah" d="M0,1 L10,5 L0,9 z" />
+    </marker>
+  </defs>
+
+  <text class="h" x="40" y="52">TurboVLA · one control cycle on the NexArm</text>
+  <text class="s" x="40" y="76">A small vision-language-action model, as trained by lerobot-nexarm · click a block or use the arrow keys</text>
+
+  <!-- 1 observe -->
+  <g data-step="observe">
+    <text class="lbl" x="40" y="114">1 · observe</text>
+    <g filter="url(#tv-rough)">
+      <rect class="sk f-in" x="40" y="128" width="290" height="250" rx="10" />
+      <rect class="sk" x="58" y="176" width="74" height="74" fill="url(#tv-hatch)" />
+      <rect class="sk" x="148" y="176" width="74" height="74" fill="url(#tv-hatch)" />
+      <rect class="sk" x="238" y="176" width="74" height="74" fill="url(#tv-hatch)" />
+      <rect class="sk f-note" x="40" y="398" width="290" height="96" rx="10" />
+      <rect class="sk f-in" x="40" y="514" width="290" height="86" rx="10" />
+    </g>
+    <text class="t" x="58" y="160">camera views</text>
+    <text class="sm" x="95" y="270" text-anchor="middle">front</text>
+    <text class="sm" x="185" y="270" text-anchor="middle">wrist</text>
+    <text class="sm" x="275" y="270" text-anchor="middle">top</text>
+    <text class="m" x="58" y="304">resized to 224 × 224</text>
+    <text class="s" x="58" y="328">order front, wrist, top;</text>
+    <text class="s" x="58" y="348">top only when recorded</text>
+    <text class="t" x="58" y="428">instruction</text>
+    <text class="m" x="58" y="454">"stack the bowls"</text>
+    <text class="s" x="58" y="478">the dataset's task prompt</text>
+    <text class="t" x="58" y="544">joint state</text>
+    <text class="m" x="58" y="570">ℝ⁶, min-max to [-1, 1]</text>
+  </g>
+
+  <path class="ln" d="M330 230 H398" marker-end="url(#tv-ah)" />
+  <path class="ln" d="M330 446 H398" marker-end="url(#tv-ah)" />
+
+  <!-- 2 vision -->
+  <g data-step="vision">
+    <text class="lbl" x="400" y="114">2 · vision encoder</text>
+    <g filter="url(#tv-rough)">
+      <rect class="sk f-enc" x="400" y="128" width="320" height="252" rx="12" />
+    </g>
+    <text class="t" x="420" y="162">DINOv3 ViT-B/16</text>
+    <text class="s" x="420" y="184">self-supervised weights, fine-tuned;</text>
+    <text class="s" x="420" y="204">each view encoded separately</text>
+    <g class="tok">
+      <rect class="f-panel" x="420" y="222" width="18" height="18" />
+      <rect class="f-panel" x="440" y="222" width="18" height="18" />
+      <rect class="f-panel" x="460" y="222" width="18" height="18" />
+      <rect class="f-panel" x="480" y="222" width="18" height="18" />
+      <rect class="f-panel" x="420" y="242" width="18" height="18" />
+      <rect class="f-panel" x="440" y="242" width="18" height="18" />
+      <rect class="f-panel" x="460" y="242" width="18" height="18" />
+      <rect class="f-panel" x="480" y="242" width="18" height="18" />
+      <rect class="f-panel" x="420" y="262" width="18" height="18" />
+      <rect class="f-panel" x="440" y="262" width="18" height="18" />
+      <rect class="f-panel" x="460" y="262" width="18" height="18" />
+      <rect class="f-panel" x="480" y="262" width="18" height="18" />
+    </g>
+    <text class="s" x="516" y="240">14 × 14 patches</text>
+    <text class="s" x="516" y="262">of 16 × 16 pixels</text>
+    <text class="m" x="420" y="312">196 × 768 per view</text>
+    <text class="m" x="420" y="336">→ projection to 256 + view emb.</text>
+    <text class="m" x="420" y="360">→ 588 tokens (392 with 2 views)</text>
+  </g>
+
+  <!-- 3 language -->
+  <g data-step="language">
+    <text class="lbl" x="400" y="414">3 · language encoder</text>
+    <g filter="url(#tv-rough)">
+      <rect class="sk f-note" x="400" y="428" width="320" height="172" rx="12" />
+    </g>
+    <text class="t" x="420" y="462">BERT-base, uncased</text>
+    <text class="s" x="420" y="484">frozen by default (--freeze-text)</text>
+    <text class="m" x="420" y="516">WordPiece → L × 768</text>
+    <text class="m" x="420" y="540">→ Linear 768 → 256</text>
+    <text class="s" x="420" y="570">L is the prompt length, padding masked</text>
+  </g>
+
+  <path class="ln" d="M720 254 H752 V300 H788" marker-end="url(#tv-ah)" />
+  <path class="ln" d="M720 514 H752 V420 H788" marker-end="url(#tv-ah)" />
+
+  <!-- 4 interaction -->
+  <g data-step="interaction">
+    <text class="lbl" x="790" y="114">4 · vision ↔ language</text>
+    <g filter="url(#tv-rough)">
+      <rect class="sk f-enc" x="806" y="144" width="284" height="300" rx="10" />
+      <rect class="sk f-enc" x="798" y="152" width="284" height="300" rx="10" />
+      <rect class="sk f-enc" x="790" y="160" width="284" height="300" rx="10" />
+      <rect class="sk f-panel" x="810" y="238" width="112" height="132" rx="8" />
+      <rect class="sk f-panel" x="942" y="238" width="112" height="132" rx="8" />
+      <rect class="sk f-panel" x="790" y="490" width="300" height="70" rx="10" />
+    </g>
+    <text class="t" x="810" y="192">× 6 interaction layers</text>
+    <text class="m" x="810" y="218">d 256 · 4 heads · inner 1024</text>
+    <text class="t" x="822" y="264">vision</text>
+    <text class="s" x="822" y="290">attends to</text>
+    <text class="s" x="822" y="310">text</text>
+    <text class="t" x="954" y="264">text</text>
+    <text class="s" x="954" y="290">attends to</text>
+    <text class="s" x="954" y="310">vision, then</text>
+    <text class="s" x="954" y="330">to itself</text>
+    <path class="ln" d="M922 290 H940" marker-end="url(#tv-ah)" />
+    <path class="ln" d="M942 316 H924" marker-end="url(#tv-ah)" />
+    <text class="s" x="810" y="402">bi-attention with drop-path 0.1;</text>
+    <text class="s" x="810" y="424">normalized residuals</text>
+    <text class="m" x="806" y="522">fused tokens</text>
+    <text class="m" x="806" y="544">(588 + L) × 256</text>
+  </g>
+  <path class="ln" d="M940 460 L940 488" marker-end="url(#tv-ah)" />
+
+  <!-- 5 action head -->
+  <path class="ln" d="M1090 525 H1122 V340 H1158" marker-end="url(#tv-ah)" />
+  <path class="ln" d="M330 557 H364 V626 H1136 V380 H1158" marker-end="url(#tv-ah)" />
+  <g data-step="action">
+    <text class="lbl" x="1160" y="114">5 · action head</text>
+    <g filter="url(#tv-rough)">
+      <rect class="sk f-dec" x="1160" y="128" width="400" height="96" rx="10" />
+      <rect class="sk f-dec" x="1160" y="248" width="400" height="170" rx="10" />
+      <rect class="sk f-panel" x="1160" y="438" width="400" height="48" rx="8" />
+      <rect class="sk f-out" x="1160" y="506" width="400" height="110" rx="10" />
+    </g>
+    <g class="tok">
+      <rect class="f-panel" x="1176" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1200" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1224" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1248" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1272" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1296" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1320" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1344" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1368" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1392" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1416" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1440" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1464" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1488" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1512" y="172" width="20" height="20" />
+      <rect class="f-panel" x="1536" y="172" width="20" height="20" />
+    </g>
+    <text class="t" x="1176" y="156">16 learned action queries</text>
+    <text class="sm" x="1176" y="212">one per future step, as in ACT</text>
+    <text class="t" x="1176" y="278">× 3 decoder layers (pre-norm)</text>
+    <text class="m" x="1176" y="304">d 256 · 8 heads · FFN 2048</text>
+    <text class="m" x="1176" y="328">cross-attention memory:</text>
+    <text class="m" x="1176" y="350">fused tokens + 2 state tokens</text>
+    <text class="s" x="1176" y="376">state: LayerNorm → MLP 6 → 256 → 2 × 256</text>
+    <text class="s" x="1176" y="398">no CVAE, no latent z</text>
+    <text class="m" x="1176" y="468">MLP 256 → 512 → 6, then tanh</text>
+    <text class="t" x="1176" y="534">action chunk · 16 × 6 in [-1, 1]</text>
+    <path class="ln" d="M1176 566 C1240 560 1300 576 1370 568 S1490 560 1540 572" />
+    <path class="ln-a" d="M1176 590 C1250 588 1330 598 1400 586 S1500 592 1540 592" />
+    <text class="s" x="1176" y="608">min-max inverted to joint and gripper targets</text>
+  </g>
+  <path class="ln" d="M1360 224 L1360 246" marker-end="url(#tv-ah)" />
+  <path class="ln" d="M1360 418 L1360 436" marker-end="url(#tv-ah)" />
+  <path class="ln" d="M1360 486 L1360 504" marker-end="url(#tv-ah)" />
+
+  <!-- 6 execute -->
+  <path class="ln" d="M1360 616 V708" marker-end="url(#tv-ah)" />
+  <g data-step="execute">
+    <text class="lbl" x="40" y="700">6 · run 8, then infer again</text>
+    <g filter="url(#tv-rough)">
+      <rect class="sk f-panel" x="200" y="712" width="1200" height="70" rx="8" />
+      <rect class="sk f-out" x="200" y="712" width="600" height="70" rx="8" />
+    </g>
+    <g class="ln-a">
+      <line x1="237" y1="728" x2="237" y2="766" />
+      <line x1="312" y1="728" x2="312" y2="766" />
+      <line x1="387" y1="728" x2="387" y2="766" />
+      <line x1="462" y1="728" x2="462" y2="766" />
+      <line x1="537" y1="728" x2="537" y2="766" />
+      <line x1="612" y1="728" x2="612" y2="766" />
+      <line x1="687" y1="728" x2="687" y2="766" />
+      <line x1="762" y1="728" x2="762" y2="766" />
+    </g>
+    <g class="ln-d">
+      <line x1="837" y1="728" x2="837" y2="766" />
+      <line x1="912" y1="728" x2="912" y2="766" />
+      <line x1="987" y1="728" x2="987" y2="766" />
+      <line x1="1062" y1="728" x2="1062" y2="766" />
+      <line x1="1137" y1="728" x2="1137" y2="766" />
+      <line x1="1212" y1="728" x2="1212" y2="766" />
+      <line x1="1287" y1="728" x2="1287" y2="766" />
+      <line x1="1362" y1="728" x2="1362" y2="766" />
+    </g>
+    <text class="m" x="206" y="806">a₁</text>
+    <text class="m" x="794" y="806" text-anchor="end">a₈ · 0.27 s</text>
+    <text class="m" x="1400" y="806" text-anchor="end">a₁₆ (discarded)</text>
+    <text class="s" x="200" y="834">The arm runs the first 8 actions (--open-loop-steps 8 at 30 Hz), then new frames go back through the whole network.</text>
+    <path class="ln" d="M200 747 H120 V610" marker-end="url(#tv-ah)" />
+    <text class="sm" x="128" y="672">next cycle</text>
+  </g>
+  <text class="s" x="200" y="868">Re-planning every 0.27 s, against ACT's 3.33 s, gives the policy a fresh look at the bowls about 12 times as often.</text>
+</svg>

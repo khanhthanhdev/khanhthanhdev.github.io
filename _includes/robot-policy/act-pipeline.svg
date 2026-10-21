@@ -1,0 +1,190 @@
+<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="act-pipe-title act-pipe-desc">
+  <title id="act-pipe-title">ACT inference pipeline on the NexArm</title>
+  <desc id="act-pipe-desc">Three 640 by 480 camera frames go through a shared ResNet18 into 900 image tokens; with a latent token and a joint-state token they form 902 tokens for a 4-layer transformer encoder; 100 learned queries in a 1-layer decoder read that memory and a linear head outputs a 100 by 6 action chunk, which the arm runs open loop for 3.33 seconds before observing again.</desc>
+  <defs>
+    <filter id="act-rough" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="7" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <pattern id="act-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+      <line x1="0" y1="0" x2="0" y2="9" />
+    </pattern>
+    <pattern id="act-ticks" width="12" height="70" patternUnits="userSpaceOnUse" x="200" y="712">
+      <line x1="6" y1="16" x2="6" y2="54" class="ln-a" />
+    </pattern>
+    <marker id="act-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path class="ah" d="M0,1 L10,5 L0,9 z" />
+    </marker>
+  </defs>
+
+  <text class="h" x="40" y="52">ACT · one control cycle on the NexArm</text>
+  <text class="s" x="40" y="76">Action Chunking with Transformers, as configured in lerobot-nexarm · click a block or use the arrow keys</text>
+
+  <!-- 1 observe -->
+  <g data-step="observe">
+    <text class="lbl" x="40" y="114">1 · observe</text>
+    <g filter="url(#act-rough)">
+      <rect class="sk f-in" x="40" y="128" width="290" height="104" rx="10" />
+      <rect class="sk f-in" x="40" y="248" width="290" height="104" rx="10" />
+      <rect class="sk f-in" x="40" y="368" width="290" height="104" rx="10" />
+      <rect class="sk f-in" x="40" y="496" width="290" height="92" rx="10" />
+      <rect class="sk" x="56" y="150" width="72" height="54" fill="url(#act-hatch)" />
+      <rect class="sk" x="56" y="270" width="72" height="54" fill="url(#act-hatch)" />
+      <rect class="sk" x="56" y="390" width="72" height="54" fill="url(#act-hatch)" />
+    </g>
+    <text class="t" x="144" y="166">front camera</text>
+    <text class="s" x="144" y="188">Logitech · RGB 640×480</text>
+    <text class="sm" x="144" y="210">images.front</text>
+    <text class="t" x="144" y="286">top camera</text>
+    <text class="s" x="144" y="308">D435i · RGB 640×480</text>
+    <text class="sm" x="144" y="330">images.top · 3-cam data</text>
+    <text class="t" x="144" y="406">wrist camera</text>
+    <text class="s" x="144" y="428">icSpring · RGB 640×480</text>
+    <text class="sm" x="144" y="450">images.wrist</text>
+    <text class="t" x="56" y="526">joint state</text>
+    <text class="s" x="56" y="548">5 joint angles + gripper</text>
+    <text class="m" x="56" y="572">observation.state ∈ ℝ⁶</text>
+  </g>
+
+  <path class="ln" d="M330 180 L398 236" marker-end="url(#act-ah)" />
+  <path class="ln" d="M330 300 L398 300" marker-end="url(#act-ah)" />
+  <path class="ln" d="M330 420 L398 364" marker-end="url(#act-ah)" />
+
+  <!-- 2 backbone -->
+  <g data-step="backbone">
+    <text class="lbl" x="400" y="114">2 · ResNet18 on each image</text>
+    <g filter="url(#act-rough)">
+      <rect class="sk f-enc" x="400" y="128" width="320" height="350" rx="12" />
+      <rect class="sk f-panel" x="424" y="230" width="44" height="150" />
+      <rect class="sk f-panel" x="480" y="245" width="40" height="120" />
+      <rect class="sk f-panel" x="532" y="257" width="36" height="96" />
+      <rect class="sk f-panel" x="580" y="269" width="32" height="72" />
+      <rect class="sk f-panel" x="624" y="281" width="28" height="48" />
+      <rect class="sk f-panel" x="400" y="498" width="320" height="102" rx="10" />
+    </g>
+    <text class="t" x="420" y="162">ResNet18</text>
+    <text class="s" x="420" y="184">ImageNet-1k init; one backbone</text>
+    <text class="s" x="420" y="202">shared by the three cameras</text>
+    <text class="sm" x="446" y="402" text-anchor="middle">stem</text>
+    <text class="sm" x="500" y="402" text-anchor="middle">l1</text>
+    <text class="sm" x="550" y="402" text-anchor="middle">l2</text>
+    <text class="sm" x="596" y="402" text-anchor="middle">l3</text>
+    <text class="sm" x="638" y="402" text-anchor="middle">l4</text>
+    <text class="m" x="420" y="436">layer4: 512 × 15 × 20</text>
+    <text class="s" x="420" y="458">stride 32 on a 480×640 frame</text>
+    <text class="t" x="416" y="526">1×1 conv → 512, flatten</text>
+    <text class="s" x="416" y="548">+ 2D sinusoidal position embedding</text>
+    <text class="m" x="416" y="572">300 tokens per camera → 900</text>
+    <text class="sm" x="416" y="590">600 with the 2-camera dataset</text>
+  </g>
+  <path class="ln" d="M560 478 L560 496" marker-end="url(#act-ah)" />
+
+  <!-- 3 encoder -->
+  <path class="ln" d="M720 543 H752 V200 H788" marker-end="url(#act-ah)" />
+  <path class="ln" d="M330 560 H364 V614 H772 V246 H788" marker-end="url(#act-ah)" />
+  <g data-step="encoder">
+    <text class="lbl" x="790" y="114">3 · transformer encoder</text>
+    <g filter="url(#act-rough)">
+      <rect class="sk f-panel" x="790" y="128" width="300" height="150" rx="10" />
+      <rect class="tok f-note" x="806" y="174" width="14" height="22" />
+      <rect class="tok f-in" x="826" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="852" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="870" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="888" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="906" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="932" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="950" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="968" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="986" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="1012" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="1030" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="1048" y="174" width="14" height="22" />
+      <rect class="tok f-enc" x="1066" y="174" width="14" height="22" />
+      <rect class="sk f-enc" x="822" y="302" width="268" height="170" rx="10" />
+      <rect class="sk f-enc" x="814" y="310" width="268" height="170" rx="10" />
+      <rect class="sk f-enc" x="806" y="318" width="268" height="170" rx="10" />
+      <rect class="sk f-panel" x="790" y="510" width="300" height="50" rx="10" />
+    </g>
+    <text class="t" x="806" y="156">input sequence · 902 × 512</text>
+    <text class="sm" x="813" y="214" text-anchor="middle">z</text>
+    <text class="sm" x="833" y="214" text-anchor="middle">s</text>
+    <text class="sm" x="852" y="214">image tokens, 3 × 300</text>
+    <text class="s" x="806" y="240">z · style latent, zeros at inference</text>
+    <text class="s" x="806" y="262">s · joint state through Linear(6→512)</text>
+    <text class="t" x="822" y="350">× 4 encoder layers</text>
+    <text class="m" x="822" y="378">d_model 512 · 8 heads</text>
+    <text class="m" x="822" y="400">FFN 3200 · ReLU</text>
+    <text class="s" x="822" y="424">post-norm · dropout 0.1</text>
+    <text class="s" x="822" y="446">self-attention over all 902</text>
+    <text class="m" x="806" y="541">memory · 902 × 512</text>
+  </g>
+  <path class="ln" d="M940 278 L940 300" marker-end="url(#act-ah)" />
+  <path class="ln" d="M940 488 L940 508" marker-end="url(#act-ah)" />
+
+  <!-- 4 decoder -->
+  <path class="ln" d="M1090 535 H1122 V323 H1158" marker-end="url(#act-ah)" />
+  <g data-step="decoder">
+    <text class="lbl" x="1160" y="114">4 · transformer decoder</text>
+    <g filter="url(#act-rough)">
+      <rect class="sk f-dec" x="1160" y="128" width="400" height="96" rx="10" />
+      <rect class="sk f-dec" x="1160" y="248" width="400" height="150" rx="10" />
+      <rect class="sk f-panel" x="1160" y="418" width="400" height="48" rx="8" />
+      <rect class="sk f-out" x="1160" y="486" width="400" height="140" rx="10" />
+    </g>
+    <g class="tok">
+      <rect class="f-panel" x="1176" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1194" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1212" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1230" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1248" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1266" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1284" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1302" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1320" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1338" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1356" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1374" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1392" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1410" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1428" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1446" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1464" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1482" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1500" y="172" width="14" height="20" />
+      <rect class="f-panel" x="1518" y="172" width="14" height="20" />
+    </g>
+    <text class="t" x="1176" y="156">100 learned queries</text>
+    <text class="sm" x="1176" y="212">one query per future action (DETR-style)</text>
+    <text class="t" x="1176" y="278">× 1 decoder layer</text>
+    <text class="m" x="1176" y="304">self-attention over the queries</text>
+    <text class="m" x="1176" y="326">cross-attention → encoder memory</text>
+    <text class="m" x="1176" y="348">d_model 512 · 8 heads · FFN 3200</text>
+    <text class="s" x="1176" y="374">lerobot default: n_decoder_layers = 1</text>
+    <text class="m" x="1176" y="447">Linear(512 → 6) on every query</text>
+    <text class="t" x="1176" y="514">action chunk · 100 × 6</text>
+    <path class="ln" d="M1176 540 C1230 530 1280 556 1340 548 S1460 532 1540 552" />
+    <path class="ln" d="M1176 566 C1240 572 1300 548 1370 560 S1480 578 1540 566" />
+    <path class="ln-a" d="M1176 588 C1250 586 1330 596 1400 584 S1500 590 1540 590" />
+    <text class="s" x="1176" y="614">3.33 s of joint and gripper targets at 30 Hz</text>
+  </g>
+  <path class="ln" d="M1360 224 L1360 246" marker-end="url(#act-ah)" />
+  <path class="ln" d="M1360 398 L1360 416" marker-end="url(#act-ah)" />
+  <path class="ln" d="M1360 466 L1360 484" marker-end="url(#act-ah)" />
+
+  <!-- 5 execute -->
+  <path class="ln" d="M1360 626 V708" marker-end="url(#act-ah)" />
+  <g data-step="execute">
+    <text class="lbl" x="40" y="700">5 · execute, then look again</text>
+    <g filter="url(#act-rough)">
+      <rect class="sk f-panel" x="200" y="712" width="1200" height="70" rx="8" />
+    </g>
+    <rect x="200" y="712" width="1200" height="70" fill="url(#act-ticks)" />
+    <text class="m" x="206" y="806">a₁</text>
+    <text class="m" x="1400" y="806" text-anchor="end">a₁₀₀</text>
+    <text class="sm" x="1414" y="752">3.33 s</text>
+    <text class="s" x="200" y="834">All 100 actions run open loop at 30 Hz (n_action_steps = 100, no temporal ensembling), then the next frames are captured.</text>
+    <path class="ln" d="M200 747 H120 V600" marker-end="url(#act-ah)" />
+    <text class="sm" x="128" y="672">next cycle</text>
+  </g>
+  <text class="s" x="200" y="868">Training adds a CVAE encoder that reads the true chunk and produces z; it is dropped at inference (see Training).</text>
+</svg>

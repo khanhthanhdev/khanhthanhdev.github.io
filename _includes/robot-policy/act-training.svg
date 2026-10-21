@@ -1,0 +1,68 @@
+<svg viewBox="0 0 1200 560" role="img" aria-labelledby="act-train-title act-train-desc">
+  <title id="act-train-title">How ACT is trained</title>
+  <desc id="act-train-desc">During training a CVAE encoder reads the joint state and the true 100-step action chunk and produces a 32-dimensional style latent z. The main ACT network predicts the chunk from images, state and z. The loss is the L1 error on non-padded actions plus 10 times the KL divergence of z from a unit Gaussian.</desc>
+  <defs>
+    <marker id="act-tr-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path class="ah" d="M0,1 L10,5 L0,9 z" />
+    </marker>
+    <marker id="act-tr-aha" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
+    </marker>
+  </defs>
+
+  <text class="h2" x="30" y="40">Training only: the CVAE branch</text>
+
+  <rect class="sk f-in" x="30" y="70" width="230" height="74" rx="10" />
+  <text class="t" x="46" y="100">joint state q_t</text>
+  <text class="m" x="46" y="124">Linear 6 → 512</text>
+  <rect class="sk f-out" x="30" y="164" width="230" height="74" rx="10" />
+  <text class="t" x="46" y="194">true chunk a_t … a_t+99</text>
+  <text class="m" x="46" y="218">100 × Linear 6 → 512</text>
+  <rect class="sk f-panel" x="30" y="258" width="230" height="56" rx="10" />
+  <text class="t" x="46" y="292">[CLS] token</text>
+
+  <path class="ln" d="M260 107 H300 V190 H326" marker-end="url(#act-tr-ah)" />
+  <path class="ln" d="M260 201 H326" marker-end="url(#act-tr-ah)" />
+  <path class="ln" d="M260 286 H300 V212 H326" marker-end="url(#act-tr-ah)" />
+
+  <rect class="sk f-enc" x="330" y="120" width="230" height="160" rx="12" />
+  <text class="t" x="346" y="152">CVAE encoder</text>
+  <text class="m" x="346" y="180">4 layers · 512 · 8 heads</text>
+  <text class="s" x="346" y="204">102 tokens + sine</text>
+  <text class="s" x="346" y="224">position embedding</text>
+  <text class="s" x="346" y="256">read the [CLS] output</text>
+
+  <path class="ln" d="M560 200 H606" marker-end="url(#act-tr-ah)" />
+  <rect class="sk f-note" x="610" y="140" width="220" height="120" rx="12" />
+  <text class="t" x="626" y="172">μ, log σ² ∈ ℝ³²</text>
+  <text class="m" x="626" y="198">z = μ + σ · ε</text>
+  <text class="m" x="626" y="222">Linear 32 → 512</text>
+  <text class="s" x="626" y="246">becomes the z token</text>
+
+  <path class="ln-a" d="M720 260 V320 H520 V388" marker-end="url(#act-tr-aha)" />
+  <text class="sm" x="732" y="300">z token</text>
+
+  <text class="h2" x="30" y="370">Main network (same as inference)</text>
+  <rect class="sk f-enc" x="30" y="394" width="560" height="74" rx="10" />
+  <text class="t" x="46" y="424">images + state + z → encoder (4) → decoder (1)</text>
+  <text class="s" x="46" y="450">ResNet18 backbone trained at lr 1e-5, like the rest</text>
+  <rect class="sk f-dec" x="630" y="340" width="246" height="86" rx="10" />
+  <text class="t" x="646" y="372">predicted chunk</text>
+  <text class="m" x="646" y="400">100 × 6, normalized</text>
+  <path class="ln" d="M590 410 H612 V383 H626" marker-end="url(#act-tr-ah)" />
+
+  <rect class="sk f-out" x="930" y="70" width="250" height="160" rx="12" />
+  <text class="t" x="946" y="102">loss</text>
+  <text class="m" x="946" y="132">L1(pred, true)</text>
+  <text class="s" x="946" y="154">masked where the episode</text>
+  <text class="s" x="946" y="174">ended (action_is_pad)</text>
+  <text class="m" x="946" y="206">+ 10 · KL(z ‖ N(0, I))</text>
+  <path class="ln" d="M876 383 H1055 V234" marker-end="url(#act-tr-ah)" />
+  <path class="ln-d" d="M830 170 H926" marker-end="url(#act-tr-ah)" />
+  <text class="sm" x="866" y="160">KL</text>
+
+  <rect class="sk f-panel" x="930" y="440" width="250" height="100" rx="12" />
+  <text class="t" x="946" y="470">at inference</text>
+  <text class="s" x="946" y="494">the CVAE branch is dropped</text>
+  <text class="s" x="946" y="516">and z = 0 (the prior's mean)</text>
+</svg>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="{{ site.lang }}">
+  <head>
+    {% include robot-policy/head.liquid %}
+    <script type="module" src="{{ '/assets/js/robot-policy/app.js' | relative_url | bust_file_cache }}"></script>
+  </head>
+  <body class="rp rp-nojs">
+    <script>
+      document.body.classList.remove('rp-nojs');
+    </script>
+    {% include robot-policy/topbar.liquid model=page.model_name tabs=true %}
+
+    <main
+      id="rp-app"
+      data-asset-url="{{ '/assets/robot/nexarm' | relative_url }}"
+      data-stage-module="{{ '/assets/js/robot-policy/stage.js' | relative_url | bust_file_cache }}"
+      data-horizon="{{ page.policy.horizon }}"
+      data-execute="{{ page.policy.execute }}"
+      data-fps="{{ page.policy.fps }}"
+      data-name="{{ page.model_name }}"
+    >
+      <h1 class="rp-sr">{{ page.model_name }} on the NexArm: {{ page.full_name }}</h1>
+
+      <!-- Inference: pipeline diagram + 3D stage, driven by one list of steps -->
+      <section id="inference" class="rp-panel rp-inference" role="tabpanel" aria-labelledby="tab-inference">
+        <div class="rp-split" id="rp-split">
+          <div class="rp-diagram" id="rp-diagram">
+            {% capture rp_pipeline %}robot-policy/{{ page.slug }}-pipeline.svg{% endcapture %}
+            {% include {{ rp_pipeline }} %}
+            <div class="rp-diagram-tools">
+              <button type="button" id="rp-fit" title="Show the whole pipeline">Fit</button>
+            </div>
+          </div>
+          <div
+            class="rp-splitter"
+            id="rp-splitter"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize diagram and 3D view"
+            tabindex="0"
+          ></div>
+          <div class="rp-stage" id="rp-stage">
+            <div class="rp-stage-fallback" id="rp-stage-fallback">
+              <strong>NexArm 3D view</strong>
+              <span>Loading the robot model…</span>
+            </div>
+            <div class="rp-stage-tools">
+              <button type="button" id="rp-motion" aria-pressed="false">Pause motion</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp-rail">
+          <div class="rp-step-card" id="rp-step-card" aria-live="polite">
+            {% assign first = page.steps | first %}
+            <div class="rp-step-count">Step 1 of {{ page.steps | size }}</div>
+            <h2>{{ first.title }}</h2>
+            <div>{{ first.body | markdownify }}</div>
+            {% if first.shapes %}
+              <div class="rp-step-shapes">{{ first.shapes }}</div>
+            {% endif %}
+          </div>
+          <div class="rp-controls">
+            <div class="rp-buttons">
+              <button type="button" id="rp-prev" aria-label="Previous step">←</button>
+              <button type="button" id="rp-play" class="primary" aria-pressed="false">Play</button>
+              <button type="button" id="rp-next" aria-label="Next step">→</button>
+            </div>
+            <ol class="rp-dots" id="rp-dots">
+              {% for step in page.steps %}
+                <li>
+                  <button
+                    type="button"
+                    data-index="{{ forloop.index0 }}"
+                    aria-label="Step {{ forloop.index }}: {{ step.title | escape }}"
+                    {% if forloop.first %}
+                      aria-current="step"
+                    {% endif %}
+                  ></button>
+                </li>
+              {% endfor %}
+            </ol>
+            <div class="rp-kbd-hint">Keys: <kbd>←</kbd> <kbd>→</kbd> steps · <kbd>space</kbd> play</div>
+          </div>
+        </div>
+
+        <ol class="rp-step-list" id="rp-steps">
+          {% for step in page.steps %}
+            <li
+              data-id="{{ step.id }}"
+              data-bounds="{{ step.bounds | join: ' ' }}"
+              data-stage="{{ step.stage | jsonify | escape }}"
+            >
+              <h3>{{ step.title }}</h3>
+              <div class="rp-step-body">{{ step.body | markdownify }}</div>
+              {% if step.shapes %}
+                <div class="rp-step-shapes">{{ step.shapes }}</div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+
+      <!-- Training: the architecture write-up -->
+      <section id="training" class="rp-panel rp-article-wrap" role="tabpanel" aria-labelledby="tab-training">
+        <article class="rp-article">
+          <div class="rp-step-count">Training · {{ page.model_name }}</div>
+          <h1>{{ page.full_name }}</h1>
+          <p class="rp-lede">{{ page.description }}</p>
+          {% if page.facts %}
+            <ul class="rp-specs">
+              {% for f in page.facts %}
+                <li>
+                  <b>{{ f.value }}</b> · {{ f.label }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          {{ content }}
+        </article>
+      </section>
+
+      <!-- Results -->
+      <section id="results" class="rp-panel rp-article-wrap" role="tabpanel" aria-labelledby="tab-results">
+        <article class="rp-article">
+          <div class="rp-step-count">Results · {{ page.model_name }}</div>
+          <h2>Evaluation status</h2>
+          <p>
+            <span class="rp-pill {% if page.results.measured %}done{% else %}pending{% endif %}">
+              {%- if page.results.measured %}Measured{% else %}Not yet measured{% endif -%}
+            </span>
+          </p>
+          <div>{{ page.results.summary | markdownify }}</div>
+          {% if page.results.metrics %}
+            <div class="rp-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>How it is measured</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for m in page.results.metrics %}
+                    <tr>
+                      <td>{{ m.name }}</td>
+                      <td class="num">{{ m.value | default: '—' }}</td>
+                      <td>{{ m.method }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+          {% if page.results.protocol %}
+            <h3>Protocol</h3>
+            <ol>
+              {% for p in page.results.protocol %}
+                <li>{{ p | markdownify | remove: '<p>' | remove: '</p>' }}</li>
+              {% endfor %}
+            </ol>
+          {% endif %}
+          {% if page.links %}
+            <h3>Code and data</h3>
+            <ul>
+              {% for l in page.links %}
+                <li>
+                  <a href="{{ l.url }}">{{ l.label }}</a>
+                  {% if l.note %}· {{ l.note }}{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </article>
+      </section>
+    </main>
+
+    <footer class="rp-foot">
+      <p>
+        3D model: NexArm MJCF and meshes from
+        <a href="https://github.com/khanhthanhdev/lerobot-nexarm">khanhthanhdev/lerobot-nexarm</a>, rendered with three.js. The motion is a scripted
+        bowl-stacking demo solved with inverse kinematics in the browser; the dots show how long one {{ page.model_name }} action chunk is, not a
+        recorded policy rollout.
+      </p>
+    </footer>
+  </body>
+</html>

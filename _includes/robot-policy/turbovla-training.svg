@@ -1,0 +1,60 @@
+<svg viewBox="0 0 1200 470" role="img" aria-labelledby="tv-train-title tv-train-desc">
+  <title id="tv-train-title">How TurboVLA is trained for the NexArm</title>
+  <desc id="tv-train-desc">Scripted MuJoCo demonstrations with domain randomization and real teleoperated demonstrations are mixed by a sampler that draws real data half of the time. Batches of 16 train TurboVLA with a masked L1 loss on 16-step chunks, AdamW at 5e-5 with 1000 warm-up steps and gradient clipping at 1.0. An exponential moving average of the weights with decay 0.999 is what gets saved, together with normalization statistics and the model config.</desc>
+  <defs>
+    <marker id="tv-tr-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path class="ah" d="M0,1 L10,5 L0,9 z" />
+    </marker>
+  </defs>
+
+  <rect class="sk f-in" x="30" y="40" width="270" height="120" rx="12" />
+  <text class="t" x="46" y="72">simulation</text>
+  <text class="s" x="46" y="96">scripted bowl stacking in MuJoCo,</text>
+  <text class="s" x="46" y="116">domain randomization on by default</text>
+  <text class="sm" x="46" y="144">--sim-dataset-root</text>
+
+  <rect class="sk f-in" x="30" y="190" width="270" height="120" rx="12" />
+  <text class="t" x="46" y="222">real teleoperation</text>
+  <text class="s" x="46" y="246">teleoperated demonstrations</text>
+  <text class="s" x="46" y="266">on the physical NexArm</text>
+  <text class="sm" x="46" y="294">thanhkt/nexarm_stack_bowls</text>
+
+  <path class="ln" d="M300 100 H330 V160 H356" marker-end="url(#tv-tr-ah)" />
+  <path class="ln" d="M300 250 H330 V200 H356" marker-end="url(#tv-tr-ah)" />
+
+  <rect class="sk f-note" x="360" y="120" width="230" height="120" rx="12" />
+  <text class="t" x="376" y="152">DomainMixSampler</text>
+  <text class="m" x="376" y="178">--real-ratio 0.5</text>
+  <text class="s" x="376" y="202">each sample: real with p 0.5,</text>
+  <text class="s" x="376" y="222">sim otherwise (with replacement)</text>
+
+  <path class="ln" d="M590 180 H626" marker-end="url(#tv-tr-ah)" />
+  <rect class="sk f-enc" x="630" y="100" width="250" height="160" rx="12" />
+  <text class="t" x="646" y="132">TurboVLA</text>
+  <text class="m" x="646" y="158">batch 16 · 16-step chunks</text>
+  <text class="s" x="646" y="182">DINOv3 trained at 5e-5,</text>
+  <text class="s" x="646" y="202">BERT frozen</text>
+  <text class="s" x="646" y="234">min-max stats merged across domains</text>
+
+  <path class="ln" d="M880 180 H916" marker-end="url(#tv-tr-ah)" />
+  <rect class="sk f-out" x="920" y="80" width="250" height="200" rx="12" />
+  <text class="t" x="936" y="112">loss and update</text>
+  <text class="m" x="936" y="140">mean |pred − target|</text>
+  <text class="s" x="936" y="162">over non-padded steps; optional</text>
+  <text class="s" x="936" y="182">extra weight on the gripper</text>
+  <text class="m" x="936" y="214">AdamW 5e-5 · warm-up 1000</text>
+  <text class="m" x="936" y="238">grad clip 1.0 · 50k steps</text>
+  <text class="m" x="936" y="262">EMA of weights, decay 0.999</text>
+
+  <path class="ln" d="M1045 280 V326" marker-end="url(#tv-tr-ah)" />
+  <rect class="sk f-panel" x="760" y="330" width="410" height="110" rx="12" />
+  <text class="t" x="776" y="362">checkpoint (every 5,000 steps)</text>
+  <text class="m" x="776" y="390">EMA weights · stats_turbovla.json</text>
+  <text class="m" x="776" y="414">config.json (camera keys, image size, fps, task)</text>
+
+  <rect class="sk f-panel" x="30" y="350" width="560" height="90" rx="12" />
+  <text class="t" x="46" y="382">optional starting point</text>
+  <text class="s" x="46" y="406">the released RoboTwin TurboVLA checkpoint, fine-tuned with</text>
+  <text class="s" x="46" y="426">--pretrained-checkpoint (and --freeze-vision for a fast head-only run)</text>
+  <path class="ln-d" d="M590 395 H700 V264" marker-end="url(#tv-tr-ah)" />
+</svg>

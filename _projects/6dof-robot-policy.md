@@ -71,6 +71,8 @@ We also built a MuJoCo scene for a three-bowl stacking task. Recorded joint traj
 
 The project includes an ACT path for learning from camera views and robot state, plus a TurboVLA path that also accepts a task instruction. Real and simulated demonstrations can be used together during training. The diagram shows the intended flow through evaluation; this page does not claim a measured physical success rate for a trained policy.
 
+The [robot policy explorer]({{ '/works/robot-policy/' | relative_url }}) walks through one control cycle of [ACT]({{ '/works/robot-policy/act/' | relative_url }}) and [TurboVLA]({{ '/works/robot-policy/turbovla/' | relative_url }}) step by step, next to a 3D model of the NexArm in the bowl-stacking scene.
+
 The work taught us that stable cameras, repeatable demonstrations, and a calibrated simulation are all part of the learning system. The next meaningful result is a controlled hardware evaluation that compares policies trained with real data alone and with a mixture of real and simulated data.
 
 {% include figure.liquid path="/assets/img/projects/6dof-robot/robotics-lab-team.jpg" title="Robotics research team at VinUniversity" class="img-fluid rounded z-depth-1 my-3" %}

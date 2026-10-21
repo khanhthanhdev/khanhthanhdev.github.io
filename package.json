@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:agentic": "node --test test/agentic-worker.test.mjs test/rendered-site.test.mjs"
+    "test:agentic": "node --test test/agentic-worker.test.mjs test/rendered-site.test.mjs test/robot-policy.test.mjs"
   },
   "devDependencies": {
     "@shopify/prettier-plugin-liquid": "1.10.2",
