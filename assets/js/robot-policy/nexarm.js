@@ -1,6 +1,6 @@
 // NexArm kinematics and the scripted bowl-stacking motion used by the robot-policy stage.
 // Pure three.js math with no DOM, so it also runs under Node for tests.
-import * as THREE from "./vendor/three.module.min.js";
+import * as THREE from "./lib/three.module.min.js";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 

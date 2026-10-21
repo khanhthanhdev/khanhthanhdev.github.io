@@ -1,6 +1,6 @@
 // Three.js stage for /works/robot-policy/: the NexArm in its bowl-stacking workcell, with the three
 // policy cameras rendered into the HUD and the current action chunk drawn ahead of the gripper.
-import * as THREE from "./vendor/three.module.min.js";
+import * as THREE from "./lib/three.module.min.js";
 import { buildRobot, buildScript, decodeGeometry, mujocoCamera, ARM_LABELS } from "./nexarm.js";
 
 const OVERLAY = 1;

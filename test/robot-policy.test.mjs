@@ -34,6 +34,15 @@ test("robot-policy modules and stylesheet are published without minification", a
   }
 });
 
+// .gitignore drops any path containing "vendor", so the three.js build must live elsewhere and be tracked.
+test("three.js bundle is tracked and served", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const path = "assets/js/robot-policy/lib/three.module.min.js";
+  const tracked = execFileSync("git", ["ls-files", "--error-unmatch", path], { cwd: repo("").pathname }).toString();
+  assert.match(tracked, /three\.module\.min\.js/);
+  assert.equal((await readFile(site(path))).length, (await readFile(repo(path))).length);
+});
+
 test("NexArm asset decodes and the scripted motion reaches every IK target", async () => {
   const { buildRobot, buildScript, decodeGeometry } = await import("../assets/js/robot-policy/nexarm.js");
   const asset = JSON.parse(await readFile(repo("assets/robot/nexarm/nexarm.json"), "utf8"));
