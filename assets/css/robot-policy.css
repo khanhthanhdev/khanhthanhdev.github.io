@@ -139,6 +139,20 @@
   scroll-margin-top: 100vh;
 }
 
+/* scroll track: one stretch of page scroll per step; the explorer stays pinned under the sub-nav while it scrolls */
+.rp-scroll {
+  --rp-view: calc(100dvh - var(--rp-nav) - var(--rp-sub));
+  --rp-step-len: 80vh;
+  height: calc(var(--rp-steps) * var(--rp-step-len) + max(var(--rp-view), 620px));
+}
+.rp-scroll > .rp-explorer {
+  position: sticky;
+  top: calc(var(--rp-nav) + var(--rp-sub));
+}
+.rp-nojs .rp-scroll {
+  height: auto;
+}
+
 /* explorer: the diagram on the left; the 3D stage (inference only), the step explanation and formulas on the right */
 .rp-explorer {
   max-width: 1440px;
@@ -173,7 +187,7 @@
   background:
     radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rp-ink) 14%, transparent) 1px, transparent 1.4px) 0 0 / 22px 22px,
     var(--rp-panel);
-  touch-action: none;
+  touch-action: pan-y;
   cursor: grab;
 }
 .rp-diagram.is-dragging {
@@ -463,62 +477,79 @@
   padding-top: 8px;
 }
 .rp-controls {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 10px 18px;
-  padding: 12px 22px 14px;
+  /* room for the site's fixed back-to-top button */
+  padding: 12px 76px 14px 22px;
   border-top: 1px solid var(--rp-rule);
 }
-.rp-buttons {
+.rp-pager {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
 }
-.rp-buttons button {
-  border: 1px solid var(--rp-ink);
-  background: transparent;
-  color: var(--rp-ink);
-  border-radius: 0;
-  min-width: 44px;
-  height: 36px;
-  padding: 0 14px;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.rp-buttons button:hover {
-  border-color: var(--rp-accent);
-  color: var(--rp-accent);
-}
-.rp-buttons button.primary {
-  background: var(--rp-accent);
-  border-color: var(--rp-accent);
-  color: var(--global-hover-text-color);
-}
-.rp-dots {
+.rp-pages {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  gap: 4px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.rp-dots button {
-  width: 22px;
-  height: 6px;
-  border: 0;
-  padding: 0;
-  border-radius: 3px;
-  background: var(--rp-rule);
+.rp-pager button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--rp-rule);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--rp-ink);
+  font-family: var(--rp-font-mono);
+  font-size: 0.85rem;
   cursor: pointer;
 }
-.rp-dots button[aria-current="step"] {
+.rp-pager button:hover:not(:disabled) {
+  border-color: var(--rp-accent);
+  color: var(--rp-accent);
+}
+.rp-pager button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.rp-pager > button {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.rp-pages button[aria-current="step"] {
   background: var(--rp-accent);
+  border-color: var(--rp-accent);
+  color: var(--global-hover-text-color);
+}
+.rp-pages .rp-gap {
+  min-width: 20px;
+  text-align: center;
+  color: var(--rp-muted);
 }
 .rp-kbd-hint {
   margin-left: auto;
   font-size: 11.5px;
   color: var(--rp-muted);
+}
+.rp-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 2px;
+}
+.rp-progress span {
+  display: block;
+  height: 100%;
+  background: var(--rp-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
 }
 .rp-after {
   padding-top: 2.5rem;
@@ -845,26 +876,40 @@ a.rp-card:hover {
   .rp-tabs {
     gap: 14px;
   }
+  .rp-scroll {
+    --rp-view: calc(100svh - var(--rp-nav) - var(--rp-sub));
+    --rp-step-len: 70svh;
+    height: calc(var(--rp-steps) * var(--rp-step-len) + var(--rp-view));
+  }
   .rp-explorer {
-    height: auto;
+    height: calc(100svh - var(--rp-nav) - var(--rp-sub));
     min-height: 0;
+    border-left: 0;
+    border-right: 0;
   }
   .rp-split {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 60vh auto;
+    grid-template-rows: minmax(0, 40%) minmax(0, 1fr);
   }
   .rp-splitter {
     display: none;
   }
-  .rp-side,
-  .has-stage .rp-side {
-    grid-template-rows: auto auto auto;
+  .has-stage .rp-split {
+    grid-template-rows: minmax(0, 34%) minmax(0, 1fr);
   }
-  .rp-side .rp-stage {
-    height: 44vh;
+  .has-stage .rp-side {
+    grid-template-rows: minmax(0, 40%) minmax(0, 1fr) auto;
   }
   .rp-step-card {
-    overflow: visible;
+    padding: 12px 16px;
+  }
+  .rp-controls {
+    padding: 8px 12px 10px;
+  }
+  .rp-pager button {
+    min-width: 30px;
+    height: 32px;
+    padding: 0 6px;
   }
   .rp-kbd-hint {
     display: none;
