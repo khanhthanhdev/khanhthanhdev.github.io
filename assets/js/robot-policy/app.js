@@ -1,5 +1,5 @@
-// Controller for /works/robot-policy/: tabs, the step rail, the pipeline diagram's camera,
-// the resizable split and the lazily loaded 3D stage. Each step drives both views at once.
+// Controller for /works/robot-policy/: tabs, the stepped explorers (inference and training), their diagram cameras,
+// the resizable splits, KaTeX formulas and the lazily loaded 3D stage. Each inference step drives the diagram and the stage.
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -117,13 +117,13 @@ function initDiagram(host) {
   return { svg, fit, wasDrag: () => drag && drag.moved >= 4 };
 }
 
-function initSplitter(split, handle) {
+function initSplitter(split, handle, key) {
   const apply = (f) => {
-    const v = Math.min(0.72, Math.max(0.28, f));
+    const v = Math.min(0.75, Math.max(0.3, f));
     split.style.setProperty("--rp-split", v.toFixed(3));
     return v;
   };
-  let frac = apply(Number(store("rp-split")) || 0.5);
+  let frac = apply(Number(store(key)) || 0.6);
   handle.addEventListener("pointerdown", (e) => {
     handle.setPointerCapture(e.pointerId);
     const move = (ev) => {
@@ -132,7 +132,7 @@ function initSplitter(split, handle) {
     };
     const up = () => {
       handle.removeEventListener("pointermove", move);
-      store("rp-split", String(frac));
+      store(key, String(frac));
     };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up, { once: true });
@@ -141,8 +141,99 @@ function initSplitter(split, handle) {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
     frac = apply(frac + (e.key === "ArrowRight" ? 0.03 : -0.03));
-    store("rp-split", String(frac));
+    store(key, String(frac));
   });
+}
+
+// Formulas are TeX in .rp-tex; KaTeX (a deferred classic script) typesets them once, before any step is shown.
+// Without KaTeX the TeX source stays visible as text.
+function typeset(root) {
+  if (!window.katex) return;
+  root.querySelectorAll(".rp-tex").forEach((el) => {
+    try {
+      window.katex.render(el.textContent, el, { displayMode: true, throwOnError: false, output: "html" });
+      el.classList.add("is-typeset");
+    } catch (err) {
+      console.error(err);
+    }
+  });
+}
+
+// One explorer = a diagram whose camera follows a list of steps, plus the card that explains the current step.
+function initExplorer(root, { onStep = () => {} } = {}) {
+  const items = [...root.querySelectorAll(".rp-step-list > li")];
+  typeset(root.querySelector(".rp-step-list"));
+  const steps = items.map((li) => ({
+    id: li.dataset.id,
+    bounds: li.dataset.bounds ? li.dataset.bounds.split(" ").map(Number) : null,
+    stage: JSON.parse(li.dataset.stage || "null") ?? {},
+    li,
+  }));
+  const card = root.querySelector(".rp-step-card");
+  const dots = [...root.querySelectorAll(".rp-dots button")];
+  const playBtn = root.querySelector('[data-role="play"]');
+  const diagram = initDiagram(root.querySelector(".rp-diagram"));
+  const groups = [...diagram.svg.querySelectorAll("[data-step]")];
+  let index = 0;
+  let timer = 0;
+
+  function activate(i, { animate = true } = {}) {
+    index = (i + steps.length) % steps.length;
+    const s = steps[index];
+    const count = document.createElement("div");
+    count.className = "rp-step-count";
+    count.textContent = `Step ${index + 1} of ${steps.length}`;
+    const title = document.createElement("h2");
+    title.textContent = s.li.querySelector("h3").textContent;
+    const rest = [...s.li.children].filter((el) => el.tagName !== "H3").map((el) => el.cloneNode(true));
+    card.replaceChildren(count, title, ...rest);
+    card.scrollTop = 0;
+    dots.forEach((d, k) => (k === index ? d.setAttribute("aria-current", "step") : d.removeAttribute("aria-current")));
+    const focus = s.stage.focus ?? s.id;
+    let any = false;
+    groups.forEach((g) => {
+      const on = g.dataset.step.split(" ").includes(focus);
+      g.classList.toggle("is-active", on);
+      any ||= on;
+    });
+    diagram.svg.classList.toggle("has-active", any);
+    diagram.fit(s.bounds, animate ? 700 : 0);
+    onStep(s);
+  }
+
+  const setPlaying = (on) => {
+    clearInterval(timer);
+    playBtn.setAttribute("aria-pressed", String(on));
+    playBtn.textContent = on ? "Pause" : "Play";
+    if (on) timer = setInterval(() => activate(index + 1), 9000);
+  };
+  const togglePlay = () => setPlaying(playBtn.getAttribute("aria-pressed") !== "true");
+
+  root.querySelector('[data-role="prev"]').addEventListener("click", () => activate(index - 1));
+  root.querySelector('[data-role="next"]').addEventListener("click", () => activate(index + 1));
+  root.querySelector('[data-role="fit"]').addEventListener("click", () => diagram.fit(null));
+  playBtn.addEventListener("click", togglePlay);
+  dots.forEach((d) => d.addEventListener("click", () => activate(Number(d.dataset.index))));
+  groups.forEach((g) => {
+    g.setAttribute("tabindex", "0");
+    g.setAttribute("role", "button");
+    const go = () => {
+      const k = steps.findIndex((s) => g.dataset.step.split(" ").includes(s.stage.focus ?? s.id));
+      if (k >= 0) activate(k);
+    };
+    g.addEventListener("click", () => !diagram.wasDrag() && go());
+    g.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), go()));
+  });
+  initSplitter(root.querySelector(".rp-split"), root.querySelector(".rp-splitter"), `rp-split-${root.dataset.explorer}`);
+
+  return {
+    root,
+    current: () => steps[index],
+    show: () => requestAnimationFrame(() => activate(index, { animate: false })),
+    step: (d) => activate(index + d),
+    togglePlay,
+    stop: () => setPlaying(false),
+  };
 }
 
 function webglAvailable() {
@@ -155,79 +246,25 @@ function webglAvailable() {
 }
 
 function initPolicyPage(app) {
-  const steps = [...document.querySelectorAll("#rp-steps > li")].map((li) => ({
-    id: li.dataset.id,
-    bounds: li.dataset.bounds ? li.dataset.bounds.split(" ").map(Number) : null,
-    stage: JSON.parse(li.dataset.stage || "{}"),
-    title: li.querySelector("h3").textContent,
-    body: li.querySelector(".rp-step-body").innerHTML,
-    shapes: li.querySelector(".rp-step-shapes")?.textContent ?? "",
-  }));
-  const card = document.getElementById("rp-step-card");
-  const dots = [...document.querySelectorAll("#rp-dots button")];
-  const playBtn = document.getElementById("rp-play");
-  const diagram = initDiagram(document.getElementById("rp-diagram"));
-  const groups = [...diagram.svg.querySelectorAll("[data-step]")];
-  let index = 0;
   let stage = null;
-  let timer = 0;
-
-  function activate(i, { animate = true } = {}) {
-    index = (i + steps.length) % steps.length;
-    const s = steps[index];
-    card.innerHTML =
-      `<div class="rp-step-count">Step ${index + 1} of ${steps.length}</div>` +
-      `<h2></h2><div>${s.body}</div>` +
-      (s.shapes ? `<div class="rp-step-shapes"></div>` : "");
-    card.querySelector("h2").textContent = s.title;
-    if (s.shapes) card.querySelector(".rp-step-shapes").textContent = s.shapes;
-    dots.forEach((d, k) => (k === index ? d.setAttribute("aria-current", "step") : d.removeAttribute("aria-current")));
-    const focus = s.stage.focus ?? s.id;
-    let any = false;
-    groups.forEach((g) => {
-      const on = g.dataset.step.split(" ").includes(focus);
-      g.classList.toggle("is-active", on);
-      any ||= on;
-    });
-    diagram.svg.classList.toggle("has-active", any);
-    diagram.fit(s.bounds, animate ? 700 : 0);
-    stage?.play({ beat: s.id, ...s.stage });
-  }
-
-  const setPlaying = (on) => {
-    clearInterval(timer);
-    playBtn.setAttribute("aria-pressed", String(on));
-    playBtn.textContent = on ? "Pause" : "Play";
-    if (on) timer = setInterval(() => activate(index + 1), 8000);
-  };
-
-  document.getElementById("rp-prev").addEventListener("click", () => activate(index - 1));
-  document.getElementById("rp-next").addEventListener("click", () => activate(index + 1));
-  document.getElementById("rp-fit").addEventListener("click", () => diagram.fit(null));
-  playBtn.addEventListener("click", () => setPlaying(playBtn.getAttribute("aria-pressed") !== "true"));
-  dots.forEach((d) => d.addEventListener("click", () => activate(Number(d.dataset.index))));
-  groups.forEach((g) => {
-    g.setAttribute("tabindex", "0");
-    g.setAttribute("role", "button");
-    const go = () => {
-      const k = steps.findIndex((s) => g.dataset.step.split(" ").includes(s.stage.focus ?? s.id));
-      if (k >= 0) activate(k);
-    };
-    g.addEventListener("click", () => !diagram.wasDrag() && go());
-    g.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), go()));
+  const explorers = {};
+  explorers.inference = initExplorer(app.querySelector('[data-explorer="inference"]'), {
+    onStep: (s) => stage?.play({ beat: s.id, ...s.stage }),
   });
+  const training = app.querySelector('[data-explorer="training"]');
+  if (training) explorers.training = initExplorer(training);
+  let visible = null;
+
   document.addEventListener("keydown", (e) => {
-    if (document.getElementById("inference").hidden) return;
+    if (!visible) return;
     if (e.target.closest("input, textarea, select, [role='tab'], [role='separator']")) return;
-    if (e.key === "ArrowRight") activate(index + 1);
-    else if (e.key === "ArrowLeft") activate(index - 1);
+    if (e.key === "ArrowRight") visible.step(1);
+    else if (e.key === "ArrowLeft") visible.step(-1);
     else if (e.key === " " && (e.target === document.body || e.target === document.documentElement)) {
       e.preventDefault();
-      setPlaying(playBtn.getAttribute("aria-pressed") !== "true");
+      visible.togglePlay();
     }
   });
-
-  initSplitter(document.getElementById("rp-split"), document.getElementById("rp-splitter"));
 
   // 3D stage: load three.js and the NexArm asset only when the stage is on screen.
   const stageEl = document.getElementById("rp-stage");
@@ -254,7 +291,8 @@ function initPolicyPage(app) {
         },
       });
       fallback.remove();
-      stage.play({ beat: steps[index].id, ...steps[index].stage });
+      const s = explorers.inference.current();
+      stage.play({ beat: s.id, ...s.stage });
       if (reducedMotion) {
         stage.setPlaying(false);
         motionBtn.textContent = "Play motion";
@@ -280,12 +318,10 @@ function initPolicyPage(app) {
   });
 
   initTabs((id) => {
-    if (id === "inference") {
-      io.observe(stageEl);
-      requestAnimationFrame(() => activate(index, { animate: false }));
-    } else {
-      setPlaying(false);
-    }
+    Object.values(explorers).forEach((x) => x.stop());
+    visible = explorers[id] ?? null;
+    visible?.show();
+    if (id === "inference") io.observe(stageEl);
   });
 }
 

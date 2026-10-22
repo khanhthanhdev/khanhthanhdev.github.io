@@ -139,23 +139,31 @@
   scroll-margin-top: 100vh;
 }
 
-/* inference: split view + step rail */
-.rp-inference {
+/* explorer: the diagram on the left; the 3D stage (inference only), the step explanation and formulas on the right */
+.rp-explorer {
   max-width: 1440px;
   margin: 0 auto;
   border-left: 1px solid var(--rp-rule);
   border-right: 1px solid var(--rp-rule);
   border-bottom: 1px solid var(--rp-rule);
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
   height: calc(100dvh - var(--rp-nav) - var(--rp-sub));
-  min-height: 560px;
+  min-height: 620px;
 }
 .rp-split {
-  --rp-split: 0.5;
+  --rp-split: 0.6;
   display: grid;
   grid-template-columns: minmax(0, calc(var(--rp-split) * 100%)) 10px minmax(0, 1fr);
+  height: 100%;
+}
+.rp-side {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
   min-height: 0;
+  background: var(--rp-paper);
+}
+.has-stage .rp-side {
+  grid-template-rows: minmax(0, 42%) minmax(0, 1fr) auto;
 }
 .rp-diagram {
   position: relative;
@@ -375,22 +383,21 @@
   font-size: 10.5px;
 }
 
-/* step rail */
-.rp-rail {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 28px;
-  align-items: start;
-  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
-  border-top: 1px solid var(--rp-rule);
-  background: var(--rp-paper);
-}
+/* step explanation */
 .rp-step-card {
   display: grid;
-  gap: 4px;
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 10px;
   min-width: 0;
-  max-width: 92ch;
-  min-height: 108px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px 20px;
+  border-top: 1px solid var(--rp-rule);
+}
+.rp-explorer:not(.has-stage) .rp-step-card {
+  border-top: 0;
+  padding-top: 26px;
 }
 .rp-step-count {
   font-size: 0.75rem;
@@ -407,19 +414,61 @@
   text-wrap: balance;
 }
 .rp-step-card p {
-  margin: 0;
+  margin: 0 0 0.6em;
   font-size: 15px;
   color: var(--rp-ink);
+}
+.rp-step-card p:last-child {
+  margin-bottom: 0;
+}
+.rp-formulas {
+  display: grid;
+  gap: 2px;
+  padding: 6px 14px;
+  border-left: 3px solid var(--rp-accent);
+  background: var(--rp-panel);
+  border-radius: 0 6px 6px 0;
+  overflow-x: auto;
+}
+.rp-tex {
+  font-family: var(--rp-font-mono);
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  padding: 4px 0;
+}
+.rp-tex.is-typeset {
+  font-family: inherit;
+  white-space: normal;
+  padding: 0;
+}
+.rp-tex .katex-display {
+  margin: 0.55em 0;
+  text-align: left;
+}
+.rp-tex .katex-display > .katex {
+  text-align: left;
+}
+.rp-tex .katex {
+  font-size: 1.2em;
+}
+.rp-where p {
+  font-size: 13.5px;
+  color: var(--rp-muted);
 }
 .rp-step-card .rp-step-shapes {
   font-family: var(--rp-font-mono);
   font-size: 12.5px;
   color: var(--rp-muted);
+  border-top: 1px dashed var(--rp-rule);
+  padding-top: 8px;
 }
 .rp-controls {
-  display: grid;
-  gap: 10px;
-  justify-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 12px 22px 14px;
+  border-top: 1px solid var(--rp-rule);
 }
 .rp-buttons {
   display: flex;
@@ -448,13 +497,14 @@
 }
 .rp-dots {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .rp-dots button {
-  width: 26px;
+  width: 22px;
   height: 6px;
   border: 0;
   padding: 0;
@@ -466,8 +516,12 @@
   background: var(--rp-accent);
 }
 .rp-kbd-hint {
+  margin-left: auto;
   font-size: 11.5px;
   color: var(--rp-muted);
+}
+.rp-after {
+  padding-top: 2.5rem;
 }
 
 /* all-steps list (no-JS and screen readers) */
@@ -563,6 +617,34 @@
   stroke-width: 2.4;
   stroke-linecap: round;
 }
+.rp svg .o {
+  font-size: 13.5px;
+}
+.rp svg .i {
+  font-family: KaTeX_Math, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 17px;
+}
+.rp svg .ss {
+  font-size: 0.72em;
+}
+.rp svg .op {
+  fill: var(--rp-panel);
+  stroke: currentColor;
+  stroke-width: 1.1;
+}
+.rp svg .op-a {
+  fill: var(--rp-panel);
+  stroke: var(--rp-accent);
+  stroke-width: 1.8;
+}
+.rp svg .ln-t {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .rp svg .ah {
   fill: currentColor;
 }
@@ -653,20 +735,6 @@
   margin: 0;
   display: grid;
   gap: 10px;
-}
-.rp-figure-scroll {
-  overflow-x: auto;
-  background: var(--rp-panel);
-  border: 1px solid var(--rp-rule);
-  border-radius: 8px;
-  padding: 12px;
-}
-.rp-figure-scroll svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-width: 720px;
-  color: var(--rp-ink);
 }
 .rp-article figcaption {
   font-size: 13.5px;
@@ -777,26 +845,26 @@ a.rp-card:hover {
   .rp-tabs {
     gap: 14px;
   }
-  .rp-inference {
+  .rp-explorer {
     height: auto;
     min-height: 0;
-    grid-template-rows: auto auto;
   }
   .rp-split {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 54vh 46vh;
-  }
-  .rp-split .rp-stage {
-    order: -1;
+    grid-template-rows: 60vh auto;
   }
   .rp-splitter {
     display: none;
   }
-  .rp-rail {
-    grid-template-columns: minmax(0, 1fr);
+  .rp-side,
+  .has-stage .rp-side {
+    grid-template-rows: auto auto auto;
   }
-  .rp-controls {
-    justify-items: start;
+  .rp-side .rp-stage {
+    height: 44vh;
+  }
+  .rp-step-card {
+    overflow: visible;
   }
   .rp-kbd-hint {
     display: none;
