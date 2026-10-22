@@ -1,14 +1,27 @@
 <!doctype html>
 <html lang="{{ site.lang }}">
   <head>
-    {% include robot-policy/head.liquid %}
+    {% include head.liquid %}
+    <link rel="stylesheet" href="{{ '/assets/css/robot-policy.css' | relative_url | bust_file_cache }}">
     <script type="module" src="{{ '/assets/js/robot-policy/app.js' | relative_url | bust_file_cache }}"></script>
   </head>
-  <body class="rp rp-nojs">
+  <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} rp rp-nojs">
     <script>
       document.body.classList.remove('rp-nojs');
     </script>
-    {% include robot-policy/topbar.liquid model=page.model_name tabs=true %}
+    {% include header.liquid %}
+
+    <div class="container rp-head">
+      <header class="post-header">
+        {% include robot-policy/crumbs.liquid model=page.model_name %}
+        <h1 class="post-title">
+          {{ page.model_name }}
+          <span class="rp-on">on the NexArm</span>
+        </h1>
+        <p class="post-description">{{ page.full_name }}</p>
+      </header>
+    </div>
+    {% include robot-policy/subnav.liquid tabs=true %}
 
     <main
       id="rp-app"
@@ -19,8 +32,6 @@
       data-fps="{{ page.policy.fps }}"
       data-name="{{ page.model_name }}"
     >
-      <h1 class="rp-sr">{{ page.model_name }} on the NexArm: {{ page.full_name }}</h1>
-
       <!-- Inference: pipeline diagram + 3D stage, driven by one list of steps -->
       <section id="inference" class="rp-panel rp-inference" role="tabpanel" aria-labelledby="tab-inference">
         <div class="rp-split" id="rp-split">
@@ -102,10 +113,8 @@
       </section>
 
       <!-- Training: the architecture write-up -->
-      <section id="training" class="rp-panel rp-article-wrap" role="tabpanel" aria-labelledby="tab-training">
+      <section id="training" class="rp-panel container" role="tabpanel" aria-labelledby="tab-training">
         <article class="rp-article">
-          <div class="rp-step-count">Training · {{ page.model_name }}</div>
-          <h1>{{ page.full_name }}</h1>
           <p class="rp-lede">{{ page.description }}</p>
           {% if page.facts %}
             <ul class="rp-specs">
@@ -121,9 +130,8 @@
       </section>
 
       <!-- Results -->
-      <section id="results" class="rp-panel rp-article-wrap" role="tabpanel" aria-labelledby="tab-results">
+      <section id="results" class="rp-panel container" role="tabpanel" aria-labelledby="tab-results">
         <article class="rp-article">
-          <div class="rp-step-count">Results · {{ page.model_name }}</div>
           <h2>Evaluation status</h2>
           <p>
             <span class="rp-pill {% if page.results.measured %}done{% else %}pending{% endif %}">
@@ -146,7 +154,7 @@
                     <tr>
                       <td>{{ m.name }}</td>
                       <td class="num">{{ m.value | default: '—' }}</td>
-                      <td>{{ m.method }}</td>
+                      <td>{{ m.method | markdownify | remove: '<p>' | remove: '</p>' }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>
@@ -176,13 +184,16 @@
       </section>
     </main>
 
-    <footer class="rp-foot">
-      <p>
+    <div class="container">
+      <p class="rp-foot">
         3D model: NexArm MJCF and meshes from
         <a href="https://github.com/khanhthanhdev/lerobot-nexarm">khanhthanhdev/lerobot-nexarm</a>, rendered with three.js. The motion is a scripted
         bowl-stacking demo solved with inverse kinematics in the browser; the dots show how long one {{ page.model_name }} action chunk is, not a
         recorded policy rollout.
       </p>
-    </footer>
+    </div>
+
+    {% include footer.liquid %}
+    {% include scripts.liquid %}
   </body>
 </html>

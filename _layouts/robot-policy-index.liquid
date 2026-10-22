@@ -1,35 +1,36 @@
-<!doctype html>
-<html lang="{{ site.lang }}">
-  <head>
-    {% include robot-policy/head.liquid %}
-    <script type="module" src="{{ '/assets/js/robot-policy/app.js' | relative_url | bust_file_cache }}"></script>
-  </head>
-  <body class="rp">
-    {% include robot-policy/topbar.liquid %}
-    <main class="rp-article-wrap">
-      <article class="rp-article">
-        <div class="rp-step-count">works · robot policy</div>
-        <h1>{{ page.heading }}</h1>
-        <p class="rp-lede">{{ page.description }}</p>
-        {{ content }}
-        <div class="rp-cards">
-          {% assign models = site.robot_policies | sort: 'order' %}
-          {% for m in models %}
-            <a class="rp-card" href="{{ m.url | relative_url }}">
-              <div class="rp-step-count">{{ m.full_name }}</div>
-              <h2>{{ m.model_name }}</h2>
-              <p>{{ m.description }}</p>
-              <ul class="rp-specs">
-                {% for f in m.facts limit: 4 %}
-                  <li>
-                    <b>{{ f.value }}</b> · {{ f.label }}
-                  </li>
-                {% endfor %}
-              </ul>
-            </a>
-          {% endfor %}
-        </div>
-      </article>
-    </main>
-  </body>
-</html>
+---
+layout: default
+---
+<link rel="stylesheet" href="{{ '/assets/css/robot-policy.css' | relative_url | bust_file_cache }}">
+
+<div class="post rp">
+  <header class="post-header">
+    {% include robot-policy/crumbs.liquid %}
+    <h1 class="post-title">{{ page.heading }}</h1>
+    <p class="post-description">{{ page.description }}</p>
+  </header>
+
+  <article>
+    {{ content }}
+
+    <div class="rp-cards">
+      {% assign models = site.robot_policies | sort: 'order' %}
+      {% for m in models %}
+        <a class="card hoverable rp-card" href="{{ m.url | relative_url }}">
+          <div class="card-body">
+            <div class="rp-step-count">{{ m.full_name }}</div>
+            <h2 class="card-title">{{ m.model_name }}</h2>
+            <p class="card-text">{{ m.description }}</p>
+            <ul class="rp-specs">
+              {% for f in m.facts limit: 4 %}
+                <li>
+                  <b>{{ f.value }}</b> · {{ f.label }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </article>
+</div>

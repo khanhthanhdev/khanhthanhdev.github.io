@@ -1,7 +1,6 @@
-// Controller for /works/robot-policy/: theme, tabs, the step rail, the pipeline diagram's camera,
+// Controller for /works/robot-policy/: tabs, the step rail, the pipeline diagram's camera,
 // the resizable split and the lazily loaded 3D stage. Each step drives both views at once.
 
-const THEMES = ["light", "dark", "system"];
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function store(key, value) {
@@ -12,25 +11,6 @@ function store(key, value) {
     return null;
   }
   return value;
-}
-
-function initTheme() {
-  const button = document.getElementById("rp-theme");
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
-  const apply = (setting) => {
-    const theme = setting === "system" ? (media.matches ? "dark" : "light") : setting;
-    document.documentElement.setAttribute("data-theme-setting", setting);
-    document.documentElement.setAttribute("data-theme", theme);
-    if (button) button.textContent = setting;
-  };
-  let setting = store("theme") || "light";
-  apply(setting);
-  button?.addEventListener("click", () => {
-    setting = THEMES[(THEMES.indexOf(setting) + 1) % THEMES.length];
-    store("theme", setting);
-    apply(setting);
-  });
-  media.addEventListener("change", () => setting === "system" && apply(setting));
 }
 
 function initTabs(onChange) {
@@ -309,6 +289,5 @@ function initPolicyPage(app) {
   });
 }
 
-initTheme();
 const app = document.getElementById("rp-app");
 if (app) initPolicyPage(app);

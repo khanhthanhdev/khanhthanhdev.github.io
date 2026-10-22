@@ -1,0 +1,11 @@
+<nav class="rp-crumbs" aria-label="Breadcrumb">
+  <a href="{{ '/works/' | relative_url }}">works</a>
+  <span aria-hidden="true">/</span>
+  {% if include.model %}
+    <a href="{{ '/works/robot-policy/' | relative_url }}">robot policy</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{{ include.model }}</span>
+  {% else %}
+    <span aria-current="page">robot policy</span>
+  {% endif %}
+</nav>
