@@ -1,6 +1,6 @@
-// Controller for /works/robot-policy/: tabs, the scroll-driven explorers (inference and training), their diagram cameras,
-// the resizable splits, KaTeX formulas and the lazily loaded 3D stage. Page scroll picks the step; the step drives the
-// diagram camera, the explanation card and (for inference) the stage.
+// Controller for /works/robot-policy/: tabs, the reading pane whose scroll picks the step, the diagram cameras that follow
+// it, the resizable split, KaTeX formulas and the lazily loaded 3D stage. The step under the reading line drives the
+// diagram camera and (for inference) the stage on the left.
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -14,30 +14,32 @@ function store(key, value) {
   return value;
 }
 
+// Panels are #panel-<name> and the URL carries #<name>, so the browser never jumps to a panel on load: the reading
+// pane and the window keep their own scroll.
 function initTabs(onChange) {
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   if (!tabs.length) return;
-  const select = (id, focus = false) => {
+  const nameOf = (tab) => tab.getAttribute("aria-controls").replace(/^panel-/, "");
+  const select = (name, focus = false) => {
     tabs.forEach((tab) => {
-      const on = tab.getAttribute("aria-controls") === id;
+      const on = nameOf(tab) === name;
       tab.setAttribute("aria-selected", String(on));
       tab.tabIndex = on ? 0 : -1;
       document.getElementById(tab.getAttribute("aria-controls")).hidden = !on;
       if (on && focus) tab.focus();
     });
-    history.replaceState(null, "", id === "inference" ? location.pathname : `#${id}`);
-    onChange(id);
+    history.replaceState(null, "", name === "inference" ? location.pathname : `#${name}`);
+    onChange(name);
   };
   tabs.forEach((tab, i) => {
-    tab.addEventListener("click", () => select(tab.getAttribute("aria-controls")));
+    tab.addEventListener("click", () => select(nameOf(tab)));
     tab.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-      const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
-      select(next.getAttribute("aria-controls"), true);
+      select(nameOf(tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length]), true);
     });
   });
   const initial = location.hash.slice(1);
-  select(tabs.some((t) => t.getAttribute("aria-controls") === initial) ? initial : "inference");
+  select(tabs.some((t) => nameOf(t) === initial) ? initial : "inference");
 }
 
 // The diagram camera animates the SVG viewBox; preserveAspectRatio keeps the requested region in view.
@@ -90,7 +92,7 @@ function initDiagram(host) {
     return pt.matrixTransform(svg.getScreenCTM().inverse());
   };
   let drag = null;
-  // Touch scrolls the page (it drives the steps); mouse and pen drag the diagram.
+  // Touch scrolls the page (it drives the steps on narrow screens); mouse and pen drag the diagram.
   host.addEventListener("pointerdown", (e) => {
     if (e.pointerType === "touch" || e.button !== 0 || e.target.closest("button")) return;
     drag = { x: e.clientX, y: e.clientY, view: view.slice(), moved: 0 };
@@ -116,7 +118,7 @@ function initDiagram(host) {
   host.addEventListener(
     "wheel",
     (e) => {
-      // A plain wheel scrolls the page and so moves through the steps; ctrl/⌘ + wheel (and trackpad pinch) zooms.
+      // A plain wheel scrolls the reading pane (see initReader); ctrl/⌘ + wheel (and trackpad pinch) zooms.
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       cancelAnimationFrame(anim);
@@ -138,7 +140,7 @@ function initSplitter(split, handle, key) {
     split.style.setProperty("--rp-split", v.toFixed(3));
     return v;
   };
-  let frac = apply(Number(store(key)) || 0.6);
+  let frac = apply(Number(store(key)) || 0.56);
   handle.addEventListener("pointerdown", (e) => {
     handle.setPointerCapture(e.pointerId);
     const move = (ev) => {
@@ -189,32 +191,87 @@ function pageList(current, n) {
   return out;
 }
 
-// Each step owns one stretch of scroll. The first HOLD of the stretch keeps the camera on the step's block, the rest
-// zooms it toward the next block; the card switches halfway through that zoom.
+// While a step crosses the reading line, the first HOLD of its height keeps the camera on its block and the rest zooms
+// toward the next step's block, which arrives as that step reaches the line.
 const HOLD = 0.55;
+const pad2 = (k) => String(k).padStart(2, "0");
 
-// One explorer = a diagram whose camera follows page scroll through a list of steps, plus the card that explains the
-// current step. The explorer is sticky inside a .rp-scroll track whose height gives every step its stretch of scroll.
-function initExplorer(root, { onStep = () => {} } = {}) {
-  const items = [...root.querySelectorAll(".rp-step-list > li")];
-  typeset(root.querySelector(".rp-step-list"));
+// The reading pane scrolls on its own on wide screens; on narrow ones the page scrolls under a sticky visual.
+// The reading line sits 30% down the part of the text that is visible.
+function initReader(app) {
+  const pane = app.querySelector(".rp-read-scroll");
+  const visual = app.querySelector(".rp-visual");
+  const foot = app.querySelector(".rp-read-foot");
+  const paneScrolls = () => getComputedStyle(pane).overflowY !== "visible";
+  // Narrow screens measure from where the sticky visual ends once it is pinned, so a jump computed while it is still
+  // scrolling into place lands where sync() will read it.
+  const line = () => {
+    const [a, b] = paneScrolls()
+      ? [pane.getBoundingClientRect().top, pane.getBoundingClientRect().bottom]
+      : [(parseFloat(getComputedStyle(visual).top) || 0) + visual.offsetHeight, innerHeight - foot.offsetHeight];
+    return a + (b - a) * 0.3;
+  };
+  // Scroll so that `el` sits just above the reading line. The glide is driven here rather than by
+  // behavior: "smooth", which some browsers drop on an element right after an instant scroll.
+  let glide = 0;
+  const stop = () => cancelAnimationFrame(glide);
+  ["wheel", "touchstart", "keydown"].forEach((t) => window.addEventListener(t, stop, { passive: true }));
+  const scrollTo = (el) => {
+    const inPane = paneScrolls();
+    const get = () => (inPane ? pane.scrollTop : window.scrollY);
+    const set = (y) => (inPane ? (pane.scrollTop = y) : window.scrollTo(0, y));
+    const from = get();
+    const to = from + el.getBoundingClientRect().top - line() + 4;
+    stop();
+    if (reducedMotion) return set(to);
+    const ms = Math.min(900, 300 + Math.abs(to - from) * 0.25);
+    const t0 = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - t0) / ms);
+      set(from + (to - from) * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) glide = requestAnimationFrame(tick);
+    };
+    glide = requestAnimationFrame(tick);
+  };
+  const toTop = () => {
+    if (paneScrolls()) pane.scrollTop = 0;
+    const top = app.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(app).scrollMarginTop) || 0);
+    if (window.scrollY > top) window.scrollTo({ top, behavior: "auto" });
+  };
+  // A plain wheel over the visual reads on, so the whole window scrolls the steps.
+  visual.addEventListener(
+    "wheel",
+    (e) => {
+      if (e.ctrlKey || e.metaKey || !paneScrolls()) return;
+      e.preventDefault();
+      pane.scrollBy({ top: e.deltaY * (e.deltaMode === 1 ? 16 : 1) });
+    },
+    { passive: false }
+  );
+  return { pane, line, scrollTo, toTop };
+}
+
+// One explorer = the steps of a panel plus the diagram whose camera follows them. `controls` are the shared pager,
+// counter and progress bar in the reading pane's foot; only the visible explorer writes to them.
+function initExplorer(list, host, reader, controls, { onStep = () => {} } = {}) {
+  const items = [...list.children];
+  typeset(list);
   const steps = items.map((li) => ({
     id: li.dataset.id,
+    title: li.querySelector("h2").textContent.trim(),
     bounds: li.dataset.bounds ? li.dataset.bounds.split(" ").map(Number) : null,
     stage: JSON.parse(li.dataset.stage || "null") ?? {},
     li,
   }));
   const n = steps.length;
-  const track = root.closest(".rp-scroll");
-  const card = root.querySelector(".rp-step-card");
-  const pages = root.querySelector(".rp-pages");
-  const bar = root.querySelector(".rp-progress span");
-  const diagram = initDiagram(root.querySelector(".rp-diagram"));
+  const diagram = initDiagram(host);
   const groups = [...diagram.svg.querySelectorAll("[data-step]")];
   let index = -1;
+  let shown = false;
 
-  function renderPages() {
-    pages.replaceChildren(
+  function render() {
+    if (!shown || index < 0) return;
+    controls.pages.replaceChildren(
       ...pageList(index, n).map((k) => {
         const li = document.createElement("li");
         if (k === null) {
@@ -227,11 +284,19 @@ function initExplorer(root, { onStep = () => {} } = {}) {
         b.type = "button";
         b.textContent = String(k + 1);
         b.dataset.index = String(k);
-        b.setAttribute("aria-label", `Step ${k + 1}: ${steps[k].li.querySelector("h3").textContent}`);
+        b.setAttribute("aria-label", `Step ${k + 1}: ${steps[k].title}`);
         if (k === index) b.setAttribute("aria-current", "step");
         li.append(b);
         return li;
       })
+    );
+    controls.prev.disabled = index === 0;
+    controls.next.disabled = index === n - 1;
+    const next = steps[index + 1];
+    controls.now.replaceChildren(
+      Object.assign(document.createElement("b"), { textContent: `${pad2(index + 1)} / ${pad2(n)}` }),
+      ` ${steps[index].title}`,
+      ...(next ? [Object.assign(document.createElement("span"), { textContent: ` → ${next.title}` })] : [])
     );
   }
 
@@ -239,17 +304,7 @@ function initExplorer(root, { onStep = () => {} } = {}) {
     if (i === index) return;
     index = i;
     const s = steps[index];
-    const count = document.createElement("div");
-    count.className = "rp-step-count";
-    count.textContent = `Step ${index + 1} of ${n}`;
-    const title = document.createElement("h2");
-    title.textContent = s.li.querySelector("h3").textContent;
-    const rest = [...s.li.children].filter((el) => el.tagName !== "H3").map((el) => el.cloneNode(true));
-    card.replaceChildren(count, title, ...rest);
-    card.scrollTop = 0;
-    renderPages();
-    root.querySelector('[data-role="prev"]').disabled = index === 0;
-    root.querySelector('[data-role="next"]').disabled = index === n - 1;
+    items.forEach((li, k) => li.classList.toggle("is-active", k === index));
     const focus = s.stage.focus ?? s.id;
     let any = false;
     groups.forEach((g) => {
@@ -258,41 +313,25 @@ function initExplorer(root, { onStep = () => {} } = {}) {
       any ||= on;
     });
     diagram.svg.classList.toggle("has-active", any);
+    render();
     onStep(s);
   }
 
-  // Scroll geometry: how far the track has moved past the sticky top, as a position in steps (0 … n).
-  const stickyTop = () => parseFloat(getComputedStyle(root).top) || 0;
-  const range = () => Math.max(1, track.offsetHeight - root.offsetHeight);
-  const position = () => {
-    const passed = stickyTop() - track.getBoundingClientRect().top;
-    return Math.min(n - 1e-6, Math.max(0, (passed / range()) * n));
-  };
-
   function sync() {
-    const p = position();
-    const i = Math.floor(p);
-    const t = i < n - 1 ? (p - i - HOLD) / (1 - HOLD) : 0;
+    const L = reader.line();
+    const tops = items.map((li) => li.getBoundingClientRect().top);
+    let i = 0;
+    while (i < n - 1 && tops[i + 1] <= L) i++;
+    const end = i < n - 1 ? tops[i + 1] : items[i].getBoundingClientRect().bottom;
+    const f = Math.min(1, Math.max(0, (L - tops[i]) / Math.max(1, end - tops[i])));
+    const t = i < n - 1 ? (f - HOLD) / (1 - HOLD) : 0;
     diagram.between(steps[i].bounds, steps[Math.min(i + 1, n - 1)].bounds, t);
-    activate(t >= 0.5 ? i + 1 : i);
-    bar.style.transform = `scaleX(${(p / (n - 1e-6)).toFixed(4)})`;
+    activate(i);
+    controls.bar.style.transform = `scaleX(${((i + f) / n).toFixed(4)})`;
   }
 
-  // Jump by scrolling the page to the middle of the step's hold, so the camera and card follow the scroll.
-  function go(i) {
-    const k = Math.min(n - 1, Math.max(0, i));
-    const trackTop = track.getBoundingClientRect().top + window.scrollY - stickyTop();
-    const y = trackTop + ((k + HOLD / 2) / n) * range();
-    window.scrollTo({ top: Math.round(y), behavior: reducedMotion ? "auto" : "smooth" });
-  }
-
-  root.querySelector('[data-role="prev"]').addEventListener("click", () => go(index - 1));
-  root.querySelector('[data-role="next"]').addEventListener("click", () => go(index + 1));
-  root.querySelector('[data-role="fit"]').addEventListener("click", () => diagram.fit(null));
-  pages.addEventListener("click", (e) => {
-    const b = e.target.closest("button[data-index]");
-    if (b) go(Number(b.dataset.index));
-  });
+  const go = (k) => reader.scrollTo(items[Math.min(n - 1, Math.max(0, k))]);
+  host.querySelector('[data-role="fit"]').addEventListener("click", () => diagram.fit(null));
   groups.forEach((g) => {
     g.setAttribute("tabindex", "0");
     g.setAttribute("role", "button");
@@ -303,20 +342,19 @@ function initExplorer(root, { onStep = () => {} } = {}) {
     g.addEventListener("click", () => !diagram.wasDrag() && jump());
     g.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), jump()));
   });
-  initSplitter(root.querySelector(".rp-split"), root.querySelector(".rp-splitter"), `rp-split-${root.dataset.explorer}`);
 
   return {
-    root,
     current: () => steps[Math.max(0, index)],
     sync,
+    go,
     step: (d) => go(index + d),
-    // Called when the tab becomes visible: start from the top of its track if the page is already below it.
-    show: () =>
-      requestAnimationFrame(() => {
-        const trackTop = track.getBoundingClientRect().top + window.scrollY - stickyTop();
-        if (window.scrollY > trackTop) window.scrollTo({ top: trackTop, behavior: "auto" });
+    show(on) {
+      shown = on;
+      if (on) {
         sync();
-      }),
+        render();
+      }
+    },
   };
 }
 
@@ -331,17 +369,64 @@ function webglAvailable() {
 
 function initPolicyPage(app) {
   let stage = null;
+  let tab = "inference";
+  const reader = initReader(app);
+  const controls = {
+    pages: app.querySelector(".rp-pages"),
+    prev: app.querySelector('[data-role="prev"]'),
+    next: app.querySelector('[data-role="next"]'),
+    now: app.querySelector(".rp-now"),
+    bar: app.querySelector(".rp-progress span"),
+  };
   const explorers = {};
-  explorers.inference = initExplorer(app.querySelector('[data-explorer="inference"]'), {
-    onStep: (s) => stage?.play({ beat: s.id, ...s.stage }),
-  });
-  const training = app.querySelector('[data-explorer="training"]');
-  if (training) explorers.training = initExplorer(training);
+  for (const name of ["inference", "training"]) {
+    const list = app.querySelector(`[data-steps="${name}"]`);
+    const host = app.querySelector(`.rp-diagram[data-for="${name}"]`);
+    if (!list || !host) continue;
+    explorers[name] = initExplorer(list, host, reader, controls, {
+      onStep: (s) => name === "inference" && tab === "inference" && stage?.play({ beat: s.id, ...s.stage }),
+    });
+  }
   let visible = null;
+  const playForTab = () => {
+    if (!stage || !explorers.inference) return;
+    // Results shows the whole loop running, as in the overview step.
+    const s = tab === "results" ? { id: "overview", stage: {} } : explorers.inference.current();
+    stage.play({ beat: s.id, ...s.stage });
+  };
+
+  controls.prev.addEventListener("click", () => visible?.step(-1));
+  controls.next.addEventListener("click", () => visible?.step(1));
+  controls.pages.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-index]");
+    if (b) visible?.go(Number(b.dataset.index));
+  });
+  initSplitter(app, app.querySelector(".rp-splitter"), "rp-split");
+
+  // Contents: the steps and headings of the open panel.
+  const contents = app.querySelector(".rp-contents");
+  const buildContents = (panel) => {
+    const targets = [...panel.querySelectorAll(".rp-steps > li > h2, .rp-article > h2, .rp-article > h3")];
+    contents.querySelector("ol").replaceChildren(
+      ...targets.map((h) => {
+        const li = document.createElement("li");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = h.textContent.trim();
+        b.addEventListener("click", () => {
+          contents.open = false;
+          reader.scrollTo(h.closest("li") ?? h);
+        });
+        li.append(b);
+        return li;
+      })
+    );
+  };
+  document.addEventListener("click", (e) => contents.open && !contents.contains(e.target) && (contents.open = false));
 
   document.addEventListener("keydown", (e) => {
     if (!visible) return;
-    if (e.target.closest("input, textarea, select, [role='tab'], [role='separator']")) return;
+    if (e.target.closest("input, textarea, select, summary, [role='tab'], [role='separator']")) return;
     if (e.key === "ArrowRight") visible.step(1);
     else if (e.key === "ArrowLeft") visible.step(-1);
   });
@@ -354,6 +439,7 @@ function initPolicyPage(app) {
       visible?.sync();
     });
   };
+  reader.pane.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
 
@@ -382,8 +468,7 @@ function initPolicyPage(app) {
         },
       });
       fallback.remove();
-      const s = explorers.inference.current();
-      stage.play({ beat: s.id, ...s.stage });
+      playForTab();
       if (reducedMotion) {
         stage.setPlaying(false);
         motionBtn.textContent = "Play motion";
@@ -402,16 +487,21 @@ function initPolicyPage(app) {
     motionBtn.setAttribute("aria-pressed", String(!on));
   });
   const io = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
+    if (entries.some((en) => en.isIntersecting)) {
       io.disconnect();
       load();
     }
   });
 
   initTabs((id) => {
+    tab = id;
+    app.dataset.tab = id;
+    reader.toTop();
+    buildContents(document.getElementById(`panel-${id}`));
+    Object.entries(explorers).forEach(([name, ex]) => ex.show(name === id));
     visible = explorers[id] ?? null;
-    visible?.show();
-    if (id === "inference") io.observe(stageEl);
+    if (id !== "training") io.observe(stageEl);
+    playForTab();
   });
 }
 
