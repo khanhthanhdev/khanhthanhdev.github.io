@@ -339,6 +339,11 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+/* data-beat is set from JS, so PurgeCSS cannot see the value in the HTML. */
+.rp-stage[data-beat="observe"] .rp-hud-cam {
+  border-color: var(--rp-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rp-accent) 35%, transparent);
+}
 .rp-hud-joints {
   position: absolute;
   left: 12px;
