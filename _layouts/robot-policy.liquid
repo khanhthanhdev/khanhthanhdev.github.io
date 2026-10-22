@@ -3,6 +3,8 @@
   <head>
     {% include head.liquid %}
     <link rel="stylesheet" href="{{ '/assets/css/robot-policy.css' | relative_url | bust_file_cache }}">
+    <link rel="stylesheet" href="{{ '/assets/js/robot-policy/lib/katex/katex.min.css' | relative_url }}">
+    <script defer src="{{ '/assets/js/robot-policy/lib/katex/katex.min.js' | relative_url }}"></script>
     <script type="module" src="{{ '/assets/js/robot-policy/app.js' | relative_url | bust_file_cache }}"></script>
   </head>
   <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} rp rp-nojs">
@@ -32,101 +34,31 @@
       data-fps="{{ page.policy.fps }}"
       data-name="{{ page.model_name }}"
     >
-      <!-- Inference: pipeline diagram + 3D stage, driven by one list of steps -->
-      <section id="inference" class="rp-panel rp-inference" role="tabpanel" aria-labelledby="tab-inference">
-        <div class="rp-split" id="rp-split">
-          <div class="rp-diagram" id="rp-diagram">
-            {% capture rp_pipeline %}robot-policy/{{ page.slug }}-pipeline.svg{% endcapture %}
-            {% include {{ rp_pipeline }} %}
-            <div class="rp-diagram-tools">
-              <button type="button" id="rp-fit" title="Show the whole pipeline">Fit</button>
-            </div>
-          </div>
-          <div
-            class="rp-splitter"
-            id="rp-splitter"
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="Resize diagram and 3D view"
-            tabindex="0"
-          ></div>
-          <div class="rp-stage" id="rp-stage">
-            <div class="rp-stage-fallback" id="rp-stage-fallback">
-              <strong>NexArm 3D view</strong>
-              <span>Loading the robot model…</span>
-            </div>
-            <div class="rp-stage-tools">
-              <button type="button" id="rp-motion" aria-pressed="false">Pause motion</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="rp-rail">
-          <div class="rp-step-card" id="rp-step-card" aria-live="polite">
-            {% assign first = page.steps | first %}
-            <div class="rp-step-count">Step 1 of {{ page.steps | size }}</div>
-            <h2>{{ first.title }}</h2>
-            <div>{{ first.body | markdownify }}</div>
-            {% if first.shapes %}
-              <div class="rp-step-shapes">{{ first.shapes }}</div>
-            {% endif %}
-          </div>
-          <div class="rp-controls">
-            <div class="rp-buttons">
-              <button type="button" id="rp-prev" aria-label="Previous step">←</button>
-              <button type="button" id="rp-play" class="primary" aria-pressed="false">Play</button>
-              <button type="button" id="rp-next" aria-label="Next step">→</button>
-            </div>
-            <ol class="rp-dots" id="rp-dots">
-              {% for step in page.steps %}
-                <li>
-                  <button
-                    type="button"
-                    data-index="{{ forloop.index0 }}"
-                    aria-label="Step {{ forloop.index }}: {{ step.title | escape }}"
-                    {% if forloop.first %}
-                      aria-current="step"
-                    {% endif %}
-                  ></button>
-                </li>
-              {% endfor %}
-            </ol>
-            <div class="rp-kbd-hint">Keys: <kbd>←</kbd> <kbd>→</kbd> steps · <kbd>space</kbd> play</div>
-          </div>
-        </div>
-
-        <ol class="rp-step-list" id="rp-steps">
-          {% for step in page.steps %}
-            <li
-              data-id="{{ step.id }}"
-              data-bounds="{{ step.bounds | join: ' ' }}"
-              data-stage="{{ step.stage | jsonify | escape }}"
-            >
-              <h3>{{ step.title }}</h3>
-              <div class="rp-step-body">{{ step.body | markdownify }}</div>
-              {% if step.shapes %}
-                <div class="rp-step-shapes">{{ step.shapes }}</div>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ol>
+      <!-- Inference: pipeline diagram on the left; 3D stage, explanation and formulas on the right -->
+      <section id="inference" class="rp-panel" role="tabpanel" aria-labelledby="tab-inference">
+        {% capture rp_pipeline %}robot-policy/{{ page.slug }}-pipeline.svg{% endcapture %}
+        {% include robot-policy/explorer.liquid name="inference" steps=page.steps svg=rp_pipeline stage=true %}
       </section>
 
-      <!-- Training: the architecture write-up -->
-      <section id="training" class="rp-panel container" role="tabpanel" aria-labelledby="tab-training">
-        <article class="rp-article">
-          <p class="rp-lede">{{ page.description }}</p>
-          {% if page.facts %}
-            <ul class="rp-specs">
-              {% for f in page.facts %}
-                <li>
-                  <b>{{ f.value }}</b> · {{ f.label }}
-                </li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-          {{ content }}
-        </article>
+      <!-- Training: the training loop on the left, the explanation and formulas on the right, then the settings -->
+      <section id="training" class="rp-panel" role="tabpanel" aria-labelledby="tab-training">
+        {% capture rp_training %}robot-policy/{{ page.slug }}-training.svg{% endcapture %}
+        {% include robot-policy/explorer.liquid name="training" steps=page.training_steps svg=rp_training %}
+        <div class="container rp-after">
+          <article class="rp-article">
+            <p class="rp-lede">{{ page.description }}</p>
+            {% if page.facts %}
+              <ul class="rp-specs">
+                {% for f in page.facts %}
+                  <li>
+                    <b>{{ f.value }}</b> · {{ f.label }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            {{ content }}
+          </article>
+        </div>
       </section>
 
       <!-- Results -->

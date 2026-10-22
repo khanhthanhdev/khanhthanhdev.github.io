@@ -1,0 +1,89 @@
+{% comment %}
+  One stepped explorer: the diagram on the left, the explanation, formulas and (for inference) the 3D stage on the right.
+  Params: name (inference | training), steps (list from front matter), svg (include path), stage (true to add the 3D view).
+{% endcomment %}
+{% assign rp_steps = include.steps %}
+{% assign first = rp_steps | first %}
+<div class="rp-explorer{% if include.stage %} has-stage{% endif %}" data-explorer="{{ include.name }}">
+  <div class="rp-split">
+    <div class="rp-diagram">
+      {% include {{ include.svg }} %}
+      <div class="rp-diagram-tools">
+        <button type="button" data-role="fit" title="Show the whole diagram">Fit</button>
+      </div>
+    </div>
+    <div
+      class="rp-splitter"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the diagram and the explanation"
+      tabindex="0"
+    ></div>
+    <div class="rp-side">
+      {% if include.stage %}
+        <div class="rp-stage" id="rp-stage">
+          <div class="rp-stage-fallback" id="rp-stage-fallback">
+            <strong>NexArm 3D view</strong>
+            <span>Loading the robot model…</span>
+          </div>
+          <div class="rp-stage-tools">
+            <button type="button" id="rp-motion" aria-pressed="false">Pause motion</button>
+          </div>
+        </div>
+      {% endif %}
+      <div class="rp-step-card" aria-live="polite">
+        <div class="rp-step-count">Step 1 of {{ rp_steps | size }}</div>
+        <h2>{{ first.title }}</h2>
+        <div class="rp-step-body">{{ first.body | markdownify }}</div>
+      </div>
+      <div class="rp-controls">
+        <div class="rp-buttons">
+          <button type="button" data-role="prev" aria-label="Previous step">←</button>
+          <button type="button" data-role="play" class="primary" aria-pressed="false">Play</button>
+          <button type="button" data-role="next" aria-label="Next step">→</button>
+        </div>
+        <ol class="rp-dots">
+          {% for step in rp_steps %}
+            <li>
+              <button
+                type="button"
+                data-index="{{ forloop.index0 }}"
+                aria-label="Step {{ forloop.index }}: {{ step.title | escape }}"
+                {% if forloop.first %}
+                  aria-current="step"
+                {% endif %}
+              ></button>
+            </li>
+          {% endfor %}
+        </ol>
+        <div class="rp-kbd-hint"><kbd>←</kbd> <kbd>→</kbd> steps · <kbd>space</kbd> play</div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="rp-step-list">
+    {% for step in rp_steps %}
+      <li
+        data-id="{{ step.id }}"
+        data-bounds="{{ step.bounds | join: ' ' }}"
+        data-stage="{{ step.stage | jsonify | escape }}"
+      >
+        <h3>{{ step.title }}</h3>
+        <div class="rp-step-body">{{ step.body | markdownify }}</div>
+        {% if step.formulas %}
+          <div class="rp-formulas">
+            {% for f in step.formulas %}
+              <div class="rp-tex">{{ f | escape }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if step.where %}
+          <div class="rp-where">{{ step.where | markdownify }}</div>
+        {% endif %}
+        {% if step.shapes %}
+          <div class="rp-step-shapes">{{ step.shapes }}</div>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+</div>

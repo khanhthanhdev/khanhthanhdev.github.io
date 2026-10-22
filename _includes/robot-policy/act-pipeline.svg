@@ -1,190 +1,344 @@
-<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="act-pipe-title act-pipe-desc">
+<svg viewBox="0 0 1400 1600" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="act-pipe-title act-pipe-desc">
   <title id="act-pipe-title">ACT inference pipeline on the NexArm</title>
-  <desc id="act-pipe-desc">Three 640 by 480 camera frames go through a shared ResNet18 into 900 image tokens; with a latent token and a joint-state token they form 902 tokens for a 4-layer transformer encoder; 100 learned queries in a 1-layer decoder read that memory and a linear head outputs a 100 by 6 action chunk, which the arm runs open loop for 3.33 seconds before observing again.</desc>
+  <desc id="act-pipe-desc">Each 480 by 640 camera frame goes through a shared ResNet18 to a 512 by 15 by 20 feature map, a 1 by 1 convolution and a fixed 2D sine position code, giving 300 tokens per camera; the joint state and the style latent z, which is zero at inference, become two more tokens; four post-norm encoder layers mix all 902 tokens; one decoder layer turns 100 zero-initialised query slots with learned positions into 100 actions through self-attention, cross-attention and a feed-forward block; a linear layer gives 100 by 6 normalised actions that the arm runs in full before observing again.</desc>
   <defs>
-    <filter id="act-rough" x="-4%" y="-4%" width="108%" height="108%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="7" result="n" />
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G" />
+    <filter id="act-pipe-rough" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="11" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
     </filter>
-    <pattern id="act-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+    <pattern id="act-pipe-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
       <line x1="0" y1="0" x2="0" y2="9" />
     </pattern>
-    <pattern id="act-ticks" width="12" height="70" patternUnits="userSpaceOnUse" x="200" y="712">
-      <line x1="6" y1="16" x2="6" y2="54" class="ln-a" />
-    </pattern>
-    <marker id="act-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <marker id="act-pipe-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
       <path class="ah" d="M0,1 L10,5 L0,9 z" />
     </marker>
+    <marker id="act-pipe-ah-a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
+    </marker>
   </defs>
-
   <text class="h" x="40" y="52">ACT · one control cycle on the NexArm</text>
-  <text class="s" x="40" y="76">Action Chunking with Transformers, as configured in lerobot-nexarm · click a block or use the arrow keys</text>
+  <text class="s" x="40" y="78">Read top to bottom · blocks follow lerobot/policies/act/modeling_act.py · click a block or use the arrow keys</text>
 
   <!-- 1 observe -->
   <g data-step="observe">
-    <text class="lbl" x="40" y="114">1 · observe</text>
-    <g filter="url(#act-rough)">
-      <rect class="sk f-in" x="40" y="128" width="290" height="104" rx="10" />
-      <rect class="sk f-in" x="40" y="248" width="290" height="104" rx="10" />
-      <rect class="sk f-in" x="40" y="368" width="290" height="104" rx="10" />
-      <rect class="sk f-in" x="40" y="496" width="290" height="92" rx="10" />
-      <rect class="sk" x="56" y="150" width="72" height="54" fill="url(#act-hatch)" />
-      <rect class="sk" x="56" y="270" width="72" height="54" fill="url(#act-hatch)" />
-      <rect class="sk" x="56" y="390" width="72" height="54" fill="url(#act-hatch)" />
+    <text class="lbl" x="40" y="112">1 · observe</text>
+    <g filter="url(#act-pipe-rough)">
+      <rect class="sk f-in" x="40" y="124" width="520" height="176" rx="10" />
+      <rect class="sk f-in" x="600" y="124" width="340" height="176" rx="10" />
+      <rect class="sk" x="60" y="166" width="120" height="78" rx="3" fill="url(#act-pipe-hatch)" />
+      <rect class="sk" x="200" y="166" width="120" height="78" rx="3" fill="url(#act-pipe-hatch)" />
+      <rect class="sk" x="340" y="166" width="120" height="78" rx="3" fill="url(#act-pipe-hatch)" />
     </g>
-    <text class="t" x="144" y="166">front camera</text>
-    <text class="s" x="144" y="188">Logitech · RGB 640×480</text>
-    <text class="sm" x="144" y="210">images.front</text>
-    <text class="t" x="144" y="286">top camera</text>
-    <text class="s" x="144" y="308">D435i · RGB 640×480</text>
-    <text class="sm" x="144" y="330">images.top · 3-cam data</text>
-    <text class="t" x="144" y="406">wrist camera</text>
-    <text class="s" x="144" y="428">icSpring · RGB 640×480</text>
-    <text class="sm" x="144" y="450">images.wrist</text>
-    <text class="t" x="56" y="526">joint state</text>
-    <text class="s" x="56" y="548">5 joint angles + gripper</text>
-    <text class="m" x="56" y="572">observation.state ∈ ℝ⁶</text>
+    <rect class="ln-d f-note" x="980" y="124" width="380" height="176" rx="10" />
+    <text class="t" x="60" y="152">camera views I<tspan dy="4" class="ss">1</tspan><tspan dy="-4">​</tspan> … I<tspan dy="4" class="ss">V</tspan><tspan dy="-4">​</tspan></text>
+    <text class="sm" x="120" y="264" text-anchor="middle">front</text>
+    <text class="sm" x="260" y="264" text-anchor="middle">wrist</text>
+    <text class="sm" x="400" y="264" text-anchor="middle">top (if recorded)</text>
+    <text class="m" x="60" y="288">480 × 640 RGB · ImageNet mean / std · V = 2 or 3</text>
+    <text class="t" x="620" y="152">joint state s<tspan dy="4" class="ss">t</tspan><tspan dy="-4">​</tspan></text>
+    <rect class="op" x="620" y="170" width="46" height="40" rx="5" />
+    <text class="sm" x="643.0" y="195.0" text-anchor="middle">j1</text>
+    <rect class="op" x="672" y="170" width="46" height="40" rx="5" />
+    <text class="sm" x="695.0" y="195.0" text-anchor="middle">j2</text>
+    <rect class="op" x="724" y="170" width="46" height="40" rx="5" />
+    <text class="sm" x="747.0" y="195.0" text-anchor="middle">j3</text>
+    <rect class="op" x="776" y="170" width="46" height="40" rx="5" />
+    <text class="sm" x="799.0" y="195.0" text-anchor="middle">j4</text>
+    <rect class="op" x="828" y="170" width="46" height="40" rx="5" />
+    <text class="sm" x="851.0" y="195.0" text-anchor="middle">j5</text>
+    <rect class="op" x="880" y="170" width="46" height="40" rx="5" />
+    <text class="sm" x="903.0" y="195.0" text-anchor="middle">grip</text>
+    <text class="m" x="620" y="244">(s − μ) / σ</text>
+    <text class="s" x="620" y="268">dataset mean and std, per joint</text>
+    <text class="t" x="1000" y="152">style latent z ∈ ℝ<tspan dy="-6" class="ss">32</tspan><tspan dy="6">​</tspan></text>
+    <text class="m" x="1000" y="188">z = 0 at inference</text>
+    <text class="s" x="1000" y="216">in training it comes from the CVAE</text>
+    <text class="s" x="1000" y="236">encoder (see the Training tab)</text>
+    <text class="s" x="1000" y="268">ACT does not read the task text</text>
   </g>
-
-  <path class="ln" d="M330 180 L398 236" marker-end="url(#act-ah)" />
-  <path class="ln" d="M330 300 L398 300" marker-end="url(#act-ah)" />
-  <path class="ln" d="M330 420 L398 364" marker-end="url(#act-ah)" />
+  <path class="ln" d="M300 300 V350" marker-end="url(#act-pipe-ah)" />
+  <path class="ln" d="M770 300 V350" marker-end="url(#act-pipe-ah)" />
+  <path class="ln-d" d="M1170 300 V350" marker-end="url(#act-pipe-ah)" />
 
   <!-- 2 backbone -->
   <g data-step="backbone">
-    <text class="lbl" x="400" y="114">2 · ResNet18 on each image</text>
-    <g filter="url(#act-rough)">
-      <rect class="sk f-enc" x="400" y="128" width="320" height="350" rx="12" />
-      <rect class="sk f-panel" x="424" y="230" width="44" height="150" />
-      <rect class="sk f-panel" x="480" y="245" width="40" height="120" />
-      <rect class="sk f-panel" x="532" y="257" width="36" height="96" />
-      <rect class="sk f-panel" x="580" y="269" width="32" height="72" />
-      <rect class="sk f-panel" x="624" y="281" width="28" height="48" />
-      <rect class="sk f-panel" x="400" y="498" width="320" height="102" rx="10" />
+    <text class="lbl" x="40" y="342">2 · image backbone</text>
+    <g filter="url(#act-pipe-rough)">
+      <rect class="sk f-enc" x="40" y="352" width="520" height="412" rx="12" />
     </g>
-    <text class="t" x="420" y="162">ResNet18</text>
-    <text class="s" x="420" y="184">ImageNet-1k init; one backbone</text>
-    <text class="s" x="420" y="202">shared by the three cameras</text>
-    <text class="sm" x="446" y="402" text-anchor="middle">stem</text>
-    <text class="sm" x="500" y="402" text-anchor="middle">l1</text>
-    <text class="sm" x="550" y="402" text-anchor="middle">l2</text>
-    <text class="sm" x="596" y="402" text-anchor="middle">l3</text>
-    <text class="sm" x="638" y="402" text-anchor="middle">l4</text>
-    <text class="m" x="420" y="436">layer4: 512 × 15 × 20</text>
-    <text class="s" x="420" y="458">stride 32 on a 480×640 frame</text>
-    <text class="t" x="416" y="526">1×1 conv → 512, flatten</text>
-    <text class="s" x="416" y="548">+ 2D sinusoidal position embedding</text>
-    <text class="m" x="416" y="572">300 tokens per camera → 900</text>
-    <text class="sm" x="416" y="590">600 with the 2-camera dataset</text>
+    <text class="t" x="60" y="380">ResNet18 · ImageNet-1k weights</text>
+    <text class="s" x="60" y="400">one backbone for all cameras · FrozenBatchNorm · lr 1e-5</text>
+    <rect class="op" x="60" y="414" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="435.0">stem: conv 7×7 /2 · BN · ReLU · maxpool /2</text>
+    <text class="sm" x="526" y="435" text-anchor="end">64 × 120 × 160</text>
+    <rect class="op" x="60" y="456" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="477.0">layer1 · 2 basic blocks</text>
+    <text class="sm" x="526" y="477" text-anchor="end">64 × 120 × 160</text>
+    <path class="ln-t" d="M300 446 V456" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="60" y="498" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="519.0">layer2 · 2 basic blocks, /2</text>
+    <text class="sm" x="526" y="519" text-anchor="end">128 × 60 × 80</text>
+    <path class="ln-t" d="M300 488 V498" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="60" y="540" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="561.0">layer3 · 2 basic blocks, /2</text>
+    <text class="sm" x="526" y="561" text-anchor="end">256 × 30 × 40</text>
+    <path class="ln-t" d="M300 530 V540" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="60" y="582" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="603.0">layer4 · 2 basic blocks, /2</text>
+    <text class="sm" x="526" y="603" text-anchor="end">512 × 15 × 20</text>
+    <path class="ln-t" d="M300 572 V582" marker-end="url(#act-pipe-ah)" />
+    <path class="ln-t" d="M300 614 V632" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="60" y="632" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="653.0">1 × 1 conv 512 → 512 · flatten 15 × 20 → 300 tokens</text>
+    <path class="ln-t" d="M300 664 V674" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="60" y="674" width="480" height="32" rx="5" />
+    <text class="o" x="74" y="695.0">2D sine position p: 256 for y, 256 for x · fixed</text>
+    <text class="m" x="60" y="744">per camera: 300 × 512 tokens + their positions</text>
   </g>
-  <path class="ln" d="M560 478 L560 496" marker-end="url(#act-ah)" />
+  <path class="ln" d="M560 690 H600" marker-end="url(#act-pipe-ah)" />
 
-  <!-- 3 encoder -->
-  <path class="ln" d="M720 543 H752 V200 H788" marker-end="url(#act-ah)" />
-  <path class="ln" d="M330 560 H364 V614 H772 V246 H788" marker-end="url(#act-ah)" />
+  <!-- 3 encoder tokens -->
+  <g data-step="tokens">
+    <text class="lbl" x="600" y="342">3 · encoder input</text>
+    <g filter="url(#act-pipe-rough)">
+      <rect class="sk f-enc" x="600" y="352" width="760" height="412" rx="12" />
+    </g>
+    <text class="t" x="620" y="380">one token sequence</text>
+    <text class="s" x="620" y="400">1D tokens get learned positions; image tokens keep their 2D sine code</text>
+    <rect class="op" x="620" y="414" width="300" height="32" rx="5" />
+    <text class="o" x="770.0" y="435.0" text-anchor="middle">state: Linear 6 → 512</text>
+    <path class="ln-t" d="M770 446 V456" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="620" y="456" width="300" height="32" rx="5" />
+    <text class="o" x="770.0" y="477.0" text-anchor="middle">+ learned position p<tspan dy="4" class="ss">s</tspan><tspan dy="-4">​</tspan></text>
+    <rect class="op" x="1000" y="414" width="340" height="32" rx="5" />
+    <text class="o" x="1170.0" y="435.0" text-anchor="middle">latent: Linear 32 → 512</text>
+    <path class="ln-t" d="M1170 446 V456" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="1000" y="456" width="340" height="32" rx="5" />
+    <text class="o" x="1170.0" y="477.0" text-anchor="middle">+ learned position p<tspan dy="4" class="ss">z</tspan><tspan dy="-4">​</tspan></text>
+    <text class="sm" x="620" y="528">tokens X</text>
+    <rect class="op-a" x="620" y="538" width="50" height="40" rx="4" />
+    <text class="i" x="645" y="563" text-anchor="middle">z</text>
+    <rect class="op-a" x="676" y="538" width="50" height="40" rx="4" />
+    <text class="i" x="701" y="563" text-anchor="middle">s</text>
+    <rect class="tok f-dec" x="734" y="538" width="192" height="40" rx="4" />
+    <text class="sm" x="830" y="563" text-anchor="middle">front · 300</text>
+    <rect class="tok f-dec" x="934" y="538" width="192" height="40" rx="4" />
+    <text class="sm" x="1030" y="563" text-anchor="middle">wrist · 300</text>
+    <rect class="tok f-dec" x="1134" y="538" width="192" height="40" rx="4" />
+    <text class="sm" x="1230" y="563" text-anchor="middle">top · 300</text>
+    <text class="sm" x="620" y="604">positions P</text>
+    <rect class="op" x="620" y="614" width="50" height="30" rx="4" />
+    <text class="sm" x="645" y="634" text-anchor="middle">p<tspan dy="4" class="ss">z</tspan><tspan dy="-4">​</tspan></text>
+    <rect class="op" x="676" y="614" width="50" height="30" rx="4" />
+    <text class="sm" x="701" y="634" text-anchor="middle">p<tspan dy="4" class="ss">s</tspan><tspan dy="-4">​</tspan></text>
+    <rect class="op" x="734" y="614" width="192" height="30" rx="4" />
+    <text class="sm" x="830" y="634" text-anchor="middle">2D sine</text>
+    <rect class="op" x="934" y="614" width="192" height="30" rx="4" />
+    <text class="sm" x="1030" y="634" text-anchor="middle">2D sine</text>
+    <rect class="op" x="1134" y="614" width="192" height="30" rx="4" />
+    <text class="sm" x="1230" y="634" text-anchor="middle">2D sine</text>
+    <text class="s" x="620" y="690">P is added to the queries and keys of every attention in the encoder,</text>
+    <text class="s" x="620" y="710">and to the keys of the decoder's cross-attention, never to the values</text>
+    <text class="m" x="620" y="750">X, P · (2 + 300V) × 512 = 902 × 512 with 3 cameras</text>
+  </g>
+  <path class="ln" d="M760 764 V786 H280 V890" marker-end="url(#act-pipe-ah)" />
+  <path class="ln" d="M840 764 V796 H620 V890" marker-end="url(#act-pipe-ah)" />
+
+  <!-- 4 encoder -->
   <g data-step="encoder">
-    <text class="lbl" x="790" y="114">3 · transformer encoder</text>
-    <g filter="url(#act-rough)">
-      <rect class="sk f-panel" x="790" y="128" width="300" height="150" rx="10" />
-      <rect class="tok f-note" x="806" y="174" width="14" height="22" />
-      <rect class="tok f-in" x="826" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="852" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="870" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="888" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="906" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="932" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="950" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="968" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="986" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="1012" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="1030" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="1048" y="174" width="14" height="22" />
-      <rect class="tok f-enc" x="1066" y="174" width="14" height="22" />
-      <rect class="sk f-enc" x="822" y="302" width="268" height="170" rx="10" />
-      <rect class="sk f-enc" x="814" y="310" width="268" height="170" rx="10" />
-      <rect class="sk f-enc" x="806" y="318" width="268" height="170" rx="10" />
-      <rect class="sk f-panel" x="790" y="510" width="300" height="50" rx="10" />
+    <text class="lbl" x="40" y="810">4 · transformer encoder</text>
+    <g filter="url(#act-pipe-rough)">
+      <rect class="sk f-enc" x="40" y="820" width="900" height="530" rx="12" />
     </g>
-    <text class="t" x="806" y="156">input sequence · 902 × 512</text>
-    <text class="sm" x="813" y="214" text-anchor="middle">z</text>
-    <text class="sm" x="833" y="214" text-anchor="middle">s</text>
-    <text class="sm" x="852" y="214">image tokens, 3 × 300</text>
-    <text class="s" x="806" y="240">z · style latent, zeros at inference</text>
-    <text class="s" x="806" y="262">s · joint state through Linear(6→512)</text>
-    <text class="t" x="822" y="350">× 4 encoder layers</text>
-    <text class="m" x="822" y="378">d_model 512 · 8 heads</text>
-    <text class="m" x="822" y="400">FFN 3200 · ReLU</text>
-    <text class="s" x="822" y="424">post-norm · dropout 0.1</text>
-    <text class="s" x="822" y="446">self-attention over all 902</text>
-    <text class="m" x="806" y="541">memory · 902 × 512</text>
+    <text class="t" x="60" y="850">4 × encoder layer, post-norm</text>
+    <text class="s" x="60" y="870">d 512 · 8 heads · FFN 3200 · ReLU · dropout 0.1</text>
+    <rect class="op" x="180" y="890" width="200" height="34" rx="5" />
+    <text class="o" x="280.0" y="912.0" text-anchor="middle">X</text>
+    <rect class="op" x="520" y="890" width="200" height="34" rx="5" />
+    <text class="o" x="620.0" y="912.0" text-anchor="middle">P</text>
+    <path class="ln-t" d="M330 924 V950 H438" marker-end="url(#act-pipe-ah)" />
+    <path class="ln-t" d="M620 924 V950 H462" marker-end="url(#act-pipe-ah)" />
+    <circle class="op" cx="450" cy="950" r="11" />
+    <path class="ln-t" d="M443 950 H457 M450 943 V957" />
+    <path class="ln-t" d="M450 961 V1000" marker-end="url(#act-pipe-ah)" />
+    <text class="sm" x="458" y="986">q, k</text>
+    <path class="ln-t" d="M240 924 V1000" marker-end="url(#act-pipe-ah)" />
+    <text class="sm" x="248" y="986">v</text>
+    <rect class="op" x="200" y="1000" width="500" height="50" rx="5" />
+    <text class="o" x="450.0" y="1022.0" text-anchor="middle">multi-head self-attention · 8 heads</text>
+    <text class="sm" x="450.0" y="1040.0" text-anchor="middle">every token attends to all 902</text>
+    <path class="ln-t" d="M450 1050 V1068" marker-end="url(#act-pipe-ah)" />
+    <path class="ln-t" d="M180 907 H100 V1080 H438" marker-end="url(#act-pipe-ah)" />
+    <circle class="op" cx="450" cy="1080" r="11" />
+    <path class="ln-t" d="M443 1080 H457 M450 1073 V1087" />
+    <path class="ln-t" d="M450 1091 V1104" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="400" y="1104" width="100" height="30" rx="5" />
+    <text class="o" x="450.0" y="1124.0" text-anchor="middle">LN</text>
+    <path class="ln-t" d="M450 1134 V1160" marker-end="url(#act-pipe-ah)" />
+    <path class="ln-t" d="M450 1146 H780 V1236 H462" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="200" y="1160" width="500" height="40" rx="5" />
+    <text class="o" x="450.0" y="1185.0" text-anchor="middle">FFN 512 → 3200 → 512, ReLU</text>
+    <path class="ln-t" d="M450 1200 V1224" marker-end="url(#act-pipe-ah)" />
+    <circle class="op" cx="450" cy="1236" r="11" />
+    <path class="ln-t" d="M443 1236 H457 M450 1229 V1243" />
+    <path class="ln-t" d="M450 1247 V1262" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="400" y="1262" width="100" height="30" rx="5" />
+    <text class="o" x="450.0" y="1282.0" text-anchor="middle">LN</text>
+    <path class="ln-d" d="M880 1290 V900" marker-end="url(#act-pipe-ah)" />
+    <text class="t" x="880" y="1314" text-anchor="middle">× 4</text>
+    <path class="ln-t" d="M450 1292 V1306" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="200" y="1306" width="500" height="32" rx="5" />
+    <text class="o" x="450.0" y="1327.0" text-anchor="middle">memory M · 902 × 512</text>
   </g>
-  <path class="ln" d="M940 278 L940 300" marker-end="url(#act-ah)" />
-  <path class="ln" d="M940 488 L940 508" marker-end="url(#act-ah)" />
+  <path class="ln" d="M700 1322 H955 V1079 H1016" marker-end="url(#act-pipe-ah)" />
 
-  <!-- 4 decoder -->
-  <path class="ln" d="M1090 535 H1122 V323 H1158" marker-end="url(#act-ah)" />
+  <!-- 5 decoder -->
   <g data-step="decoder">
-    <text class="lbl" x="1160" y="114">4 · transformer decoder</text>
-    <g filter="url(#act-rough)">
-      <rect class="sk f-dec" x="1160" y="128" width="400" height="96" rx="10" />
-      <rect class="sk f-dec" x="1160" y="248" width="400" height="150" rx="10" />
-      <rect class="sk f-panel" x="1160" y="418" width="400" height="48" rx="8" />
-      <rect class="sk f-out" x="1160" y="486" width="400" height="140" rx="10" />
+    <text class="lbl" x="980" y="810">5 · decoder and action head</text>
+    <g filter="url(#act-pipe-rough)">
+      <rect class="sk f-dec" x="980" y="820" width="380" height="530" rx="12" />
     </g>
-    <g class="tok">
-      <rect class="f-panel" x="1176" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1194" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1212" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1230" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1248" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1266" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1284" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1302" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1320" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1338" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1356" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1374" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1392" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1410" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1428" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1446" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1464" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1482" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1500" y="172" width="14" height="20" />
-      <rect class="f-panel" x="1518" y="172" width="14" height="20" />
-    </g>
-    <text class="t" x="1176" y="156">100 learned queries</text>
-    <text class="sm" x="1176" y="212">one query per future action (DETR-style)</text>
-    <text class="t" x="1176" y="278">× 1 decoder layer</text>
-    <text class="m" x="1176" y="304">self-attention over the queries</text>
-    <text class="m" x="1176" y="326">cross-attention → encoder memory</text>
-    <text class="m" x="1176" y="348">d_model 512 · 8 heads · FFN 3200</text>
-    <text class="s" x="1176" y="374">lerobot default: n_decoder_layers = 1</text>
-    <text class="m" x="1176" y="447">Linear(512 → 6) on every query</text>
-    <text class="t" x="1176" y="514">action chunk · 100 × 6</text>
-    <path class="ln" d="M1176 540 C1230 530 1280 556 1340 548 S1460 532 1540 552" />
-    <path class="ln" d="M1176 566 C1240 572 1300 548 1370 560 S1480 578 1540 566" />
-    <path class="ln-a" d="M1176 588 C1250 586 1330 596 1400 584 S1500 590 1540 590" />
-    <text class="s" x="1176" y="614">3.33 s of joint and gripper targets at 30 Hz</text>
+    <text class="t" x="1000" y="850">1 × decoder layer, post-norm</text>
+    <text class="s" x="1000" y="870">d 512 · 8 heads · FFN 3200</text>
+    <rect class="op" x="1000" y="886" width="340" height="50" rx="5" />
+    <text class="o" x="1014" y="908.0">100 query slots, input x = 0</text>
+    <text class="sm" x="1014" y="926.0">+ learned position p<tspan dy="4" class="ss">dec</tspan><tspan dy="-4">​</tspan> · 100 × 512</text>
+    <path class="ln-t" d="M1170 936 V950" marker-end="url(#act-pipe-ah)" />
+    <rect class="sk f-note" x="1000" y="950" width="340" height="230" rx="8" />
+    <text class="sm" x="1016" y="970">decoder layer × 1</text>
+    <rect class="op" x="1016" y="980" width="308" height="30" rx="5" />
+    <text class="sm" x="1170.0" y="1000.0" text-anchor="middle">self-attn · q = k = x + p<tspan dy="4" class="ss">dec</tspan><tspan dy="-4">​</tspan></text>
+    <path class="ln-t" d="M1170 1010 V1022" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="1016" y="1022" width="308" height="30" rx="5" />
+    <text class="sm" x="1170.0" y="1042.0" text-anchor="middle">Add &amp; LN</text>
+    <path class="ln-t" d="M1170 1052 V1064" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="1016" y="1064" width="308" height="30" rx="5" />
+    <text class="sm" x="1170.0" y="1084.0" text-anchor="middle">cross-attn · k = M + P, v = M</text>
+    <path class="ln-t" d="M1170 1094 V1106" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="1016" y="1106" width="308" height="30" rx="5" />
+    <text class="sm" x="1170.0" y="1126.0" text-anchor="middle">Add &amp; LN → FFN 3200 → Add &amp; LN</text>
+    <text class="sm" x="1016" y="1160">queries are x + p<tspan dy="4" class="ss">dec</tspan><tspan dy="-4">​</tspan> in both attentions</text>
+    <path class="ln-t" d="M1170 1180 V1198" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="1000" y="1198" width="340" height="32" rx="5" />
+    <text class="o" x="1170.0" y="1219.0" text-anchor="middle">final LayerNorm</text>
+    <path class="ln-t" d="M1170 1230 V1244" marker-end="url(#act-pipe-ah)" />
+    <rect class="op" x="1000" y="1244" width="340" height="32" rx="5" />
+    <text class="o" x="1170.0" y="1265.0" text-anchor="middle">Linear 512 → 6</text>
+    <text class="m" x="1000" y="1316">â · 100 × 6, normalized</text>
   </g>
-  <path class="ln" d="M1360 224 L1360 246" marker-end="url(#act-ah)" />
-  <path class="ln" d="M1360 398 L1360 416" marker-end="url(#act-ah)" />
-  <path class="ln" d="M1360 466 L1360 484" marker-end="url(#act-ah)" />
+  <path class="ln" d="M1170 1276 V1402" marker-end="url(#act-pipe-ah)" />
 
-  <!-- 5 execute -->
-  <path class="ln" d="M1360 626 V708" marker-end="url(#act-ah)" />
+  <!-- 6 execute -->
   <g data-step="execute">
-    <text class="lbl" x="40" y="700">5 · execute, then look again</text>
-    <g filter="url(#act-rough)">
-      <rect class="sk f-panel" x="200" y="712" width="1200" height="70" rx="8" />
+    <text class="lbl" x="40" y="1392">6 · execute</text>
+    <g filter="url(#act-pipe-rough)">
+      <rect class="sk f-out" x="40" y="1404" width="1320" height="166" rx="12" />
     </g>
-    <rect x="200" y="712" width="1200" height="70" fill="url(#act-ticks)" />
-    <text class="m" x="206" y="806">a₁</text>
-    <text class="m" x="1400" y="806" text-anchor="end">a₁₀₀</text>
-    <text class="sm" x="1414" y="752">3.33 s</text>
-    <text class="s" x="200" y="834">All 100 actions run open loop at 30 Hz (n_action_steps = 100, no temporal ensembling), then the next frames are captured.</text>
-    <path class="ln" d="M200 747 H120 V600" marker-end="url(#act-ah)" />
-    <text class="sm" x="128" y="672">next cycle</text>
+    <text class="t" x="60" y="1434">un-normalize, run all 100, then observe</text>
+    <text class="m" x="60" y="1464">a = σ ⊙ â + μ</text>
+    <text class="sm" x="60" y="1492">n_action_steps = 100 · no temporal ensembling</text>
+    <text class="s" x="60" y="1540">after the 100th action: new frames, next cycle</text>
+    <rect class="op-a" x="520" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="528" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="536" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="544" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="552" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="560" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="568" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="576" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="584" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="592" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="600" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="608" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="616" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="624" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="632" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="640" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="648" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="656" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="664" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="672" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="680" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="688" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="696" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="704" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="712" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="720" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="728" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="736" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="744" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="752" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="760" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="768" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="776" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="784" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="792" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="800" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="808" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="816" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="824" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="832" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="840" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="848" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="856" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="864" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="872" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="880" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="888" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="896" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="904" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="912" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="920" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="928" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="936" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="944" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="952" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="960" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="968" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="976" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="984" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="992" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1000" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1008" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1016" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1024" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1032" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1040" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1048" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1056" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1064" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1072" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1080" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1088" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1096" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1104" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1112" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1120" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1128" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1136" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1144" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1152" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1160" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1168" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1176" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1184" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1192" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1200" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1208" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1216" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1224" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1232" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1240" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1248" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1256" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1264" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1272" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1280" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1288" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1296" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1304" y="1440" width="6" height="44" rx="1" />
+    <rect class="op-a" x="1312" y="1440" width="6" height="44" rx="1" />
+    <text class="s" x="920" y="1512" text-anchor="middle">100 actions at 30 Hz = 3.33 s without new observations</text>
+    <path class="ln-d" d="M1310 1540 H560" marker-end="url(#act-pipe-ah)" />
   </g>
-  <text class="s" x="200" y="868">Training adds a CVAE encoder that reads the true chunk and produces z; it is dropped at inference (see Training).</text>
 </svg>

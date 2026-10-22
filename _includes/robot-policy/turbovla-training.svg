@@ -1,60 +1,292 @@
-<svg viewBox="0 0 1200 470" role="img" aria-labelledby="tv-train-title tv-train-desc">
-  <title id="tv-train-title">How TurboVLA is trained for the NexArm</title>
-  <desc id="tv-train-desc">Scripted MuJoCo demonstrations with domain randomization and real teleoperated demonstrations are mixed by a sampler that draws real data half of the time. Batches of 16 train TurboVLA with a masked L1 loss on 16-step chunks, AdamW at 5e-5 with 1000 warm-up steps and gradient clipping at 1.0. An exponential moving average of the weights with decay 0.999 is what gets saved, together with normalization statistics and the model config.</desc>
+<svg viewBox="0 0 1400 1120" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="tv-train-title tv-train-desc">
+  <title id="tv-train-title">TurboVLA training loop in lerobot-nexarm</title>
+  <desc id="tv-train-desc">Simulated and real demonstrations are mixed by a sampler with a fixed real ratio; the collator normalizes images, state and 16-step action chunks with padding flags; the model predicts a 16 by 6 chunk; a masked L1 loss with an optional gripper weight is computed over valid steps; AdamW with gradient clipping and a warm-up plus cosine schedule updates the weights; an exponential moving average of the weights is saved with the statistics and config every 5,000 steps.</desc>
   <defs>
-    <marker id="tv-tr-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <filter id="tv-train-rough" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="11" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <pattern id="tv-train-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+      <line x1="0" y1="0" x2="0" y2="9" />
+    </pattern>
+    <marker id="tv-train-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
       <path class="ah" d="M0,1 L10,5 L0,9 z" />
     </marker>
+    <marker id="tv-train-ah-a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
+    </marker>
   </defs>
+  <text class="h" x="40" y="52">TurboVLA · one training step</text>
+  <text class="s" x="40" y="78">examples/nexarm/train_turbovla.py · 50,000 steps · click a block or use the arrow keys</text>
 
-  <rect class="sk f-in" x="30" y="40" width="270" height="120" rx="12" />
-  <text class="t" x="46" y="72">simulation</text>
-  <text class="s" x="46" y="96">scripted bowl stacking in MuJoCo,</text>
-  <text class="s" x="46" y="116">domain randomization on by default</text>
-  <text class="sm" x="46" y="144">--sim-dataset-root</text>
+  <!-- 1 data -->
+  <g data-step="t-data">
+    <text class="lbl" x="40" y="112">1 · data</text>
+    <g filter="url(#tv-train-rough)">
+      <rect class="sk f-in" x="40" y="124" width="600" height="300" rx="12" />
+    </g>
+    <rect class="op" x="60" y="144" width="260" height="96" rx="5" />
+    <text class="t" x="76" y="176">simulation</text>
+    <text class="s" x="76" y="206">MuJoCo scene, scripted stacking</text>
+    <text class="s" x="76" y="226">randomized lights, colours, poses</text>
+    <rect class="op" x="360" y="144" width="260" height="96" rx="5" />
+    <text class="t" x="376" y="176">real</text>
+    <text class="s" x="376" y="206">thanhkt/nexarm_stack_bowls</text>
+    <text class="s" x="376" y="226">teleoperated on the arm</text>
+    <path class="ln-t" d="M190 240 V300 H330" marker-end="url(#tv-train-ah)" />
+    <path class="ln-t" d="M490 240 V300 H350" marker-end="url(#tv-train-ah)" />
+    <rect class="op" x="60" y="312" width="560" height="56" rx="5" />
+    <text class="t" x="340.0" y="337.0" text-anchor="middle">DomainMixSampler</text>
+    <text class="sm" x="340.0" y="355.0" text-anchor="middle">each sample: real with p = r, sim with 1 − r · with replacement</text>
+    <text class="sm" x="60" y="400">--real-ratio 0.5 · --no-sim trains on real data only · batch 16 per GPU</text>
+  </g>
+  <path class="ln" d="M640 270 H680" marker-end="url(#tv-train-ah)" />
 
-  <rect class="sk f-in" x="30" y="190" width="270" height="120" rx="12" />
-  <text class="t" x="46" y="222">real teleoperation</text>
-  <text class="s" x="46" y="246">teleoperated demonstrations</text>
-  <text class="s" x="46" y="266">on the physical NexArm</text>
-  <text class="sm" x="46" y="294">thanhkt/nexarm_stack_bowls</text>
+  <!-- 2 collate -->
+  <g data-step="t-batch">
+    <text class="lbl" x="680" y="112">2 · collate and normalize</text>
+    <g filter="url(#tv-train-rough)">
+      <rect class="sk f-in" x="680" y="124" width="680" height="300" rx="12" />
+    </g>
+    <rect class="op" x="700" y="144" width="640" height="34" rx="5" />
+    <text class="o" x="714" y="166.0">images → DINOv3 processor → B × V × 3 × 224 × 224</text>
+    <rect class="op" x="700" y="188" width="640" height="34" rx="5" />
+    <text class="o" x="714" y="210.0">state, actions → 2 (x − min) / (max − min) − 1</text>
+    <rect class="op" x="700" y="232" width="640" height="34" rx="5" />
+    <text class="o" x="714" y="254.0">min / max merged over the sim and real statistics</text>
+    <rect class="op" x="700" y="276" width="640" height="34" rx="5" />
+    <text class="o" x="714" y="298.0">instruction strings, kept as text for BERT</text>
+    <text class="sm" x="700" y="340">action chunk, 16 steps · action_is_pad marks steps past the episode end</text>
+    <rect class="op" x="700" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="717" y="376" text-anchor="middle">1</text>
+    <rect class="op" x="740" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="757" y="376" text-anchor="middle">2</text>
+    <rect class="op" x="780" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="797" y="376" text-anchor="middle">3</text>
+    <rect class="op" x="820" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="837" y="376" text-anchor="middle">4</text>
+    <rect class="op" x="860" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="877" y="376" text-anchor="middle">5</text>
+    <rect class="op" x="900" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="917" y="376" text-anchor="middle">6</text>
+    <rect class="op" x="940" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="957" y="376" text-anchor="middle">7</text>
+    <rect class="op" x="980" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="997" y="376" text-anchor="middle">8</text>
+    <rect class="op" x="1020" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="1037" y="376" text-anchor="middle">9</text>
+    <rect class="op" x="1060" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="1077" y="376" text-anchor="middle">10</text>
+    <rect class="op" x="1100" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="1117" y="376" text-anchor="middle">11</text>
+    <rect class="op" x="1140" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="1157" y="376" text-anchor="middle">12</text>
+    <rect class="op" x="1180" y="354" width="34" height="34" rx="3" />
+    <text class="sm" x="1197" y="376" text-anchor="middle">13</text>
+    <rect class="sk f-note" x="1220" y="354" width="34" height="34" rx="3" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="1237" y="376" text-anchor="middle">14</text>
+    <rect class="sk f-note" x="1260" y="354" width="34" height="34" rx="3" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="1277" y="376" text-anchor="middle">15</text>
+    <rect class="sk f-note" x="1300" y="354" width="34" height="34" rx="3" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="1317" y="376" text-anchor="middle">16</text>
+    <text class="sm" x="1340" y="410" text-anchor="end">padded</text>
+  </g>
+  <path class="ln" d="M1020 424 V446 H340 V470" marker-end="url(#tv-train-ah)" />
 
-  <path class="ln" d="M300 100 H330 V160 H356" marker-end="url(#tv-tr-ah)" />
-  <path class="ln" d="M300 250 H330 V200 H356" marker-end="url(#tv-tr-ah)" />
+  <!-- 3 forward -->
+  <g data-step="t-forward">
+    <text class="lbl" x="40" y="462">3 · forward pass</text>
+    <g filter="url(#tv-train-rough)">
+      <rect class="sk f-enc" x="40" y="474" width="600" height="286" rx="12" />
+    </g>
+    <text class="t" x="60" y="504">the network from the Inference tab</text>
+    <text class="s" x="60" y="524">autocast in bf16 when --precision bf16</text>
+    <rect class="op" x="60" y="544" width="170" height="60" rx="5" />
+    <text class="o" x="145.0" y="571.0" text-anchor="middle">DINOv3</text>
+    <text class="sm" x="145.0" y="589.0" text-anchor="middle">trainable</text>
+    <rect class="sk f-note" x="60" y="616" width="170" height="60" rx="5" fill="url(#tv-train-hatch)" />
+    <text class="o" x="145" y="642" text-anchor="middle">BERT</text>
+    <text class="sm" x="145" y="660" text-anchor="middle">frozen, no grad</text>
+    <path class="ln-t" d="M230 574 H270 V610 H290" marker-end="url(#tv-train-ah)" />
+    <path class="ln-t" d="M230 646 H270 V610 H290" />
+    <rect class="op" x="290" y="580" width="150" height="60" rx="5" />
+    <text class="o" x="365.0" y="607.0" text-anchor="middle">6 × interaction</text>
+    <text class="sm" x="365.0" y="625.0" text-anchor="middle">trainable</text>
+    <path class="ln-t" d="M440 610 H470" marker-end="url(#tv-train-ah)" />
+    <rect class="op" x="470" y="580" width="150" height="60" rx="5" />
+    <text class="o" x="545.0" y="607.0" text-anchor="middle">decoder + MLP</text>
+    <text class="sm" x="545.0" y="625.0" text-anchor="middle">trainable</text>
+    <text class="m" x="60" y="714">â = tanh(MLP(decoder(q, m))) · 16 × 6</text>
+    <text class="s" x="60" y="740">state projection and text Linear 768 → 256 are trainable too</text>
+  </g>
+  <path class="ln" d="M640 616 H680" marker-end="url(#tv-train-ah)" />
 
-  <rect class="sk f-note" x="360" y="120" width="230" height="120" rx="12" />
-  <text class="t" x="376" y="152">DomainMixSampler</text>
-  <text class="m" x="376" y="178">--real-ratio 0.5</text>
-  <text class="s" x="376" y="202">each sample: real with p 0.5,</text>
-  <text class="s" x="376" y="222">sim otherwise (with replacement)</text>
+  <!-- 4 loss -->
+  <g data-step="t-loss">
+    <text class="lbl" x="680" y="462">4 · masked L1 loss</text>
+    <g filter="url(#tv-train-rough)">
+      <rect class="sk f-out" x="680" y="474" width="680" height="286" rx="12" />
+    </g>
+    <text class="t" x="700" y="504">|â − a| per step and joint</text>
+    <text class="s" x="700" y="524">padded steps count zero; the gripper column can be re-weighted</text>
+    <rect class="op" x="760" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="792" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="824" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="856" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="888" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="920" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="952" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="984" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="1016" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="1048" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="1080" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="1112" y="540" width="30" height="22" rx="2" />
+    <rect class="op" x="1144" y="540" width="30" height="22" rx="2" />
+    <rect class="sk f-note" x="1176" y="540" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1208" y="540" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1240" y="540" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="750" y="556" text-anchor="end">j1</text>
+    <rect class="op" x="760" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="792" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="824" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="856" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="888" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="920" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="952" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="984" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="1016" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="1048" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="1080" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="1112" y="564" width="30" height="22" rx="2" />
+    <rect class="op" x="1144" y="564" width="30" height="22" rx="2" />
+    <rect class="sk f-note" x="1176" y="564" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1208" y="564" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1240" y="564" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="750" y="580" text-anchor="end">j2</text>
+    <rect class="op" x="760" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="792" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="824" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="856" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="888" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="920" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="952" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="984" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="1016" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="1048" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="1080" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="1112" y="588" width="30" height="22" rx="2" />
+    <rect class="op" x="1144" y="588" width="30" height="22" rx="2" />
+    <rect class="sk f-note" x="1176" y="588" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1208" y="588" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1240" y="588" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="750" y="604" text-anchor="end">j3</text>
+    <rect class="op" x="760" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="792" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="824" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="856" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="888" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="920" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="952" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="984" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="1016" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="1048" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="1080" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="1112" y="612" width="30" height="22" rx="2" />
+    <rect class="op" x="1144" y="612" width="30" height="22" rx="2" />
+    <rect class="sk f-note" x="1176" y="612" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1208" y="612" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1240" y="612" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="750" y="628" text-anchor="end">j4</text>
+    <rect class="op" x="760" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="792" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="824" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="856" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="888" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="920" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="952" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="984" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="1016" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="1048" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="1080" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="1112" y="636" width="30" height="22" rx="2" />
+    <rect class="op" x="1144" y="636" width="30" height="22" rx="2" />
+    <rect class="sk f-note" x="1176" y="636" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1208" y="636" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1240" y="636" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="750" y="652" text-anchor="end">j5</text>
+    <rect class="op-a" x="760" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="792" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="824" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="856" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="888" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="920" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="952" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="984" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="1016" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="1048" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="1080" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="1112" y="660" width="30" height="22" rx="2" />
+    <rect class="op-a" x="1144" y="660" width="30" height="22" rx="2" />
+    <rect class="sk f-note" x="1176" y="660" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1208" y="660" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-note" x="1240" y="660" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <text class="sm" x="750" y="676" text-anchor="end">grip</text>
+    <text class="sm" x="1280" y="676">× w<tspan dy="4" class="ss">5</tspan><tspan dy="-4">​</tspan></text>
+    <text class="m" x="700" y="714">loss = Σ mask · w · |â − a| / (6 · valid steps)</text>
+    <text class="sm" x="700" y="740">--loss-type l1 (default) · mse · smooth_l1 · --gripper-loss-weight</text>
+  </g>
+  <path class="ln" d="M1020 760 V782 H450 V804" marker-end="url(#tv-train-ah)" />
 
-  <path class="ln" d="M590 180 H626" marker-end="url(#tv-tr-ah)" />
-  <rect class="sk f-enc" x="630" y="100" width="250" height="160" rx="12" />
-  <text class="t" x="646" y="132">TurboVLA</text>
-  <text class="m" x="646" y="158">batch 16 · 16-step chunks</text>
-  <text class="s" x="646" y="182">DINOv3 trained at 5e-5,</text>
-  <text class="s" x="646" y="202">BERT frozen</text>
-  <text class="s" x="646" y="234">min-max stats merged across domains</text>
+  <!-- 5 optimizer step -->
+  <g data-step="t-update">
+    <text class="lbl" x="40" y="796">5 · optimizer step</text>
+    <g filter="url(#tv-train-rough)">
+      <rect class="sk f-dec" x="40" y="808" width="820" height="290" rx="12" />
+    </g>
+    <rect class="op" x="60" y="828" width="170" height="44" rx="5" />
+    <text class="o" x="145.0" y="855.0" text-anchor="middle">backward</text>
+    <path class="ln-t" d="M230 850 H248" marker-end="url(#tv-train-ah)" />
+    <rect class="op" x="248" y="828" width="170" height="44" rx="5" />
+    <text class="o" x="333.0" y="855.0" text-anchor="middle">clip ‖g‖ ≤ 1.0</text>
+    <path class="ln-t" d="M418 850 H436" marker-end="url(#tv-train-ah)" />
+    <rect class="op" x="436" y="828" width="170" height="44" rx="5" />
+    <text class="o" x="521.0" y="855.0" text-anchor="middle">AdamW step</text>
+    <path class="ln-t" d="M606 850 H624" marker-end="url(#tv-train-ah)" />
+    <rect class="op" x="624" y="828" width="216" height="44" rx="5" />
+    <text class="o" x="732.0" y="855.0" text-anchor="middle">LambdaLR step</text>
+    <text class="o" x="60" y="904">parameter groups</text>
+    <text class="sm" x="60" y="928">action head · lr 5e-5</text>
+    <text class="sm" x="60" y="950">interaction, projections · lr 5e-5</text>
+    <text class="sm" x="60" y="972">DINOv3 · lr 5e-5 (--dinov3-lr)</text>
+    <text class="sm" x="60" y="994">BERT · frozen, not in the optimizer</text>
+    <text class="s" x="60" y="1028">weight decay 1e-10 · no accumulation by default</text>
+    <text class="s" x="60" y="1050">GradScaler only for fp16</text>
+    <path class="ln-t" d="M470 910 V1040 H830" />
+    <text class="sm" x="830" y="1058" text-anchor="end">step 50k</text>
+    <text class="sm" x="464" y="914" text-anchor="end">lr</text>
+    <path class="ln-a" d="M470.0 1039.9 L471.8 1010.0 L473.6 980.1 L475.4 950.2 L477.2 920.4 L479.0 920.4 L480.8 920.4 L482.6 920.5 L484.4 920.5 L486.2 920.6 L488.0 920.7 L489.8 920.8 L491.6 920.9 L493.4 921.0 L495.2 921.1 L497.0 921.3 L498.8 921.4 L500.6 921.6 L502.4 921.8 L504.2 922.0 L506.0 922.3 L507.8 922.5 L509.6 922.7 L511.4 923.0 L513.2 923.3 L515.0 923.6 L516.8 923.9 L518.6 924.2 L520.4 924.6 L522.2 924.9 L524.0 925.3 L525.8 925.6 L527.6 926.0 L529.4 926.4 L531.2 926.8 L533.0 927.3 L534.8 927.7 L536.6 928.2 L538.4 928.6 L540.2 929.1 L542.0 929.6 L543.8 930.1 L545.6 930.6 L547.4 931.1 L549.2 931.7 L551.0 932.2 L552.8 932.8 L554.6 933.4 L556.4 934.0 L558.2 934.5 L560.0 935.2 L561.8 935.8 L563.6 936.4 L565.4 937.0 L567.2 937.7 L569.0 938.3 L570.8 939.0 L572.6 939.7 L574.4 940.4 L576.2 941.1 L578.0 941.8 L579.8 942.5 L581.6 943.2 L583.4 944.0 L585.2 944.7 L587.0 945.5 L588.8 946.2 L590.6 947.0 L592.4 947.8 L594.2 948.5 L596.0 949.3 L597.8 950.1 L599.6 950.9 L601.4 951.7 L603.2 952.6 L605.0 953.4 L606.8 954.2 L608.6 955.0 L610.4 955.9 L612.2 956.7 L614.0 957.6 L615.8 958.4 L617.6 959.3 L619.4 960.2 L621.2 961.0 L623.0 961.9 L624.8 962.8 L626.6 963.7 L628.4 964.6 L630.2 965.5 L632.0 966.4 L633.8 967.2 L635.6 968.1 L637.4 969.0 L639.2 969.9 L641.0 970.8 L642.8 971.8 L644.6 972.7 L646.4 973.6 L648.2 974.5 L650.0 975.4 L651.8 976.3 L653.6 977.2 L655.4 978.1 L657.2 979.0 L659.0 979.9 L660.8 980.8 L662.6 981.8 L664.4 982.7 L666.2 983.6 L668.0 984.5 L669.8 985.4 L671.6 986.3 L673.4 987.2 L675.2 988.1 L677.0 989.0 L678.8 989.9 L680.6 990.7 L682.4 991.6 L684.2 992.5 L686.0 993.4 L687.8 994.2 L689.6 995.1 L691.4 996.0 L693.2 996.8 L695.0 997.7 L696.8 998.5 L698.6 999.4 L700.4 1000.2 L702.2 1001.0 L704.0 1001.9 L705.8 1002.7 L707.6 1003.5 L709.4 1004.3 L711.2 1005.1 L713.0 1005.9 L714.8 1006.7 L716.6 1007.4 L718.4 1008.2 L720.2 1009.0 L722.0 1009.7 L723.8 1010.5 L725.6 1011.2 L727.4 1011.9 L729.2 1012.6 L731.0 1013.3 L732.8 1014.0 L734.6 1014.7 L736.4 1015.4 L738.2 1016.1 L740.0 1016.7 L741.8 1017.4 L743.6 1018.0 L745.4 1018.6 L747.2 1019.3 L749.0 1019.9 L750.8 1020.5 L752.6 1021.1 L754.4 1021.6 L756.2 1022.2 L758.0 1022.7 L759.8 1023.3 L761.6 1023.8 L763.4 1024.3 L765.2 1024.8 L767.0 1025.3 L768.8 1025.8 L770.6 1026.3 L772.4 1026.7 L774.2 1027.2 L776.0 1027.6 L777.8 1028.0 L779.6 1028.4 L781.4 1028.8 L783.2 1029.2 L785.0 1029.5 L786.8 1029.9 L788.6 1030.2 L790.4 1030.5 L792.2 1030.8 L794.0 1031.1 L795.8 1031.4 L797.6 1031.7 L799.4 1031.9 L801.2 1032.2 L803.0 1032.4 L804.8 1032.6 L806.6 1032.8 L808.4 1033.0 L810.2 1033.1 L812.0 1033.3 L813.8 1033.4 L815.6 1033.6 L817.4 1033.7 L819.2 1033.8 L821.0 1033.8 L822.8 1033.9 L824.6 1034.0 L826.4 1034.0 L828.2 1034.0 L830.0 1034.0" />
+    <text class="sm" x="486" y="954">warm-up 1k</text>
+    <text class="sm" x="826" y="1026" text-anchor="end">→ 5 %</text>
+    <text class="s" x="470" y="1078">linear warm-up, then cosine to 5 % of the base rate</text>
+  </g>
+  <path class="ln" d="M860 952 H900" marker-end="url(#tv-train-ah)" />
 
-  <path class="ln" d="M880 180 H916" marker-end="url(#tv-tr-ah)" />
-  <rect class="sk f-out" x="920" y="80" width="250" height="200" rx="12" />
-  <text class="t" x="936" y="112">loss and update</text>
-  <text class="m" x="936" y="140">mean |pred − target|</text>
-  <text class="s" x="936" y="162">over non-padded steps; optional</text>
-  <text class="s" x="936" y="182">extra weight on the gripper</text>
-  <text class="m" x="936" y="214">AdamW 5e-5 · warm-up 1000</text>
-  <text class="m" x="936" y="238">grad clip 1.0 · 50k steps</text>
-  <text class="m" x="936" y="262">EMA of weights, decay 0.999</text>
-
-  <path class="ln" d="M1045 280 V326" marker-end="url(#tv-tr-ah)" />
-  <rect class="sk f-panel" x="760" y="330" width="410" height="110" rx="12" />
-  <text class="t" x="776" y="362">checkpoint (every 5,000 steps)</text>
-  <text class="m" x="776" y="390">EMA weights · stats_turbovla.json</text>
-  <text class="m" x="776" y="414">config.json (camera keys, image size, fps, task)</text>
-
-  <rect class="sk f-panel" x="30" y="350" width="560" height="90" rx="12" />
-  <text class="t" x="46" y="382">optional starting point</text>
-  <text class="s" x="46" y="406">the released RoboTwin TurboVLA checkpoint, fine-tuned with</text>
-  <text class="s" x="46" y="426">--pretrained-checkpoint (and --freeze-vision for a fast head-only run)</text>
-  <path class="ln-d" d="M590 395 H700 V264" marker-end="url(#tv-tr-ah)" />
+  <!-- 6 ema and checkpoint -->
+  <g data-step="t-ema">
+    <text class="lbl" x="900" y="796">6 · EMA and checkpoint</text>
+    <g filter="url(#tv-train-rough)">
+      <rect class="sk f-note" x="900" y="808" width="460" height="290" rx="12" />
+    </g>
+    <text class="t" x="920" y="838">moving average of the weights</text>
+    <text class="m" x="920" y="868">θ̄ ← 0.999 θ̄ + 0.001 θ</text>
+    <text class="s" x="920" y="892">after every optimizer step</text>
+    <text class="o" x="920" y="930">every 5,000 steps, written to the run folder</text>
+    <text class="sm" x="920" y="956">{step}_ema_model.safetensors</text>
+    <text class="sm" x="920" y="978">{step}_model.pt (raw weights)</text>
+    <text class="sm" x="920" y="1000">config.json (cameras, image size, fps, task)</text>
+    <text class="sm" x="920" y="1022">stats_turbovla.json (min / max)</text>
+    <text class="s" x="920" y="1066">rollout loads the EMA weights</text>
+  </g>
+  <path class="ln-d" d="M1360 952 H1384 V96 H340 V122" marker-end="url(#tv-train-ah)" />
+  <text class="sm" x="1376" y="540" text-anchor="end" transform="rotate(-90 1376 540)">next batch</text>
 </svg>

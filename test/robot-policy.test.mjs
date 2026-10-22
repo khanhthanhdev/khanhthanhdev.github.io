@@ -9,7 +9,7 @@ for (const model of ["act", "turbovla"]) {
   test(`${model} page renders every step, its diagram group and all three panels`, async () => {
     const html = await readFile(site(`works/robot-policy/${model}/index.html`), "utf8");
     const steps = [...html.matchAll(/<li data-id="([a-z-]+)"/g)].map((match) => match[1]);
-    const groups = new Set([...html.matchAll(/data-step="([a-z ]+)"/g)].flatMap((match) => match[1].split(" ")));
+    const groups = new Set([...html.matchAll(/data-step="([a-z -]+)"/g)].flatMap((match) => match[1].split(" ")));
 
     assert.ok(steps.length >= 5, `${model} has ${steps.length} steps`);
     for (const id of steps.filter((id) => id !== "overview")) assert.ok(groups.has(id), `diagram group for ${id}`);
@@ -61,4 +61,10 @@ test("NexArm asset decodes and the scripted motion reaches every IK target", asy
   const script = buildScript(robot, asset);
   assert.ok(script.ikError < 0.001, `worst IK error ${(script.ikError * 1000).toFixed(2)} mm`);
   assert.ok(script.duration > 10);
+});
+
+test("KaTeX script, stylesheet and fonts are tracked", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const tracked = execFileSync("git", ["ls-files", "assets/js/robot-policy/lib/katex"], { cwd: repo("").pathname }).toString();
+  for (const file of ["katex.min.js", "katex.min.css", "fonts/KaTeX_Main-Regular.woff2"]) assert.ok(tracked.includes(file), file);
 });
