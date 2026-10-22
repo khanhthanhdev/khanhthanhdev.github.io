@@ -1,4 +1,5 @@
-/* Robot-policy explorer (/works/robot-policy/): inference timeline + 3D stage, training article, results.
+/* Robot-policy explorer (/works/robot-policy/): a full-height app under the navbar. The left column shows the 3D stage
+   and the diagram of the open tab; the right column is a reading pane whose scroll picks the step the left side shows.
    Sits inside the site layout (al-folio navbar, footer, theme toggle) and takes its colours from the site's
    --global-* tokens, so the pages match the rest of the (light-only) portfolio. The only extra hues are the diagram
    categories: green = observations, amber = vision/encoders, blue = action decoder, rose = actions. */
@@ -25,7 +26,6 @@
   --rp-note: var(--global-code-bg-color);
   --rp-font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --rp-nav: 56px;
-  --rp-sub: 48px;
 }
 .rp code,
 .rp kbd,
@@ -50,20 +50,7 @@
   outline-offset: 2px;
 }
 
-/* ---------- page header + sub-navigation ---------- */
-.rp-head {
-  padding-top: 3rem;
-}
-.rp-head .post-header {
-  margin-bottom: 0;
-  border-bottom: 0;
-}
-.rp-head .post-description {
-  margin-bottom: 1.25rem;
-}
-.rp .post-title .rp-on {
-  color: var(--rp-muted);
-}
+/* ---------- app: the visual on the left, the reading pane on the right ---------- */
 .rp-crumbs {
   display: flex;
   flex-wrap: wrap;
@@ -79,107 +66,41 @@
   color: var(--rp-accent);
   text-decoration: none;
 }
-.rp-subnav {
-  position: sticky;
-  top: var(--rp-nav);
-  z-index: 20;
-  background: var(--rp-paper);
-  border-top: 1px solid var(--rp-rule);
+.rp-app {
+  --rp-split: 0.56;
+  display: grid;
+  grid-template-columns: minmax(0, calc(var(--rp-split) * 100%)) 10px minmax(0, 1fr);
+  height: calc(100dvh - var(--rp-nav));
+  min-height: 560px;
   border-bottom: 1px solid var(--rp-rule);
+  scroll-margin-top: var(--rp-nav);
 }
-.rp-subnav-inner {
-  display: flex;
-  align-items: stretch;
-  gap: 24px;
-  height: var(--rp-sub);
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
-}
-.rp-models,
-.rp-tabs {
-  display: flex;
-  gap: 20px;
-}
-.rp-models a,
-.rp-tabs button {
-  display: flex;
-  align-items: center;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: none;
-  color: var(--rp-ink);
-  font-size: 1rem;
-  font-weight: 400;
-  padding: 2px 0 0;
-  text-decoration: none;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.rp-models a:hover,
-.rp-tabs button:hover {
-  color: var(--rp-accent);
-  text-decoration: none;
-}
-.rp-models a[aria-current="page"],
-.rp-tabs button[aria-selected="true"] {
-  color: var(--rp-accent);
-  border-bottom-color: var(--rp-accent);
-}
-.rp-tabs {
-  margin-left: auto;
-}
-
-/* ---------- panels ---------- */
 .rp-panel[hidden] {
   display: none !important;
 }
-/* Panels sit at the top of the page: a #training or #results link should not scroll under the sticky bar. */
-.rp-panel {
-  scroll-margin-top: 100vh;
-}
-
-/* scroll track: one stretch of page scroll per step; the explorer stays pinned under the sub-nav while it scrolls */
-.rp-scroll {
-  --rp-view: calc(100dvh - var(--rp-nav) - var(--rp-sub));
-  --rp-step-len: 80vh;
-  height: calc(var(--rp-steps) * var(--rp-step-len) + max(var(--rp-view), 620px));
-}
-.rp-scroll > .rp-explorer {
-  position: sticky;
-  top: calc(var(--rp-nav) + var(--rp-sub));
-}
-.rp-nojs .rp-scroll {
-  height: auto;
-}
-
-/* explorer: the diagram on the left; the 3D stage (inference only), the step explanation and formulas on the right */
-.rp-explorer {
-  max-width: 1440px;
-  margin: 0 auto;
-  border-left: 1px solid var(--rp-rule);
-  border-right: 1px solid var(--rp-rule);
-  border-bottom: 1px solid var(--rp-rule);
-  height: calc(100dvh - var(--rp-nav) - var(--rp-sub));
-  min-height: 620px;
-}
-.rp-split {
-  --rp-split: 0.6;
+.rp-visual {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, calc(var(--rp-split) * 100%)) 10px minmax(0, 1fr);
-  height: 100%;
-}
-.rp-side {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
-  background: var(--rp-paper);
+  background: var(--rp-panel);
 }
-.has-stage .rp-side {
-  grid-template-rows: minmax(0, 42%) minmax(0, 1fr) auto;
+/* data-tab is switched from JS, so keep these through PurgeCSS. */
+/* purgecss start ignore */
+.rp-app[data-tab="inference"] .rp-visual {
+  grid-template-rows: minmax(0, 46%) minmax(0, 1fr);
 }
+.rp-app:not([data-tab="inference"]) .rp-diagram[data-for="inference"],
+.rp-app:not([data-tab="training"]) .rp-diagram[data-for="training"],
+.rp-app[data-tab="training"] .rp-stage,
+.rp-app[data-tab="results"] .rp-read-foot {
+  display: none;
+}
+.rp-app[data-tab="inference"] .rp-diagram {
+  border-top: 1px solid var(--rp-rule);
+}
+/* purgecss end ignore */
 .rp-diagram {
   position: relative;
   min-width: 0;
@@ -202,24 +123,23 @@
   display: block;
   color: var(--rp-ink);
 }
-.rp-diagram-tools {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  display: flex;
-  gap: 4px;
-}
-.rp-diagram-tools button,
+.rp-whole,
 .rp-stage-tools button {
   border: 1px solid var(--rp-rule);
-  background: var(--rp-panel);
+  background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
   color: var(--rp-ink);
-  border-radius: 4px;
+  border-radius: 999px;
   font-size: 0.8rem;
-  padding: 6px 10px;
+  padding: 5px 12px;
   cursor: pointer;
 }
-.rp-diagram-tools button:hover,
+.rp-whole {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+}
+.rp-whole:hover,
 .rp-stage-tools button:hover {
   border-color: var(--rp-accent);
   color: var(--rp-accent);
@@ -242,6 +162,152 @@
   border-left: 1px solid var(--rp-muted);
   border-right: 1px solid var(--rp-muted);
   opacity: 0.6;
+}
+
+/* reading pane */
+.rp-read {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  background: var(--rp-paper);
+}
+.rp-read-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px clamp(16px, 3vw, 40px);
+  border-bottom: 1px solid var(--rp-rule);
+}
+.rp-models {
+  display: flex;
+  gap: 14px;
+}
+.rp-models a {
+  color: var(--rp-muted);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+.rp-models a:hover,
+.rp-models a[aria-current="page"] {
+  color: var(--rp-ink);
+  text-decoration: none;
+}
+.rp-models a[aria-current="page"] {
+  font-weight: 500;
+}
+.rp-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--rp-rule);
+  border-radius: 999px;
+}
+.rp-tabs button {
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--rp-ink);
+  font-size: 0.875rem;
+  padding: 4px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rp-tabs button:hover {
+  color: var(--rp-accent);
+}
+.rp-tabs button[aria-selected="true"] {
+  background: var(--rp-accent);
+  color: var(--global-hover-text-color);
+}
+.rp-contents {
+  position: relative;
+  margin-left: auto;
+  font-size: 0.875rem;
+}
+.rp-contents summary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--rp-ink);
+  padding: 4px 2px;
+}
+.rp-contents summary::-webkit-details-marker {
+  display: none;
+}
+.rp-contents summary::after {
+  content: " ▾";
+  color: var(--rp-muted);
+}
+.rp-contents summary:hover {
+  color: var(--rp-accent);
+}
+.rp-contents ol {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: min(300px, 80vw);
+  max-height: 60vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  counter-reset: rp-c;
+  background: var(--rp-paper);
+  border: 1px solid var(--rp-rule);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+.rp-contents li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: var(--rp-ink);
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rp-contents li button:hover {
+  background: var(--rp-panel);
+  color: var(--rp-accent);
+}
+.rp-read-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0 clamp(16px, 3vw, 40px);
+}
+.rp-read-scroll:focus {
+  outline: none;
+}
+.rp-intro {
+  padding: 2.25rem 0 0.5rem;
+}
+.rp-intro h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-weight: 300;
+  line-height: 1.15;
+}
+.rp-intro .rp-on {
+  color: var(--rp-muted);
+}
+.rp-intro-desc {
+  margin: 0.5rem 0 0;
+  color: var(--rp-muted);
+  font-size: 1.05rem;
+}
+.rp-kicker {
+  margin: 1.75rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--rp-rule);
+  font: 500 0.75rem/1.4 var(--rp-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rp-muted);
 }
 .rp-stage {
   position: relative;
@@ -400,21 +466,34 @@
   font-size: 10.5px;
 }
 
-/* step explanation */
-.rp-step-card {
+/* steps: one block of text per step; the step under the reading line is the one shown on the left */
+.rp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rp-steps:last-child {
+  padding-bottom: 62vh;
+}
+.rp-steps > li {
   display: grid;
   grid-auto-rows: max-content;
-  align-content: start;
-  gap: 10px;
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 18px 22px 20px;
-  border-top: 1px solid var(--rp-rule);
+  gap: 12px;
+  padding: 2rem 0 4.5rem;
+  transition: opacity 0.3s ease;
 }
-.rp-explorer:not(.has-stage) .rp-step-card {
-  border-top: 0;
-  padding-top: 26px;
+.rp-steps > li + li {
+  border-top: 1px dashed var(--rp-rule);
+}
+/* purgecss start ignore */
+.rp:not(.rp-nojs) .rp-steps > li:not(.is-active) {
+  opacity: 0.42;
+}
+/* purgecss end ignore */
+.rp-step-num {
+  font: 500 0.85rem/1 var(--rp-font-mono);
+  letter-spacing: 0.06em;
+  color: var(--rp-muted);
 }
 .rp-step-count {
   font-size: 0.75rem;
@@ -423,19 +502,20 @@
   text-transform: uppercase;
   color: var(--rp-muted);
 }
-.rp-step-card h2 {
+.rp-steps h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: clamp(1.6rem, 2.2vw, 2.05rem);
   font-weight: 400;
   line-height: 1.2;
   text-wrap: balance;
 }
-.rp-step-card p {
-  margin: 0 0 0.6em;
-  font-size: 15px;
+.rp-step-body p {
+  margin: 0 0 0.8em;
+  font-size: 1.08rem;
+  line-height: 1.75;
   color: var(--rp-ink);
 }
-.rp-step-card p:last-child {
+.rp-step-body p:last-child {
   margin-bottom: 0;
 }
 .rp-formulas {
@@ -469,29 +549,35 @@
   font-size: 1.2em;
 }
 .rp-where p {
-  font-size: 13.5px;
+  margin: 0 0 0.4em;
+  font-size: 0.92rem;
+  line-height: 1.6;
   color: var(--rp-muted);
 }
-.rp-step-card .rp-step-shapes {
+.rp-step-shapes {
   font-family: var(--rp-font-mono);
   font-size: 12.5px;
   color: var(--rp-muted);
   border-top: 1px dashed var(--rp-rule);
   padding-top: 8px;
 }
-.rp-controls {
+
+/* foot of the reading pane: pager and what comes next */
+.rp-read-foot {
   position: relative;
   display: flex;
   align-items: center;
   gap: 10px 18px;
   /* room for the site's fixed back-to-top button */
-  padding: 12px 76px 14px 22px;
+  padding: 10px 76px 12px clamp(16px, 3vw, 40px);
   border-top: 1px solid var(--rp-rule);
+  background: var(--rp-paper);
 }
 .rp-pager {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex: none;
 }
 .rp-pages {
   display: flex;
@@ -536,12 +622,23 @@
   text-align: center;
   color: var(--rp-muted);
 }
-/* purgecss end ignore */
-.rp-kbd-hint {
-  margin-left: auto;
-  font-size: 11.5px;
+.rp-now {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--rp-ink);
+}
+.rp-now b {
+  font: 500 0.8rem var(--rp-font-mono);
+  color: var(--rp-muted);
+  margin-right: 4px;
+}
+.rp-now span {
   color: var(--rp-muted);
 }
+/* purgecss end ignore */
 .rp-progress {
   position: absolute;
   left: 0;
@@ -555,18 +652,6 @@
   background: var(--rp-accent);
   transform: scaleX(0);
   transform-origin: 0 50%;
-}
-.rp-after {
-  padding-top: 2.5rem;
-}
-
-/* all-steps list (no-JS and screen readers) */
-.rp-step-list {
-  display: none;
-}
-.rp-nojs .rp-step-list {
-  display: block;
-  padding: 0 16px 24px 40px;
 }
 
 /* ---------- diagrams (inline SVG) ---------- */
@@ -714,12 +799,13 @@
 }
 
 /* ---------- training + results articles (site typography, only spacing here) ---------- */
-.rp-panel.container {
-  padding-top: 2rem;
-}
 .rp-article {
   display: grid;
   gap: 1rem;
+  padding: 1.5rem 0 3rem;
+}
+.rp-steps + .rp-article {
+  border-top: 1px solid var(--rp-rule);
 }
 .rp-article > * {
   margin: 0;
@@ -880,69 +966,93 @@ a.rp-card:hover {
   margin: 0;
 }
 .rp-foot {
-  margin: 2rem 0 0;
+  margin: 0;
+  padding: 1.25rem 0 2rem;
+  border-top: 1px solid var(--rp-rule);
   font-size: 0.8rem;
   color: var(--rp-muted);
 }
 
-/* ---------- narrow screens ---------- */
+/* ---------- narrow screens: tabs, then the visual pinned under the navbar, the text scrolling with the page ---------- */
 @media (max-width: 860px) {
-  .rp-subnav-inner {
-    gap: 16px;
-    overflow-x: auto;
-  }
-  .rp-models,
-  .rp-tabs {
-    gap: 14px;
-  }
-  .rp-scroll {
-    --rp-view: calc(100svh - var(--rp-nav) - var(--rp-sub));
-    --rp-step-len: 70svh;
-    height: calc(var(--rp-steps) * var(--rp-step-len) + var(--rp-view));
-  }
-  .rp-explorer {
-    height: calc(100svh - var(--rp-nav) - var(--rp-sub));
+  .rp-app {
+    display: flex;
+    flex-direction: column;
+    height: auto;
     min-height: 0;
-    border-left: 0;
-    border-right: 0;
+    border-bottom: 0;
   }
-  .rp-split {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 40%) minmax(0, 1fr);
+  .rp-read {
+    display: contents;
   }
+  .rp-read-bar {
+    order: 0;
+    padding: 8px 16px;
+  }
+  .rp-visual {
+    order: 1;
+    position: sticky;
+    top: var(--rp-nav);
+    z-index: 10;
+    height: 50svh;
+    border-bottom: 1px solid var(--rp-rule);
+  }
+  /* purgecss start ignore */
+  .rp-app[data-tab="inference"] .rp-visual {
+    grid-template-rows: minmax(0, 48%) minmax(0, 1fr);
+  }
+  .rp-app[data-tab="results"] .rp-visual {
+    height: 40svh;
+  }
+  /* purgecss end ignore */
   .rp-splitter {
     display: none;
   }
-  .has-stage .rp-split {
-    grid-template-rows: minmax(0, 34%) minmax(0, 1fr);
+  .rp-read-scroll {
+    order: 2;
+    overflow: visible;
+    padding: 0 16px;
   }
-  .has-stage .rp-side {
-    grid-template-rows: minmax(0, 40%) minmax(0, 1fr) auto;
+  .rp-read-foot {
+    order: 3;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding: 8px 64px 8px 12px;
   }
-  .rp-step-card {
-    padding: 12px 16px;
+  .rp-intro {
+    padding-top: 1.25rem;
   }
-  .rp-controls {
-    padding: 8px 12px 10px;
+  .rp-steps:last-child {
+    padding-bottom: 30svh;
+  }
+  .rp-steps > li {
+    padding: 1.5rem 0 3rem;
+  }
+  .rp-step-body p {
+    font-size: 1rem;
+    line-height: 1.7;
   }
   .rp-pager button {
     min-width: 30px;
     height: 32px;
     padding: 0 6px;
   }
-  .rp-kbd-hint {
+  .rp-now {
     display: none;
   }
   .rp-hud-cam {
-    width: 25vw;
+    width: 22vw;
   }
-  .rp-hud-note {
-    display: none;
+  .rp-hud-note,
+  .rp-hud-joints {
+    display: none !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rp svg [data-step] {
+  .rp svg [data-step],
+  .rp-steps > li {
     transition: none;
   }
 }

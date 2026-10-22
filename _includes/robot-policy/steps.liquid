@@ -1,0 +1,33 @@
+{% comment %}
+  The steps of one reading panel. Scrolling the reading pane past a step drives the diagram camera (and, for inference,
+  the 3D stage) on the left. Params: name (inference | training), steps (list from front matter).
+{% endcomment %}
+<ol class="rp-steps" data-steps="{{ include.name }}">
+  {% for step in include.steps %}
+    <li
+      data-id="{{ step.id }}"
+      data-bounds="{{ step.bounds | join: ' ' }}"
+      data-stage="{{ step.stage | jsonify | escape }}"
+    >
+      <div class="rp-step-num" aria-hidden="true">
+        {% if forloop.index < 10 %}0{% endif -%}
+        {{- forloop.index }}
+      </div>
+      <h2>{{ step.title }}</h2>
+      <div class="rp-step-body">{{ step.body | markdownify }}</div>
+      {% if step.formulas %}
+        <div class="rp-formulas">
+          {% for f in step.formulas %}
+            <div class="rp-tex">{{ f | escape }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if step.where %}
+        <div class="rp-where">{{ step.where | markdownify }}</div>
+      {% endif %}
+      {% if step.shapes %}
+        <div class="rp-step-shapes">{{ step.shapes }}</div>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ol>

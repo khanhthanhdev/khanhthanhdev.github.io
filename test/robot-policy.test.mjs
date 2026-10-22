@@ -13,7 +13,7 @@ for (const model of ["act", "turbovla"]) {
 
     assert.ok(steps.length >= 5, `${model} has ${steps.length} steps`);
     for (const id of steps.filter((id) => id !== "overview")) assert.ok(groups.has(id), `diagram group for ${id}`);
-    for (const id of ["inference", "training", "results"]) assert.match(html, new RegExp(`<section id="?${id}"?`));
+    for (const id of ["inference", "training", "results"]) assert.match(html, new RegExp(`<section id="?panel-${id}"?`));
     assert.match(html, /<svg[^>]*view[bB]ox="0 0 \d+ \d+"/);
     assert.match(html, /robot-policy\/app\.js/);
   });
