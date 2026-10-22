@@ -134,30 +134,42 @@ function initDiagram(host) {
   return { svg, fit, between, wasDrag: () => drag && drag.moved >= 4 };
 }
 
-function initSplitter(split, handle, key) {
+// A draggable divider that sets `prop` (a 0–1 fraction) on `box`. Arrow keys nudge it; a double click restores `start`.
+function initSplitter(box, handle, key, { prop = "--rp-split", axis = "x", start = 0.56, min = 0.2, max = 0.85 } = {}) {
   const apply = (f) => {
-    const v = Math.min(0.75, Math.max(0.3, f));
-    split.style.setProperty("--rp-split", v.toFixed(3));
+    const v = Math.min(max, Math.max(min, f));
+    box.style.setProperty(prop, v.toFixed(3));
+    handle.setAttribute("aria-valuenow", String(Math.round(v * 100)));
     return v;
   };
-  let frac = apply(Number(store(key)) || 0.56);
+  let frac = apply(Number(store(key)) || start);
+  const keys = axis === "x" ? ["ArrowLeft", "ArrowRight"] : ["ArrowUp", "ArrowDown"];
   handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
     handle.setPointerCapture(e.pointerId);
+    document.body.classList.add("rp-resizing");
     const move = (ev) => {
-      const r = split.getBoundingClientRect();
-      frac = apply((ev.clientX - r.left) / r.width);
+      const r = box.getBoundingClientRect();
+      frac = apply(axis === "x" ? (ev.clientX - r.left) / r.width : (ev.clientY - r.top) / r.height);
     };
     const up = () => {
       handle.removeEventListener("pointermove", move);
+      document.body.classList.remove("rp-resizing");
       store(key, String(frac));
     };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up, { once: true });
+    handle.addEventListener("pointercancel", up, { once: true });
   });
   handle.addEventListener("keydown", (e) => {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    if (!keys.includes(e.key)) return;
     e.preventDefault();
-    frac = apply(frac + (e.key === "ArrowRight" ? 0.03 : -0.03));
+    e.stopPropagation();
+    frac = apply(frac + (e.key === keys[1] ? 0.03 : -0.03));
+    store(key, String(frac));
+  });
+  handle.addEventListener("dblclick", () => {
+    frac = apply(start);
     store(key, String(frac));
   });
 }
@@ -242,7 +254,8 @@ function initReader(app) {
   visual.addEventListener(
     "wheel",
     (e) => {
-      if (e.ctrlKey || e.metaKey || !paneScrolls()) return;
+      // The 3D view zooms on the wheel and marks the event handled.
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || !paneScrolls()) return;
       e.preventDefault();
       pane.scrollBy({ top: e.deltaY * (e.deltaMode === 1 ? 16 : 1) });
     },
@@ -402,6 +415,13 @@ function initPolicyPage(app) {
     if (b) visible?.go(Number(b.dataset.index));
   });
   initSplitter(app, app.querySelector(".rp-splitter"), "rp-split");
+  initSplitter(app.querySelector(".rp-visual"), app.querySelector(".rp-rowsplit"), "rp-rows", {
+    prop: "--rp-rows",
+    axis: "y",
+    start: 0.5,
+    min: 0.15,
+    max: 0.85,
+  });
 
   // Contents: the steps and headings of the open panel.
   const contents = app.querySelector(".rp-contents");
@@ -447,13 +467,15 @@ function initPolicyPage(app) {
   const stageEl = document.getElementById("rp-stage");
   const fallback = document.getElementById("rp-stage-fallback");
   const motionBtn = document.getElementById("rp-motion");
+  const camsBtn = document.getElementById("rp-cams");
+  const resetBtn = document.getElementById("rp-reset-view");
   let loading = false;
   const load = async () => {
     if (loading) return;
     loading = true;
     if (!webglAvailable()) {
       fallback.lastElementChild.textContent = "This browser has WebGL turned off, so the 3D view is unavailable.";
-      motionBtn.hidden = true;
+      motionBtn.hidden = camsBtn.hidden = true;
       return;
     }
     try {
@@ -468,6 +490,7 @@ function initPolicyPage(app) {
         },
       });
       fallback.remove();
+      stage.setCams(camsBtn.getAttribute("aria-pressed") !== "true");
       playForTab();
       if (reducedMotion) {
         stage.setPlaying(false);
@@ -486,6 +509,15 @@ function initPolicyPage(app) {
     motionBtn.textContent = on ? "Pause motion" : "Play motion";
     motionBtn.setAttribute("aria-pressed", String(!on));
   });
+  camsBtn.addEventListener("click", () => {
+    const hide = camsBtn.getAttribute("aria-pressed") !== "true";
+    camsBtn.setAttribute("aria-pressed", String(hide));
+    camsBtn.textContent = hide ? "Show cameras" : "Hide cameras";
+    store("rp-cams", hide ? "off" : "on");
+    stage?.setCams(!hide);
+  });
+  if (store("rp-cams") === "off") camsBtn.click();
+  resetBtn.addEventListener("click", () => stage?.resetView());
   const io = new IntersectionObserver((entries) => {
     if (entries.some((en) => en.isIntersecting)) {
       io.disconnect();

@@ -212,6 +212,70 @@ export async function mountStage(container, { assetUrl, policy }) {
   };
   const view = { pos: new THREE.Vector3(0.6, -0.6, 0.45), target: focus.clone() };
 
+  // Orbit: dragging the canvas takes the camera off the scripted shots. Drag rotates around the target (z is up),
+  // the wheel zooms, right-drag or shift-drag pans. "Reset view" (or a double click) hands it back to the shots.
+  const canvas = renderer.domElement;
+  const orbit = { manual: false, target: new THREE.Vector3(), r: 1, az: 0, el: 0.5 };
+  const takeOver = () => {
+    if (orbit.manual) return;
+    const off = view.pos.clone().sub(view.target);
+    orbit.target.copy(view.target);
+    orbit.r = off.length();
+    orbit.az = Math.atan2(off.y, off.x);
+    orbit.el = Math.asin(THREE.MathUtils.clamp(off.z / orbit.r, -1, 1));
+    orbit.manual = true;
+    container.classList.add("is-orbiting");
+  };
+  const orbitGoal = () => {
+    const c = Math.cos(orbit.el);
+    const off = new THREE.Vector3(c * Math.cos(orbit.az), c * Math.sin(orbit.az), Math.sin(orbit.el)).multiplyScalar(orbit.r);
+    return { pos: orbit.target.clone().add(off), target: orbit.target };
+  };
+  const resetView = () => {
+    orbit.manual = false;
+    container.classList.remove("is-orbiting");
+  };
+  let drag = null;
+  canvas.addEventListener("pointerdown", (e) => {
+    takeOver();
+    drag = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey };
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add("is-dragging");
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    if (drag.pan) {
+      const s = (orbit.r * 1.6) / Math.max(1, height);
+      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+      const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+      orbit.target.addScaledVector(right, -dx * s).addScaledVector(up, dy * s);
+    } else {
+      orbit.az -= dx * 0.008;
+      orbit.el = THREE.MathUtils.clamp(orbit.el + dy * 0.008, 0.03, 1.5);
+    }
+  });
+  const endDrag = () => {
+    drag = null;
+    canvas.classList.remove("is-dragging");
+  };
+  canvas.addEventListener("pointerup", endDrag);
+  canvas.addEventListener("pointercancel", endDrag);
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+  canvas.addEventListener("dblclick", resetView);
+  canvas.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      takeOver();
+      orbit.r = THREE.MathUtils.clamp(orbit.r * Math.exp(e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0012)), 0.15, 3.5);
+    },
+    { passive: false }
+  );
+
   // HUD.
   const hud = el("div", "rp-hud", container);
   const status = el("div", "rp-hud-status", hud);
@@ -234,7 +298,7 @@ export async function mountStage(container, { assetUrl, policy }) {
     el("span", "", row, label);
     return el("b", "", row);
   });
-  el("div", "rp-hud-note", hud, "Scripted motion in the NexArm sim scene · not a policy rollout");
+  el("div", "rp-hud-note", hud, "Drag to rotate · wheel to zoom · right-drag to pan · scripted motion, not a policy rollout");
 
   let spec = { shot: "hero", cams: true, chunk: true, frustums: false, joints: false };
   let playing = true;
@@ -351,8 +415,8 @@ export async function mountStage(container, { assetUrl, policy }) {
     if (spec.chunk) updateChunk(now);
     frustums.forEach((f) => (f.visible = spec.frustums));
 
-    const goal = (shots[spec.shot] ?? shots.hero)(now);
-    const k = 1 - Math.exp(-dt * 2.6);
+    const goal = orbit.manual ? orbitGoal() : (shots[spec.shot] ?? shots.hero)(now);
+    const k = 1 - Math.exp(-dt * (orbit.manual ? 14 : 2.6));
     view.pos.lerp(goal.pos, k);
     view.target.lerp(goal.target, k);
     camera.position.copy(view.pos);
@@ -370,6 +434,13 @@ export async function mountStage(container, { assetUrl, policy }) {
       hud.classList.toggle("show-chunk", !!spec.chunk);
       hud.classList.toggle("show-joints", !!spec.joints);
       container.dataset.beat = spec.beat ?? "";
+    },
+    resetView,
+    get orbiting() {
+      return orbit.manual;
+    },
+    setCams(on) {
+      hud.classList.toggle("hide-cams", !on);
     },
     setPlaying(on) {
       playing = on;

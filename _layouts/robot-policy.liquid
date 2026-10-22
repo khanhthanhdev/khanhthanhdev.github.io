@@ -33,9 +33,18 @@
             <span>Loading the robot model…</span>
           </div>
           <div class="rp-stage-tools">
+            <button type="button" id="rp-reset-view" title="Hand the camera back to the guided shots (or double-click the scene)">Reset view</button>
+            <button type="button" id="rp-cams" aria-pressed="false">Hide cameras</button>
             <button type="button" id="rp-motion" aria-pressed="false">Pause motion</button>
           </div>
         </div>
+        <div
+          class="rp-rowsplit"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize the 3D view and the diagram"
+          tabindex="0"
+        ></div>
         <div class="rp-diagram" data-for="inference">
           {% capture rp_pipeline %}robot-policy/{{ page.slug }}-pipeline.svg{% endcapture %}
           {% include {{ rp_pipeline }} %}

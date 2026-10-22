@@ -89,16 +89,30 @@
 /* data-tab is switched from JS, so keep these through PurgeCSS. */
 /* purgecss start ignore */
 .rp-app[data-tab="inference"] .rp-visual {
-  grid-template-rows: minmax(0, 46%) minmax(0, 1fr);
+  grid-template-rows: minmax(0, calc(var(--rp-rows, 0.5) * 100%)) 10px minmax(0, 1fr);
 }
+.rp-app:not([data-tab="inference"]) .rp-rowsplit,
 .rp-app:not([data-tab="inference"]) .rp-diagram[data-for="inference"],
 .rp-app:not([data-tab="training"]) .rp-diagram[data-for="training"],
 .rp-app[data-tab="training"] .rp-stage,
 .rp-app[data-tab="results"] .rp-read-foot {
   display: none;
 }
-.rp-app[data-tab="inference"] .rp-diagram {
-  border-top: 1px solid var(--rp-rule);
+/* stage state set from JS */
+.rp-stage:not(.is-orbiting) #rp-reset-view,
+.rp-hud.hide-cams .rp-hud-cams {
+  display: none !important;
+}
+.rp-stage.is-orbiting .rp-hud-status {
+  opacity: 0.85;
+}
+.rp-stage-canvas.is-dragging {
+  cursor: grabbing;
+}
+.rp-resizing,
+.rp-resizing * {
+  user-select: none !important;
+  cursor: inherit;
 }
 /* purgecss end ignore */
 .rp-diagram {
@@ -144,7 +158,32 @@
   border-color: var(--rp-accent);
   color: var(--rp-accent);
 }
+.rp-rowsplit {
+  cursor: row-resize;
+  background: var(--rp-paper);
+  border-top: 1px solid var(--rp-rule);
+  border-bottom: 1px solid var(--rp-rule);
+  position: relative;
+  touch-action: none;
+}
+.rp-rowsplit::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 50%;
+  width: 36px;
+  margin-left: -18px;
+  border-top: 1px solid var(--rp-muted);
+  border-bottom: 1px solid var(--rp-muted);
+  opacity: 0.6;
+}
+.rp-splitter:hover,
+.rp-rowsplit:hover {
+  background: color-mix(in srgb, var(--rp-accent) 12%, var(--rp-paper));
+}
 .rp-splitter {
+  touch-action: none;
   cursor: col-resize;
   background: var(--rp-paper);
   border-left: 1px solid var(--rp-rule);
@@ -317,6 +356,8 @@
   background: var(--rp-stage-bg);
 }
 .rp-stage-canvas {
+  cursor: grab;
+  touch-action: pan-y;
   position: absolute;
   inset: 0;
   width: 100%;
@@ -413,7 +454,7 @@
 }
 .rp-hud-cam {
   position: relative;
-  width: clamp(84px, 13vw, 168px);
+  width: clamp(56px, 7vw, 104px);
   aspect-ratio: 4 / 3;
   border: 1.5px solid var(--rp-ink);
   border-radius: 3px;
@@ -423,7 +464,7 @@
   left: 0;
   bottom: 100%;
   margin-bottom: 2px;
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--rp-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -999,7 +1040,7 @@ a.rp-card:hover {
   }
   /* purgecss start ignore */
   .rp-app[data-tab="inference"] .rp-visual {
-    grid-template-rows: minmax(0, 48%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, calc(var(--rp-rows, 0.5) * 100%)) 14px minmax(0, 1fr);
   }
   .rp-app[data-tab="results"] .rp-visual {
     height: 40svh;
@@ -1042,7 +1083,7 @@ a.rp-card:hover {
     display: none;
   }
   .rp-hud-cam {
-    width: 22vw;
+    width: 15vw;
   }
   .rp-hud-note,
   .rp-hud-joints {
