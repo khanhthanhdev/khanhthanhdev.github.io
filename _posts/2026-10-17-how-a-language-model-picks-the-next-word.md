@@ -9,8 +9,10 @@ math: true
 toc:
   sidebar: left
 css:
+  - /assets/css/screen-works.css
   - /assets/css/next-token.css
 js:
+  - /assets/js/screen-works.js
   - /assets/js/next-token.js
 ---
 
@@ -30,6 +32,20 @@ Every time a model writes a reply, it runs this loop:
 4. **Pick** one token, using a _decoding strategy_ (always take the top one, or sample at random, or something in between).
 5. **Append** that token to the text and go back to step 1.
 
+<figure class="sw-fig">
+  <span class="sw-badge">Schematic</span>
+  <h4 class="sw-caption" data-toc-skip>A reply is one small step, repeated.</h4>
+  <ol class="sw-pipe sw-build">
+    <li class="sw-stage"><span class="sw-num">01</span><span class="sw-label">Read</span><p>The text so far</p></li>
+    <li class="sw-stage is-active"><span class="sw-num">02</span><span class="sw-label">Score</span><p>One logit per token</p></li>
+    <li class="sw-stage"><span class="sw-num">03</span><span class="sw-label">Convert</span><p>Softmax gives probabilities</p></li>
+    <li class="sw-stage"><span class="sw-num">04</span><span class="sw-label">Pick</span><p>Greedy or sampled</p></li>
+    <li class="sw-stage"><span class="sw-num">05</span><span class="sw-label">Append</span><p>Add it to the text</p></li>
+  </ol>
+  <div class="sw-return sw-label">Back to read</div>
+  <p class="sw-note">The network does step 02. Everything after it is plain arithmetic.</p>
+</figure>
+
 The loop stops when the model picks a special "end of text" token, or when it hits a length limit. Models that work this way are called **autoregressive**: each new output is fed back in as input.
 
 The rest of this post goes through steps 2 to 5. Step 2, the neural network itself, is a big topic of its own, so here we treat it as a black box that hands us a list of scores.
@@ -40,11 +56,19 @@ So far I've been saying "word", but models actually work with **tokens**. A toke
 
 Here is how a typical tokenizer might split a sentence. The exact split depends on the model; this one is just an illustration:
 
-| Text             | Possible tokens                      |
-| ---------------- | ------------------------------------ |
-| `The cat sat`    | `The` · `␣cat` · `␣sat`              |
-| `unbelievable`   | `un` · `believ` · `able`             |
-| `ChatGPT rocks!` | `Chat` · `G` · `PT` · `␣rocks` · `!` |
+<figure class="sw-fig">
+  <span class="sw-badge">Schematic</span>
+  <h4 class="sw-caption" data-toc-skip>A word is one or more tokens.</h4>
+  <dl class="sw-rows sw-build">
+    <dt class="sw-label">The cat sat</dt>
+    <dd><span class="sw-chip">The</span><span class="sw-chip">␣cat</span><span class="sw-chip">␣sat</span></dd>
+    <dt class="sw-label">unbelievable</dt>
+    <dd><span class="sw-chip">un</span><span class="sw-chip is-key">believ</span><span class="sw-chip">able</span></dd>
+    <dt class="sw-label">ChatGPT rocks!</dt>
+    <dd><span class="sw-chip">Chat</span><span class="sw-chip">G</span><span class="sw-chip">PT</span><span class="sw-chip">␣rocks</span><span class="sw-chip">!</span></dd>
+  </dl>
+  <p class="sw-note">␣ marks a leading space</p>
+</figure>
 
 The `␣` symbol marks a leading space. To the model, `␣cat` (with a space in front) and `cat` (without one) are two completely different tokens. You'll see that symbol again in Figure 2.
 
@@ -88,6 +112,18 @@ p_{\text{sofa}} &\approx \tfrac{7.39}{41.77} \approx 17.7\%
 \end{aligned}
 $$
 
+<figure class="sw-fig">
+  <span class="sw-badge">Toy</span>
+  <h4 class="sw-caption" data-toc-skip>Softmax turns scores into shares.</h4>
+  <ul class="sw-bars sw-build">
+    <li class="sw-bar-row sw-bars-head"><span class="sw-label">Word</span><span class="sw-label sw-col-mid">Score → eˢᶜᵒʳᵉ</span><span class="sw-label">Share</span><span class="sw-label">Prob.</span></li>
+    <li class="sw-bar-row is-key"><span class="sw-label">mat</span><span class="sw-num sw-col-mid">3.1 → 22.20</span><span class="sw-track"><span class="sw-fill" style="--v:53.1"></span></span><span class="sw-num is-big">53.1%</span></li>
+    <li class="sw-bar-row"><span class="sw-label">floor</span><span class="sw-num sw-col-mid">2.5 → 12.18</span><span class="sw-track"><span class="sw-fill" style="--v:29.2"></span></span><span class="sw-num is-big">29.2%</span></li>
+    <li class="sw-bar-row"><span class="sw-label">sofa</span><span class="sw-num sw-col-mid">2.0 → 7.39</span><span class="sw-track"><span class="sw-fill" style="--v:17.7"></span></span><span class="sw-num is-big">17.7%</span></li>
+  </ul>
+  <p class="sw-eq">Total <span class="sw-num">22.20 + 12.18 + 7.39 ≈ 41.77</span>, and each share is its value ÷ <span class="sw-num">41.77</span>.</p>
+</figure>
+
 Why use $$e^{z}$$ rather than just dividing the raw scores by their sum? Three reasons:
 
 - **It's always positive**, even for negative scores, so every token gets a valid probability.
@@ -119,6 +155,18 @@ $$
 - At $$T = 2$$ the gap halves: the ratio drops to $$e^{0.3} \approx 1.35$$. The bars even out.
 
 As $$T$$ approaches 0, all the probability piles onto the highest-scoring token. As $$T$$ grows very large, every token tends toward the same probability.
+
+<figure class="sw-fig">
+  <span class="sw-badge">Toy</span>
+  <h4 class="sw-caption" data-toc-skip>Temperature changes the gap, not the order.</h4>
+  <ul class="sw-bars is-3col sw-build">
+    <li class="sw-bar-row sw-bars-head"><span class="sw-label">Temperature</span><span class="sw-label">Mat vs floor</span><span class="sw-label">Times likelier</span></li>
+    <li class="sw-bar-row is-key"><span class="sw-num">T = 0.5</span><span class="sw-track"><span class="sw-fill" style="--v:100"></span></span><span class="sw-num is-big">3.32×</span></li>
+    <li class="sw-bar-row"><span class="sw-num">T = 1</span><span class="sw-track"><span class="sw-fill" style="--v:54.9"></span></span><span class="sw-num is-big">1.82×</span></li>
+    <li class="sw-bar-row"><span class="sw-num">T = 2</span><span class="sw-track"><span class="sw-fill" style="--v:40.7"></span></span><span class="sw-num is-big">1.35×</span></li>
+  </ul>
+  <p class="sw-eq">Ratio <span class="sw-num">e^((3.1 − 2.5) ÷ T)</span>: halve T and the gap doubles before it is exponentiated.</p>
+</figure>
 
 Try it below. Drag the temperature slider (or drag across the uncertainty chart), then press _Pick a word_ a few times.
 
@@ -208,6 +256,19 @@ P(\text{path}) &= 0.80 \times 0.52 \times 0.46 \times 0.71 \\
 &\approx 13.6\%
 \end{aligned}
 $$
+
+<figure class="sw-fig">
+  <span class="sw-badge">Toy</span>
+  <h4 class="sw-caption" data-toc-skip>Every step multiplies in a number below 1.</h4>
+  <ul class="sw-bars is-3col sw-build">
+    <li class="sw-bar-row sw-bars-head"><span class="sw-label">Step</span><span class="sw-label">Chance so far</span><span class="sw-label">Total</span></li>
+    <li class="sw-bar-row"><span class="sw-num">time</span><span class="sw-track"><span class="sw-fill" style="--v:80"></span></span><span class="sw-num is-big">80.0%</span></li>
+    <li class="sw-bar-row"><span class="sw-num">× 0.52 ,</span><span class="sw-track"><span class="sw-fill" style="--v:41.6"></span></span><span class="sw-num is-big">41.6%</span></li>
+    <li class="sw-bar-row"><span class="sw-num">× 0.46 there</span><span class="sw-track"><span class="sw-fill" style="--v:19.1"></span></span><span class="sw-num is-big">19.1%</span></li>
+    <li class="sw-bar-row is-key"><span class="sw-num">× 0.71 was</span><span class="sw-track"><span class="sw-fill" style="--v:13.6"></span></span><span class="sw-num is-big">13.6%</span></li>
+  </ul>
+  <p class="sw-note">Path from Figure 2: time → , → there → was</p>
+</figure>
 
 Even the single most popular opening has only about a 1 in 7 chance of coming out word for word. Every extra token multiplies in another number below 1, so the probability of any one exact long text gets tiny very quickly.
 

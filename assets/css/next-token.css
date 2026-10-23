@@ -1,49 +1,37 @@
 /* Styles for the interactive figures in the "How a language model picks the next word" post.
-   Look: research-explainer figures — typewriter mono, square token chips, dotted grids, amber path ribbons. */
-
-@import url("https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap");
+   Look: Screen Works technical-drawing style (see screen-works.css): paper, ink, hairlines, one accent. */
 
 /* Classes are created from JS (and by KaTeX from a CDN), so PurgeCSS cannot see them in the built HTML. */
 /* purgecss start ignore */
 
 .ntk-figure {
-  --ntk-ink: var(--global-text-color);
-  --ntk-muted: var(--global-text-color-light);
-  --ntk-paper: var(--global-bg-color);
-  --ntk-rule: #1d1d1d;
-  --ntk-twig: rgba(0, 0, 0, 0.13);
-  --ntk-dot: rgba(0, 0, 0, 0.22);
-  --ntk-amber: #f2a516;
-  --ntk-amber-fill: #ffefc2;
-  --ntk-amber-core: #fff6dc;
-  --ntk-model-bar: #ff9500;
-  --ntk-sample-bar: #2f7bff;
-  --ntk-teal: #12898c;
-  --ntk-rollout-head: #bdf2cd;
-  --ntk-seg-on: #c9d6cf;
-  --ntk-mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+  --ntk-ink: var(--sw-ink);
+  --ntk-muted: var(--sw-muted);
+  --ntk-paper: var(--sw-paper);
+  --ntk-rule: var(--sw-ink);
+  --ntk-twig: var(--sw-grid);
+  --ntk-dot: var(--sw-grid);
+  --ntk-amber: var(--sw-accent);
+  --ntk-amber-fill: var(--sw-accent-tint);
+  --ntk-amber-core: var(--sw-paper);
+  --ntk-model-bar: var(--sw-dark);
+  --ntk-sample-bar: var(--sw-accent);
+  --ntk-teal: var(--sw-accent);
+  --ntk-rollout-head: var(--sw-grid);
+  --ntk-seg-on: var(--sw-accent-tint);
+  --ntk-mono: var(--sw-mono);
 
   position: relative;
   container-type: inline-size;
   margin: 2.5rem 0 0.75rem;
+  padding: var(--sw-gap);
+  border-radius: var(--sw-radius);
+  background: var(--sw-paper);
   color: var(--ntk-ink);
-  font-family: var(--ntk-mono);
+  font-family: var(--sw-font);
+  font-weight: 500;
   font-size: 0.92rem;
   line-height: 1.45;
-}
-
-html[data-theme="dark"] .ntk-figure {
-  --ntk-rule: #cfcfcf;
-  --ntk-twig: rgba(255, 255, 255, 0.16);
-  --ntk-dot: rgba(255, 255, 255, 0.2);
-  --ntk-amber: #f5b232;
-  --ntk-amber-fill: #4d3b10;
-  --ntk-amber-core: #6b5317;
-  --ntk-model-bar: #ff9f1a;
-  --ntk-sample-bar: #4d8dff;
-  --ntk-teal: #3cc3c6;
-  --ntk-rollout-head: #1f4a31;
-  --ntk-seg-on: #3d4a44;
 }
 
 /* Wider than the text column on large screens. Fixed width (not vw) so a desktop scrollbar never causes sideways scroll. */
@@ -68,7 +56,7 @@ html[data-theme="dark"] .ntk-figure {
 
 .ntk-caption {
   margin: 0.75rem 0 2.25rem;
-  color: var(--ntk-muted);
+  color: var(--sw-muted);
   font-size: 0.85rem;
 }
 
@@ -76,11 +64,9 @@ html[data-theme="dark"] .ntk-figure {
 
 .ntk-label {
   display: inline-block;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-  text-decoration: underline dotted;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .ntk-sub {
@@ -101,7 +87,6 @@ html[data-theme="dark"] .ntk-figure {
   color: var(--ntk-teal);
   font-family: var(--ntk-mono);
   font-size: 1.35rem;
-  font-weight: 700;
   line-height: 1;
   cursor: pointer;
 }
@@ -139,13 +124,17 @@ html[data-theme="dark"] .ntk-figure {
 }
 
 .ntk-output {
+  font-family: var(--sw-mono);
+  font-weight: 400;
   min-width: 2.6rem;
   font-variant-numeric: tabular-nums;
 }
 
 .ntk-seg {
   display: inline-flex;
+  overflow: hidden;
   border: 1px solid var(--ntk-rule);
+  border-radius: var(--sw-radius);
 }
 
 .ntk-seg button {
@@ -169,7 +158,7 @@ html[data-theme="dark"] .ntk-figure {
 .ntk-btn {
   padding: 0.15rem 0.7rem;
   border: 1px solid var(--ntk-rule);
-  border-radius: 0;
+  border-radius: var(--sw-radius);
   background: var(--ntk-paper);
   color: var(--ntk-ink);
   font-family: var(--ntk-mono);
@@ -197,6 +186,8 @@ html[data-theme="dark"] .ntk-figure {
 
 .ntk-stats {
   margin: 0;
+  font-family: var(--sw-mono);
+  font-weight: 400;
   color: var(--ntk-muted);
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
@@ -205,9 +196,12 @@ html[data-theme="dark"] .ntk-figure {
 /* Token chips */
 
 .ntk-tok {
+  font-family: var(--sw-mono);
+  font-weight: 400;
   display: inline-block;
   padding: 0 0.3rem;
   border: 1px solid var(--ntk-rule);
+  border-radius: var(--sw-radius);
   background: var(--ntk-paper);
   color: var(--ntk-ink);
   font-family: var(--ntk-mono);
@@ -234,6 +228,7 @@ html[data-theme="dark"] .ntk-figure {
 .ntk-prompt-box {
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--ntk-rule);
+  border-radius: var(--sw-radius);
   background: var(--ntk-paper);
   font-size: 0.85rem;
 }
@@ -247,6 +242,7 @@ html[data-theme="dark"] .ntk-figure {
   min-width: 4ch;
   padding: 0 0.35rem;
   border: 1px dashed var(--ntk-rule);
+  border-radius: var(--sw-radius);
   color: var(--ntk-muted);
   text-align: center;
 }
@@ -318,6 +314,8 @@ html[data-theme="dark"] .ntk-figure {
 }
 
 .ntk-bar-score {
+  font-family: var(--sw-mono);
+  font-weight: 400;
   color: var(--ntk-muted);
   font-size: 0.78rem;
   text-align: right;
@@ -326,8 +324,8 @@ html[data-theme="dark"] .ntk-figure {
 .ntk-bar-track {
   position: relative;
   height: 1.05rem;
-  background-image: radial-gradient(circle, var(--ntk-dot) 0.9px, transparent 1.1px);
-  background-size: 6px 6px;
+  border-left: 1.5px solid var(--ntk-ink);
+  background: linear-gradient(var(--ntk-dot), var(--ntk-dot)) left center / 100% 1px no-repeat;
 }
 
 .ntk-bar-fill {
@@ -344,6 +342,8 @@ html[data-theme="dark"] .ntk-figure {
 }
 
 .ntk-bar-value {
+  font-family: var(--sw-mono);
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -375,7 +375,8 @@ html[data-theme="dark"] .ntk-figure {
   max-width: 420px;
   margin: 0 auto;
   overflow: visible;
-  font-family: var(--ntk-mono);
+  font-family: var(--sw-mono);
+  font-weight: 400;
 }
 
 .ntk-grid-dot {
@@ -400,7 +401,8 @@ html[data-theme="dark"] .ntk-figure {
 .ntk-curve {
   fill: none;
   stroke: var(--ntk-ink);
-  stroke-width: 1.6;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
 }
 
 .ntk-marker-rule {
@@ -410,15 +412,14 @@ html[data-theme="dark"] .ntk-figure {
 }
 
 .ntk-marker-dot {
-  fill: var(--ntk-amber-fill);
-  stroke: var(--ntk-amber);
+  fill: var(--ntk-amber);
+  stroke: var(--ntk-paper);
   stroke-width: 2;
 }
 
 .ntk-chart-readout {
   fill: var(--ntk-ink);
   font-size: 12px;
-  font-weight: 700;
 }
 
 .ntk-scrubber {
@@ -511,6 +512,8 @@ html[data-theme="dark"] .ntk-figure {
 }
 
 .ntk-node-p {
+  font-family: var(--sw-mono);
+  font-weight: 400;
   color: var(--ntk-ink);
   font-size: 0.7rem;
 }
@@ -525,7 +528,9 @@ html[data-theme="dark"] .ntk-figure {
 .ntk-rollout {
   max-width: 640px;
   margin: 1.25rem auto 0;
+  overflow: hidden;
   border: 1px solid var(--ntk-rule);
+  border-radius: var(--sw-radius);
   background: var(--ntk-paper);
 }
 
@@ -536,15 +541,22 @@ html[data-theme="dark"] .ntk-figure {
   padding: 0.2rem 0.6rem;
   border-bottom: 1px solid var(--ntk-rule);
   background: var(--ntk-rollout-head);
-  font-size: 0.82rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .ntk-rollout-meta {
-  font-style: italic;
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .ntk-rollout-body {
   margin: 0;
+  font-family: var(--sw-mono);
+  font-weight: 400;
   padding: 0.75rem 0.75rem 0.25rem;
   font-size: 0.95rem;
   line-height: 1.9;
