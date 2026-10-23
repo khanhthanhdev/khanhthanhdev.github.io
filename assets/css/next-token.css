@@ -1,0 +1,625 @@
+/* Styles for the interactive figures in the "How a language model picks the next word" post.
+   Look: research-explainer figures — typewriter mono, square token chips, dotted grids, amber path ribbons. */
+
+@import url("https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap");
+
+/* Classes are created from JS (and by KaTeX from a CDN), so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+.ntk-figure {
+  --ntk-ink: var(--global-text-color);
+  --ntk-muted: var(--global-text-color-light);
+  --ntk-paper: var(--global-bg-color);
+  --ntk-rule: #1d1d1d;
+  --ntk-twig: rgba(0, 0, 0, 0.13);
+  --ntk-dot: rgba(0, 0, 0, 0.22);
+  --ntk-amber: #f2a516;
+  --ntk-amber-fill: #ffefc2;
+  --ntk-amber-core: #fff6dc;
+  --ntk-model-bar: #ff9500;
+  --ntk-sample-bar: #2f7bff;
+  --ntk-teal: #12898c;
+  --ntk-rollout-head: #bdf2cd;
+  --ntk-seg-on: #c9d6cf;
+  --ntk-mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+
+  position: relative;
+  container-type: inline-size;
+  margin: 2.5rem 0 0.75rem;
+  color: var(--ntk-ink);
+  font-family: var(--ntk-mono);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+html[data-theme="dark"] .ntk-figure {
+  --ntk-rule: #cfcfcf;
+  --ntk-twig: rgba(255, 255, 255, 0.16);
+  --ntk-dot: rgba(255, 255, 255, 0.2);
+  --ntk-amber: #f5b232;
+  --ntk-amber-fill: #4d3b10;
+  --ntk-amber-core: #6b5317;
+  --ntk-model-bar: #ff9f1a;
+  --ntk-sample-bar: #4d8dff;
+  --ntk-teal: #3cc3c6;
+  --ntk-rollout-head: #1f4a31;
+  --ntk-seg-on: #3d4a44;
+}
+
+/* Wider than the text column on large screens. Fixed width (not vw) so a desktop scrollbar never causes sideways scroll. */
+@media (min-width: 1200px) {
+  .ntk-figure {
+    margin-left: calc(50% - 540px);
+    margin-right: calc(50% - 540px);
+  }
+
+  /* With the table-of-contents sidebar there is no room to widen, so stay in the text column. */
+  .toc-sidebar-container .ntk-figure {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.ntk-figure-placeholder,
+.ntk-error {
+  margin: 0;
+  color: var(--ntk-muted);
+}
+
+.ntk-caption {
+  margin: 0.75rem 0 2.25rem;
+  color: var(--ntk-muted);
+  font-size: 0.85rem;
+}
+
+/* Labels, help, controls */
+
+.ntk-label {
+  display: inline-block;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.ntk-sub {
+  display: block;
+  margin: 0.15rem 0 0.6rem;
+  color: var(--ntk-muted);
+  font-size: 0.8rem;
+}
+
+.ntk-help {
+  position: absolute;
+  top: -0.4rem;
+  right: 0;
+  z-index: 2;
+  padding: 0 0.3rem;
+  border: 0;
+  background: none;
+  color: var(--ntk-teal);
+  font-family: var(--ntk-mono);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ntk-help[aria-expanded="true"] {
+  text-decoration: underline;
+}
+
+.ntk-help-note {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--ntk-teal);
+  color: var(--ntk-ink);
+  font-size: 0.85rem;
+}
+
+.ntk-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.5rem;
+  margin: 0.9rem 0;
+}
+
+.ntk-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.ntk-control input[type="range"] {
+  width: 9rem;
+  accent-color: var(--ntk-amber);
+}
+
+.ntk-output {
+  min-width: 2.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ntk-seg {
+  display: inline-flex;
+  border: 1px solid var(--ntk-rule);
+}
+
+.ntk-seg button {
+  padding: 0.05rem 0.55rem;
+  border: 0;
+  background: transparent;
+  color: var(--ntk-ink);
+  font-family: var(--ntk-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.ntk-seg button + button {
+  border-left: 1px solid var(--ntk-rule);
+}
+
+.ntk-seg button[aria-pressed="true"] {
+  background: var(--ntk-seg-on);
+}
+
+.ntk-btn {
+  padding: 0.15rem 0.7rem;
+  border: 1px solid var(--ntk-rule);
+  border-radius: 0;
+  background: var(--ntk-paper);
+  color: var(--ntk-ink);
+  font-family: var(--ntk-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ntk-btn:hover,
+.ntk-btn-primary {
+  background: var(--ntk-amber-fill);
+}
+
+.ntk-btn:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.ntk-btn:focus-visible,
+.ntk-seg button:focus-visible,
+.ntk-help:focus-visible,
+.ntk-node:focus-visible .ntk-tok {
+  outline: 2px solid var(--ntk-teal);
+  outline-offset: 2px;
+}
+
+.ntk-stats {
+  margin: 0;
+  color: var(--ntk-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Token chips */
+
+.ntk-tok {
+  display: inline-block;
+  padding: 0 0.3rem;
+  border: 1px solid var(--ntk-rule);
+  background: var(--ntk-paper);
+  color: var(--ntk-ink);
+  font-family: var(--ntk-mono);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  white-space: pre;
+}
+
+.ntk-tok.is-chosen {
+  margin: 0 0.1rem;
+  border-color: var(--ntk-amber);
+  background: var(--ntk-amber-fill);
+}
+
+/* Prompt box and the fill-in slot */
+
+.ntk-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.ntk-prompt-box {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--ntk-rule);
+  background: var(--ntk-paper);
+  font-size: 0.85rem;
+}
+
+.ntk-prompt-inline {
+  font-size: 1.05rem;
+}
+
+.ntk-slot {
+  display: inline-block;
+  min-width: 4ch;
+  padding: 0 0.35rem;
+  border: 1px dashed var(--ntk-rule);
+  color: var(--ntk-muted);
+  text-align: center;
+}
+
+.ntk-slot.is-filled {
+  border: 1px solid var(--ntk-amber);
+  background: var(--ntk-amber-fill);
+  color: var(--ntk-ink);
+}
+
+/* Figure 1 panels */
+
+.ntk-panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+@container (min-width: 620px) {
+  .ntk-panels {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ntk-panel-chart {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    max-width: 420px;
+  }
+}
+
+@container (min-width: 1000px) {
+  .ntk-panels {
+    grid-template-columns: 1.15fr 1fr 1fr;
+    gap: 2.5rem;
+  }
+  .ntk-panel-chart {
+    grid-column: auto;
+  }
+}
+
+.ntk-panel {
+  min-width: 0;
+  text-align: center;
+}
+
+.ntk-bars {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.ntk-bar-row {
+  display: grid;
+  grid-template-columns: 6.2rem 1fr 3.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.12rem 0;
+  transition: opacity 200ms;
+}
+
+.ntk-bars.has-scores .ntk-bar-row {
+  grid-template-columns: 6.2rem 2.2rem 1fr 3.6rem;
+}
+
+.ntk-bar-tok {
+  text-align: right;
+}
+
+.ntk-bar-score {
+  color: var(--ntk-muted);
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.ntk-bar-track {
+  position: relative;
+  height: 1.05rem;
+  background-image: radial-gradient(circle, var(--ntk-dot) 0.9px, transparent 1.1px);
+  background-size: 6px 6px;
+}
+
+.ntk-bar-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--ntk-model-bar);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.ntk-panel:nth-child(2) .ntk-bar-fill {
+  background: var(--ntk-sample-bar);
+  transition: transform 150ms ease-out;
+}
+
+.ntk-bar-value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ntk-bar-row.is-cut {
+  opacity: 0.3;
+}
+
+.ntk-bar-row.is-cut .ntk-tok {
+  text-decoration: line-through;
+}
+
+.ntk-bar-row.is-picked .ntk-tok {
+  animation: ntk-flash 650ms ease-out;
+}
+
+@keyframes ntk-flash {
+  from {
+    border-color: var(--ntk-amber);
+    background: var(--ntk-amber-fill);
+  }
+}
+
+/* Uncertainty chart */
+
+.ntk-chart {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  overflow: visible;
+  font-family: var(--ntk-mono);
+}
+
+.ntk-grid-dot {
+  fill: var(--ntk-dot);
+}
+
+.ntk-axis {
+  stroke: var(--ntk-rule);
+  stroke-width: 1;
+}
+
+.ntk-tick,
+.ntk-axis-title {
+  fill: var(--ntk-ink);
+  font-size: 11px;
+}
+
+.ntk-axis-title {
+  font-size: 12px;
+}
+
+.ntk-curve {
+  fill: none;
+  stroke: var(--ntk-ink);
+  stroke-width: 1.6;
+}
+
+.ntk-marker-rule {
+  stroke: var(--ntk-amber);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.ntk-marker-dot {
+  fill: var(--ntk-amber-fill);
+  stroke: var(--ntk-amber);
+  stroke-width: 2;
+}
+
+.ntk-chart-readout {
+  fill: var(--ntk-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ntk-scrubber {
+  cursor: ew-resize;
+  touch-action: pan-y; /* vertical swipes still scroll the page on phones */
+}
+
+/* Figure 2: token tree */
+
+.ntk-title-row {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.ntk-tree-scroll {
+  overflow-x: auto;
+}
+
+.ntk-tree {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* only takes effect when the tree is narrower than the figure */
+  gap: 4rem;
+  width: max-content;
+  min-width: 100%;
+  padding: 0.75rem 0.25rem 0.5rem;
+}
+
+.ntk-edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ntk-edges path {
+  fill: none;
+  stroke-linecap: butt;
+}
+
+.ntk-twig {
+  stroke: var(--ntk-twig);
+}
+
+.ntk-ribbon {
+  stroke: var(--ntk-amber);
+}
+
+.ntk-ribbon-core {
+  stroke: var(--ntk-amber-core);
+}
+
+.ntk-col {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.ntk-col-prompt {
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 13rem;
+}
+
+.ntk-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ntk-node:hover .ntk-tok {
+  border-color: var(--ntk-amber);
+}
+
+.ntk-node[aria-pressed="true"] .ntk-tok {
+  border-color: var(--ntk-amber);
+  background: var(--ntk-amber-fill);
+}
+
+.ntk-node-p {
+  color: var(--ntk-ink);
+  font-size: 0.7rem;
+}
+
+.ntk-more {
+  color: var(--ntk-muted);
+  font-size: 0.7rem;
+}
+
+/* Rollout box */
+
+.ntk-rollout {
+  max-width: 640px;
+  margin: 1.25rem auto 0;
+  border: 1px solid var(--ntk-rule);
+  background: var(--ntk-paper);
+}
+
+.ntk-rollout-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.2rem 0.6rem;
+  border-bottom: 1px solid var(--ntk-rule);
+  background: var(--ntk-rollout-head);
+  font-size: 0.82rem;
+}
+
+.ntk-rollout-meta {
+  font-style: italic;
+}
+
+.ntk-rollout-body {
+  margin: 0;
+  padding: 0.75rem 0.75rem 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.ntk-rollout-math {
+  margin: 0;
+  padding: 0 0.75rem 0.6rem;
+  color: var(--ntk-muted);
+  font-size: 0.8rem;
+}
+
+.ntk-figure .ntk-actions {
+  justify-content: center;
+}
+
+.ntk-caret::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: var(--ntk-amber);
+  animation: ntk-blink 1s steps(1) infinite;
+}
+
+.ntk-ellipsis {
+  color: var(--ntk-muted);
+}
+
+@keyframes ntk-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 540px) {
+  .ntk-bar-row,
+  .ntk-bars.has-scores .ntk-bar-row {
+    grid-template-columns: 5.4rem 1fr 3.3rem;
+    gap: 0.4rem;
+  }
+  .ntk-bar-score {
+    display: none;
+  }
+  .ntk-tree {
+    gap: 2.5rem;
+  }
+  .ntk-col-prompt {
+    max-width: 9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ntk-caret::after,
+  .ntk-bar-row.is-picked .ntk-tok {
+    animation: none;
+  }
+}
+
+/* Article content: keep wide equations and tables from widening the page on phones */
+
+.post .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+/* This stylesheet only loads on this post, so it can target the post's tables directly. */
+#markdown-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* purgecss end ignore */

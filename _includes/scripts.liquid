@@ -104,6 +104,17 @@
   <script defer src="{{ '/assets/js/newsletter.js' | relative_url | bust_file_cache }}"></script>
 {% endif %}
 
+{% if page.math %}
+  <!-- KaTeX: renders the \( \) and \[ \] delimiters that kramdown emits for display and inline math -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    crossorigin="anonymous"
+    onload="renderMathInElement(document.querySelector('.post') || document.body, {delimiters: [{left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}], throwOnError: false});"
+  ></script>
+{% endif %}
+
 {% if page.js %}
   {% for script in page.js %}
     <script defer src="{{ script | relative_url | bust_file_cache }}"></script>
