@@ -2,13 +2,6 @@
   <title id="tv-train-title">TurboVLA training loop in lerobot-nexarm</title>
   <desc id="tv-train-desc">Simulated and real demonstrations are mixed by a sampler with a fixed real ratio; the collator normalizes images, state and 16-step action chunks with padding flags; the model predicts a 16 by 6 chunk; a masked L1 loss with an optional gripper weight is computed over valid steps; AdamW with gradient clipping and a warm-up plus cosine schedule updates the weights; an exponential moving average of the weights is saved with the statistics and config every 5,000 steps.</desc>
   <defs>
-    <filter id="tv-train-rough" x="-4%" y="-4%" width="108%" height="108%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="11" result="n" />
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <pattern id="tv-train-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
-      <line x1="0" y1="0" x2="0" y2="9" />
-    </pattern>
     <marker id="tv-train-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
       <path class="ah" d="M0,1 L10,5 L0,9 z" />
     </marker>
@@ -16,13 +9,14 @@
       <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
     </marker>
   </defs>
-  <text class="h" x="40" y="52">TurboVLA · one training step</text>
-  <text class="s" x="40" y="78">examples/nexarm/train_turbovla.py · 50,000 steps · click a block or use the arrow keys</text>
+  <rect class="tick" x="40" y="33" width="4" height="23" />
+  <text class="h" x="58" y="53">TurboVLA learns from mixed real and simulated runs.</text>
+  <text class="s" x="58" y="80">examples/nexarm/train_turbovla.py · 50,000 steps · click a block or use the arrow keys</text>
 
   <!-- 1 data -->
   <g data-step="t-data">
     <text class="lbl" x="40" y="112">1 · data</text>
-    <g filter="url(#tv-train-rough)">
+    <g>
       <rect class="sk f-in" x="40" y="124" width="600" height="300" rx="12" />
     </g>
     <rect class="op" x="60" y="144" width="260" height="96" rx="5" />
@@ -45,7 +39,7 @@
   <!-- 2 collate -->
   <g data-step="t-batch">
     <text class="lbl" x="680" y="112">2 · collate and normalize</text>
-    <g filter="url(#tv-train-rough)">
+    <g>
       <rect class="sk f-in" x="680" y="124" width="680" height="300" rx="12" />
     </g>
     <rect class="op" x="700" y="144" width="640" height="34" rx="5" />
@@ -83,11 +77,11 @@
     <text class="sm" x="1157" y="376" text-anchor="middle">12</text>
     <rect class="op" x="1180" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1197" y="376" text-anchor="middle">13</text>
-    <rect class="sk f-note" x="1220" y="354" width="34" height="34" rx="3" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1220" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1237" y="376" text-anchor="middle">14</text>
-    <rect class="sk f-note" x="1260" y="354" width="34" height="34" rx="3" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1260" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1277" y="376" text-anchor="middle">15</text>
-    <rect class="sk f-note" x="1300" y="354" width="34" height="34" rx="3" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1300" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1317" y="376" text-anchor="middle">16</text>
     <text class="sm" x="1340" y="410" text-anchor="end">padded</text>
   </g>
@@ -96,7 +90,7 @@
   <!-- 3 forward -->
   <g data-step="t-forward">
     <text class="lbl" x="40" y="462">3 · forward pass</text>
-    <g filter="url(#tv-train-rough)">
+    <g>
       <rect class="sk f-enc" x="40" y="474" width="600" height="286" rx="12" />
     </g>
     <text class="t" x="60" y="504">the network from the Inference tab</text>
@@ -104,7 +98,7 @@
     <rect class="op" x="60" y="544" width="170" height="60" rx="5" />
     <text class="o" x="145.0" y="571.0" text-anchor="middle">DINOv3</text>
     <text class="sm" x="145.0" y="589.0" text-anchor="middle">trainable</text>
-    <rect class="sk f-note" x="60" y="616" width="170" height="60" rx="5" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="60" y="616" width="170" height="60" rx="5" />
     <text class="o" x="145" y="642" text-anchor="middle">BERT</text>
     <text class="sm" x="145" y="660" text-anchor="middle">frozen, no grad</text>
     <path class="ln-t" d="M230 574 H270 V610 H290" marker-end="url(#tv-train-ah)" />
@@ -124,7 +118,7 @@
   <!-- 4 loss -->
   <g data-step="t-loss">
     <text class="lbl" x="680" y="462">4 · masked L1 loss</text>
-    <g filter="url(#tv-train-rough)">
+    <g>
       <rect class="sk f-out" x="680" y="474" width="680" height="286" rx="12" />
     </g>
     <text class="t" x="700" y="504">|â − a| per step and joint</text>
@@ -142,9 +136,9 @@
     <rect class="op" x="1080" y="540" width="30" height="22" rx="2" />
     <rect class="op" x="1112" y="540" width="30" height="22" rx="2" />
     <rect class="op" x="1144" y="540" width="30" height="22" rx="2" />
-    <rect class="sk f-note" x="1176" y="540" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1208" y="540" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1240" y="540" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1176" y="540" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1208" y="540" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1240" y="540" width="30" height="22" rx="2" />
     <text class="sm" x="750" y="556" text-anchor="end">j1</text>
     <rect class="op" x="760" y="564" width="30" height="22" rx="2" />
     <rect class="op" x="792" y="564" width="30" height="22" rx="2" />
@@ -159,9 +153,9 @@
     <rect class="op" x="1080" y="564" width="30" height="22" rx="2" />
     <rect class="op" x="1112" y="564" width="30" height="22" rx="2" />
     <rect class="op" x="1144" y="564" width="30" height="22" rx="2" />
-    <rect class="sk f-note" x="1176" y="564" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1208" y="564" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1240" y="564" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1176" y="564" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1208" y="564" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1240" y="564" width="30" height="22" rx="2" />
     <text class="sm" x="750" y="580" text-anchor="end">j2</text>
     <rect class="op" x="760" y="588" width="30" height="22" rx="2" />
     <rect class="op" x="792" y="588" width="30" height="22" rx="2" />
@@ -176,9 +170,9 @@
     <rect class="op" x="1080" y="588" width="30" height="22" rx="2" />
     <rect class="op" x="1112" y="588" width="30" height="22" rx="2" />
     <rect class="op" x="1144" y="588" width="30" height="22" rx="2" />
-    <rect class="sk f-note" x="1176" y="588" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1208" y="588" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1240" y="588" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1176" y="588" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1208" y="588" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1240" y="588" width="30" height="22" rx="2" />
     <text class="sm" x="750" y="604" text-anchor="end">j3</text>
     <rect class="op" x="760" y="612" width="30" height="22" rx="2" />
     <rect class="op" x="792" y="612" width="30" height="22" rx="2" />
@@ -193,9 +187,9 @@
     <rect class="op" x="1080" y="612" width="30" height="22" rx="2" />
     <rect class="op" x="1112" y="612" width="30" height="22" rx="2" />
     <rect class="op" x="1144" y="612" width="30" height="22" rx="2" />
-    <rect class="sk f-note" x="1176" y="612" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1208" y="612" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1240" y="612" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1176" y="612" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1208" y="612" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1240" y="612" width="30" height="22" rx="2" />
     <text class="sm" x="750" y="628" text-anchor="end">j4</text>
     <rect class="op" x="760" y="636" width="30" height="22" rx="2" />
     <rect class="op" x="792" y="636" width="30" height="22" rx="2" />
@@ -210,26 +204,26 @@
     <rect class="op" x="1080" y="636" width="30" height="22" rx="2" />
     <rect class="op" x="1112" y="636" width="30" height="22" rx="2" />
     <rect class="op" x="1144" y="636" width="30" height="22" rx="2" />
-    <rect class="sk f-note" x="1176" y="636" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1208" y="636" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1240" y="636" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="sk f-cell" x="1176" y="636" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1208" y="636" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1240" y="636" width="30" height="22" rx="2" />
     <text class="sm" x="750" y="652" text-anchor="end">j5</text>
-    <rect class="op-a" x="760" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="792" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="824" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="856" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="888" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="920" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="952" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="984" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="1016" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="1048" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="1080" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="1112" y="660" width="30" height="22" rx="2" />
-    <rect class="op-a" x="1144" y="660" width="30" height="22" rx="2" />
-    <rect class="sk f-note" x="1176" y="660" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1208" y="660" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
-    <rect class="sk f-note" x="1240" y="660" width="30" height="22" rx="2" fill="url(#tv-train-hatch)" />
+    <rect class="op op-b" x="760" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="792" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="824" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="856" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="888" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="920" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="952" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="984" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="1016" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="1048" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="1080" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="1112" y="660" width="30" height="22" rx="2" />
+    <rect class="op op-b" x="1144" y="660" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1176" y="660" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1208" y="660" width="30" height="22" rx="2" />
+    <rect class="sk f-cell" x="1240" y="660" width="30" height="22" rx="2" />
     <text class="sm" x="750" y="676" text-anchor="end">grip</text>
     <text class="sm" x="1280" y="676">× w<tspan dy="4" class="ss">5</tspan><tspan dy="-4">​</tspan></text>
     <text class="m" x="700" y="714">loss = Σ mask · w · |â − a| / (6 · valid steps)</text>
@@ -240,7 +234,7 @@
   <!-- 5 optimizer step -->
   <g data-step="t-update">
     <text class="lbl" x="40" y="796">5 · optimizer step</text>
-    <g filter="url(#tv-train-rough)">
+    <g>
       <rect class="sk f-dec" x="40" y="808" width="820" height="290" rx="12" />
     </g>
     <rect class="op" x="60" y="828" width="170" height="44" rx="5" />
@@ -274,7 +268,7 @@
   <!-- 6 ema and checkpoint -->
   <g data-step="t-ema">
     <text class="lbl" x="900" y="796">6 · EMA and checkpoint</text>
-    <g filter="url(#tv-train-rough)">
+    <g>
       <rect class="sk f-note" x="900" y="808" width="460" height="290" rx="12" />
     </g>
     <text class="t" x="920" y="838">moving average of the weights</text>

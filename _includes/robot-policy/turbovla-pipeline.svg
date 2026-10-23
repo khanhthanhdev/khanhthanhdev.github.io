@@ -2,13 +2,6 @@
   <title id="tv-pipe-title">TurboVLA inference pipeline on the NexArm</title>
   <desc id="tv-pipe-desc">Camera views go through DINOv3 ViT-B/16 and a residual projection into 196 tokens of width 256 per view; the instruction goes through a frozen BERT and a linear layer; six interaction layers share one attention-logit matrix between image and text tokens and refine the text with a transformer layer; the joint state becomes two tokens; sixteen learned queries cross-attend to all of these in three pre-norm decoder layers; an MLP and tanh give a 16 by 6 chunk, of which the arm runs the first 8 before inferring again.</desc>
   <defs>
-    <filter id="tv-pipe-rough" x="-4%" y="-4%" width="108%" height="108%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="11" result="n" />
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <pattern id="tv-pipe-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
-      <line x1="0" y1="0" x2="0" y2="9" />
-    </pattern>
     <marker id="tv-pipe-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
       <path class="ah" d="M0,1 L10,5 L0,9 z" />
     </marker>
@@ -16,19 +9,20 @@
       <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
     </marker>
   </defs>
-  <text class="h" x="40" y="52">TurboVLA · one control cycle on the NexArm</text>
-  <text class="s" x="40" y="78">Read top to bottom · blocks follow TurboVLA/turbovla/models · click a block or use the arrow keys</text>
+  <rect class="tick" x="40" y="33" width="4" height="23" />
+  <text class="h" x="58" y="53">TurboVLA reads the task, then plans 16 steps.</text>
+  <text class="s" x="58" y="80">Read top to bottom · blocks follow TurboVLA/turbovla/models · click a block or use the arrow keys</text>
 
   <!-- 1 observe -->
   <g data-step="observe">
     <text class="lbl" x="40" y="112">1 · observe</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-in" x="40" y="124" width="520" height="176" rx="10" />
       <rect class="sk f-in" x="600" y="124" width="340" height="176" rx="10" />
       <rect class="sk f-in" x="980" y="124" width="380" height="176" rx="10" />
-      <rect class="sk" x="60" y="166" width="120" height="78" rx="3" fill="url(#tv-pipe-hatch)" />
-      <rect class="sk" x="200" y="166" width="120" height="78" rx="3" fill="url(#tv-pipe-hatch)" />
-      <rect class="sk" x="340" y="166" width="120" height="78" rx="3" fill="url(#tv-pipe-hatch)" />
+      <rect class="sk f-cell" x="60" y="166" width="120" height="78" rx="3" />
+      <rect class="sk f-cell" x="200" y="166" width="120" height="78" rx="3" />
+      <rect class="sk f-cell" x="340" y="166" width="120" height="78" rx="3" />
     </g>
     <text class="t" x="60" y="152">camera views I<tspan dy="4" class="ss">1</tspan><tspan dy="-4">​</tspan> … I<tspan dy="4" class="ss">V</tspan><tspan dy="-4">​</tspan></text>
     <text class="sm" x="120" y="264" text-anchor="middle">front</text>
@@ -62,7 +56,7 @@
   <!-- 2 vision encoder -->
   <g data-step="vision">
     <text class="lbl" x="40" y="342">2 · vision encoder</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-enc" x="40" y="352" width="520" height="412" rx="12" />
     </g>
     <text class="t" x="60" y="380">DINOv3 ViT-B/16</text>
@@ -107,7 +101,7 @@
   <!-- 3 language encoder -->
   <g data-step="language">
     <text class="lbl" x="600" y="342">3 · language encoder</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-enc" x="600" y="352" width="340" height="412" rx="12" />
     </g>
     <text class="t" x="620" y="380">BERT-base uncased</text>
@@ -167,7 +161,7 @@
   <!-- 5 state tokens -->
   <g data-step="state">
     <text class="lbl" x="980" y="342">5 · state tokens</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-enc" x="980" y="352" width="380" height="412" rx="12" />
     </g>
     <text class="t" x="1000" y="380">StateProjection</text>
@@ -198,7 +192,7 @@
   <!-- 4 vision-language interaction -->
   <g data-step="interaction">
     <text class="lbl" x="40" y="810">4 · vision ↔ language interaction</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-enc" x="40" y="820" width="900" height="530" rx="12" />
     </g>
     <text class="t" x="60" y="850">6 × interaction layer</text>
@@ -213,7 +207,7 @@
     <text class="sm" x="260" y="924" text-anchor="middle">W<tspan dy="4" class="ss">q</tspan><tspan dy="-4">​</tspan> v̄</text>
     <path class="ln-t" d="M720 906 H560 V950" marker-end="url(#tv-pipe-ah)" />
     <text class="sm" x="640" y="924" text-anchor="middle">W<tspan dy="4" class="ss">k</tspan><tspan dy="-4">​</tspan> l̄</text>
-    <rect class="op-a" x="300" y="950" width="320" height="58" rx="5" />
+    <rect class="op op-b" x="300" y="950" width="320" height="58" rx="5" />
     <text class="m" x="460.0" y="976.0" text-anchor="middle">S = (W<tspan dy="4" class="ss">q</tspan><tspan dy="-4">​</tspan> v̄)(W<tspan dy="4" class="ss">k</tspan><tspan dy="-4">​</tspan> l̄)ᵀ / √d<tspan dy="4" class="ss">h</tspan><tspan dy="-4">​</tspan></text>
     <text class="sm" x="460.0" y="994.0" text-anchor="middle">one logit matrix · 4 heads · d<tspan dy="4" class="ss">h</tspan><tspan dy="-4">​</tspan> 256</text>
     <path class="ln-t" d="M300 979 H250 V1040" marker-end="url(#tv-pipe-ah)" />
@@ -253,7 +247,7 @@
   <!-- 6 action decoder -->
   <g data-step="action">
     <text class="lbl" x="980" y="810">6 · action decoder</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-dec" x="980" y="820" width="380" height="530" rx="12" />
     </g>
     <text class="t" x="1000" y="850">ACT-style decoder, no CVAE</text>
@@ -290,7 +284,7 @@
   <!-- 7 execute -->
   <g data-step="execute">
     <text class="lbl" x="40" y="1392">7 · execute</text>
-    <g filter="url(#tv-pipe-rough)">
+    <g>
       <rect class="sk f-out" x="40" y="1404" width="1320" height="166" rx="12" />
     </g>
     <text class="t" x="60" y="1434">un-normalize, run 8 of 16, infer again</text>
@@ -313,21 +307,21 @@
     <text class="sm" x="842" y="1467" text-anchor="middle">7</text>
     <rect class="op-a" x="870" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="892" y="1467" text-anchor="middle">8</text>
-    <rect class="sk f-note" x="920" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="920" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="942" y="1467" text-anchor="middle">9</text>
-    <rect class="sk f-note" x="970" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="970" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="992" y="1467" text-anchor="middle">10</text>
-    <rect class="sk f-note" x="1020" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="1020" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="1042" y="1467" text-anchor="middle">11</text>
-    <rect class="sk f-note" x="1070" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="1070" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="1092" y="1467" text-anchor="middle">12</text>
-    <rect class="sk f-note" x="1120" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="1120" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="1142" y="1467" text-anchor="middle">13</text>
-    <rect class="sk f-note" x="1170" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="1170" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="1192" y="1467" text-anchor="middle">14</text>
-    <rect class="sk f-note" x="1220" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="1220" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="1242" y="1467" text-anchor="middle">15</text>
-    <rect class="sk f-note" x="1270" y="1440" width="44" height="44" rx="4" fill="url(#tv-pipe-hatch)" />
+    <rect class="sk f-cell" x="1270" y="1440" width="44" height="44" rx="4" />
     <text class="sm" x="1292" y="1467" text-anchor="middle">16</text>
     <text class="s" x="718" y="1512" text-anchor="middle">run at 30 Hz · 8 × 33 ms ≈ 0.27 s</text>
     <text class="s" x="1118" y="1512" text-anchor="middle">dropped, replaced by the next chunk</text>

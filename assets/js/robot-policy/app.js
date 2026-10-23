@@ -66,7 +66,7 @@ function initDiagram(host) {
     const e = ease(Math.min(1, Math.max(0, t)));
     set(a.map((v, i) => v + (b[i] - v) * e));
   };
-  const fit = (bounds, ms = 700) => {
+  const fit = (bounds, ms = 800) => {
     const target = frame(bounds);
     cancelAnimationFrame(anim);
     if (reducedMotion || ms === 0) return set(target);

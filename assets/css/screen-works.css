@@ -1,0 +1,455 @@
+/* Screen Works visual & motion system for blog figures.
+   Tokens, captions, labels, figure types and the scroll-in build, ported from "Screen Works Visual & Motion Style Guide".
+   Everything is scoped to .sw-* classes (and the shared token block) so the rest of the site is untouched. */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@500&family=Noto+Sans+Mono:wght@400&display=swap");
+
+/* Classes are toggled from JS, so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+/* Tokens live on :root so other figure families (the robot-policy diagrams) can share them; nothing uses them unless
+   it asks for a --sw-* value. */
+:root {
+  /* neutrals (warm dialect) */
+  --sw-paper: #f4f1ea;
+  --sw-grid: #ddd8cc;
+  --sw-muted: #5f636b;
+  --sw-metal: #8d919a;
+  --sw-dark: #33363d;
+  --sw-ink: #16181d;
+  /* signal */
+  --sw-accent: #1f55ff;
+  --sw-accent-tint: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper));
+  --sw-marker: #fde047;
+  --sw-light: #ffd23a;
+  --sw-light-soft: #fff2b0;
+  --sw-glass: #dce6ee;
+  --sw-organic: #f9d2a4;
+  /* type */
+  --sw-font: "DM Sans", system-ui, sans-serif;
+  --sw-mono: "Noto Sans Mono", ui-monospace, monospace;
+  /* space and stroke */
+  --sw-gap: 24px;
+  --sw-hairline: 1px;
+  --sw-line: 1.5px;
+  --sw-radius: 5px;
+  /* motion */
+  --sw-enter: 500ms;
+  --sw-exit: 250ms;
+  --sw-stagger: 90ms;
+  --sw-travel: 800ms;
+  --sw-ease-enter: cubic-bezier(0.33, 1, 0.68, 1);
+  --sw-ease-exit: cubic-bezier(0.32, 0, 0.67, 0);
+  --sw-ease-travel: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html[data-theme="dark"] {
+  --sw-paper: #1b1d22;
+  --sw-grid: #3a3d44;
+  --sw-muted: #9a9ea6;
+  --sw-metal: #6e727b;
+  --sw-dark: #d8d6cf;
+  --sw-ink: #ecebe6;
+  --sw-accent: #6b8cff;
+  --sw-marker: #a8860c;
+  --sw-light: #d9ad1c;
+  --sw-light-soft: #4a4224;
+  --sw-glass: #2a3540;
+  --sw-organic: #4d3a28;
+}
+
+/* The figure panel: paper, no border, no shadow */
+
+.sw-fig {
+  position: relative;
+  margin: 2.5rem 0 0.75rem;
+  padding: var(--sw-gap);
+  border-radius: var(--sw-radius);
+  background: var(--sw-paper);
+  color: var(--sw-ink);
+  font-family: var(--sw-font);
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+/* Caption: one sentence, accent tick on the left */
+
+.sw-caption {
+  position: relative;
+  margin: 0 0 calc(var(--sw-gap) * 1.25);
+  padding-left: 18px;
+  color: var(--sw-ink);
+  font-family: var(--sw-font);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.sw-caption::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.12em;
+  width: 4px;
+  height: 0.9em;
+  background: var(--sw-accent);
+  transform-origin: left;
+}
+
+/* Small spaced capitals; numbers in the mono face */
+
+.sw-label {
+  color: var(--sw-ink);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sw-label.is-muted {
+  color: var(--sw-muted);
+}
+
+.sw-num {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.sw-hero {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.027em;
+}
+
+/* Source / note line and provenance badge */
+
+.sw-note {
+  margin: calc(var(--sw-gap) * 1.25) 0 0;
+  color: var(--sw-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sw-badge {
+  position: absolute;
+  top: var(--sw-gap);
+  right: var(--sw-gap);
+  padding: 2px 8px;
+  border: var(--sw-hairline) solid var(--sw-muted);
+  border-radius: var(--sw-radius);
+  color: var(--sw-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Plain-prose caption under a figure (kept readable, not caps) */
+
+.sw-prose-caption {
+  margin: 0.75rem 0 2.25rem;
+  color: var(--sw-muted);
+  font-size: 0.85rem;
+}
+
+/* Pipeline strip: rounded boxes joined by arrows, active stage tinted */
+
+.sw-pipe {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--sw-gap) 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sw-stage {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  margin-right: 40px;
+  padding: 14px 12px;
+  border: var(--sw-line) solid var(--sw-ink);
+  border-radius: var(--sw-radius);
+  background: transparent;
+}
+
+.sw-stage:last-child {
+  margin-right: 0;
+}
+
+.sw-stage.is-active {
+  border-color: var(--sw-accent);
+  background: var(--sw-accent-tint);
+}
+
+.sw-stage .sw-num {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--sw-muted);
+  font-size: 0.8rem;
+}
+
+.sw-stage p {
+  margin: 8px 0 0;
+  color: var(--sw-muted);
+  font-size: 0.82rem;
+}
+
+/* Arrow into the next stage: shaft + filled triangular head */
+
+.sw-stage:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -40px;
+  width: 40px;
+  height: 12px;
+  margin-top: -6px;
+  background:
+    linear-gradient(var(--sw-muted), var(--sw-muted)) left center / 24px var(--sw-line) no-repeat,
+    linear-gradient(var(--sw-muted), var(--sw-muted)) right center / 12px 12px no-repeat;
+  clip-path: polygon(0 40%, 70% 40%, 70% 0, 100% 50%, 70% 100%, 70% 60%, 0 60%);
+}
+
+/* Return path of the loop */
+
+.sw-return {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: var(--sw-gap);
+  color: var(--sw-accent);
+}
+
+.sw-return::before {
+  content: "";
+  flex: 1;
+  border-top: var(--sw-line) dashed var(--sw-accent);
+}
+
+@media (max-width: 720px) {
+  .sw-pipe {
+    flex-direction: column;
+  }
+  .sw-stage {
+    margin: 0 0 40px;
+  }
+  .sw-stage:last-child {
+    margin-bottom: 0;
+  }
+  .sw-stage:not(:last-child)::after {
+    top: auto;
+    right: auto;
+    bottom: -40px;
+    left: 50%;
+    margin: 0 0 0 -20px;
+    transform: rotate(90deg);
+  }
+}
+
+/* Token strip: square chips on one baseline, leader-free */
+
+.sw-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 18px var(--sw-gap);
+  align-items: center;
+  margin: 0;
+}
+
+.sw-rows dt {
+  margin: 0;
+}
+
+.sw-rows dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.sw-chip {
+  padding: 3px 9px;
+  border: var(--sw-line) solid var(--sw-ink);
+  border-radius: var(--sw-radius);
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 0.85rem;
+  white-space: pre;
+}
+
+.sw-chip.is-key {
+  border-color: var(--sw-accent);
+  background: var(--sw-accent-tint);
+}
+
+@media (max-width: 540px) {
+  .sw-rows {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .sw-rows dd {
+    margin-bottom: 12px;
+  }
+}
+
+/* Bar rows: label, value in mono, a hairline track with one filled bar (the active one is accent) */
+
+.sw-bars {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(60px, 1fr) max-content;
+  gap: 14px var(--sw-gap);
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sw-bars.is-3col {
+  grid-template-columns: max-content minmax(60px, 1fr) max-content;
+}
+
+.sw-bar-row {
+  display: contents;
+}
+
+.sw-track {
+  position: relative;
+  height: 14px;
+  border-left: var(--sw-line) solid var(--sw-ink);
+  background: linear-gradient(var(--sw-grid), var(--sw-grid)) left center / 100% var(--sw-hairline) no-repeat;
+}
+
+.sw-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: calc(var(--v, 0) * 1%);
+  background: var(--sw-dark);
+}
+
+.sw-bar-row.is-key .sw-fill {
+  background: var(--sw-accent);
+}
+
+.sw-bar-row .sw-num.is-big {
+  font-size: 1rem;
+  text-align: right;
+}
+
+.sw-bars-head {
+  display: contents;
+}
+
+.sw-bars-head > * {
+  color: var(--sw-muted);
+}
+
+.sw-eq {
+  margin: calc(var(--sw-gap) * 0.75) 0 0;
+  padding-top: calc(var(--sw-gap) * 0.75);
+  border-top: var(--sw-hairline) solid var(--sw-grid);
+  color: var(--sw-muted);
+  font-size: 0.85rem;
+}
+
+.sw-eq .sw-num {
+  color: var(--sw-ink);
+}
+
+@media (max-width: 540px) {
+  .sw-bars {
+    grid-template-columns: max-content minmax(40px, 1fr) max-content;
+  }
+  .sw-bars .sw-col-mid {
+    display: none;
+  }
+  .sw-bars-head .sw-col-mid {
+    display: none;
+  }
+}
+
+/* Motion: things arrive in reading order with a short fade and rise, then hold still.
+   Only hidden when JS is running, so the figures read fine without it. */
+
+.sw-js .sw-fig .sw-build > *,
+.sw-js .sw-fig .sw-caption {
+  opacity: 0;
+  translate: 0 12px;
+  transition:
+    opacity var(--sw-enter) var(--sw-ease-enter),
+    translate var(--sw-enter) var(--sw-ease-enter);
+  transition-delay: calc(var(--i, 0) * var(--sw-stagger));
+}
+
+.sw-js .sw-fig .sw-caption {
+  translate: 0 16px;
+  transition-delay: calc(var(--sw-stagger) * 1.5);
+}
+
+.sw-js .sw-fig .sw-caption::before {
+  transform: scaleX(0);
+  transition: transform var(--sw-enter) var(--sw-ease-enter);
+}
+
+.sw-js .sw-fig.in .sw-build > *,
+.sw-js .sw-fig.in .sw-caption {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.sw-js .sw-fig.in .sw-caption::before {
+  transform: scaleX(1);
+}
+
+/* Bars fill in after their row has arrived */
+
+.sw-js .sw-fig .sw-fill {
+  width: 0;
+  transition: width var(--sw-travel) var(--sw-ease-travel);
+  transition-delay: calc(var(--i, 0) * var(--sw-stagger) + var(--sw-enter));
+}
+
+.sw-js .sw-fig.in .sw-fill {
+  width: calc(var(--v, 0) * 1%);
+}
+
+/* display: contents rows cannot carry a transform, so the row's cells arrive individually */
+.sw-js .sw-fig .sw-bars.sw-build > .sw-bar-row {
+  opacity: 1;
+  translate: none;
+}
+
+.sw-js .sw-fig .sw-bar-row > * {
+  opacity: 0;
+  transition: opacity var(--sw-enter) var(--sw-ease-enter);
+  transition-delay: calc(var(--i, 0) * var(--sw-stagger));
+}
+
+.sw-js .sw-fig.in .sw-bar-row > * {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-js .sw-fig .sw-build > *,
+  .sw-js .sw-fig .sw-caption,
+  .sw-js .sw-fig .sw-caption::before,
+  .sw-js .sw-fig .sw-fill,
+  .sw-js .sw-fig .sw-bar-row > * {
+    opacity: 1;
+    translate: none;
+    transform: none;
+    transition: none;
+  }
+  .sw-js .sw-fig .sw-fill {
+    width: calc(var(--v, 0) * 1%);
+  }
+}
+
+/* purgecss end ignore */

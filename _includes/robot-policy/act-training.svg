@@ -2,13 +2,6 @@
   <title id="act-train-title">ACT training as a conditional VAE</title>
   <desc id="act-train-desc">A batch of real demonstrations gives images, the joint state and the next 100 actions; a CVAE encoder reads a learned class token, the state and the 100 actions and outputs the mean and log variance of a 32 dimensional latent; a sample z is drawn with the reparameterization trick; the ACT network from the Inference tab predicts the chunk with z as its first token; the loss is the masked L1 error plus ten times the KL divergence to a unit Gaussian; AdamW updates all weights at a constant learning rate.</desc>
   <defs>
-    <filter id="act-train-rough" x="-4%" y="-4%" width="108%" height="108%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="11" result="n" />
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <pattern id="act-train-hatch" class="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
-      <line x1="0" y1="0" x2="0" y2="9" />
-    </pattern>
     <marker id="act-train-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
       <path class="ah" d="M0,1 L10,5 L0,9 z" />
     </marker>
@@ -16,13 +9,14 @@
       <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
     </marker>
   </defs>
-  <text class="h" x="40" y="52">ACT · one training step (conditional VAE)</text>
-  <text class="s" x="40" y="78">lerobot train with the ACT preset · 100,000 steps · click a block or use the arrow keys</text>
+  <rect class="tick" x="40" y="33" width="4" height="23" />
+  <text class="h" x="58" y="53">ACT learns to rebuild the recorded chunk.</text>
+  <text class="s" x="58" y="80">lerobot train with the ACT preset · 100,000 steps · click a block or use the arrow keys</text>
 
   <!-- 1 data -->
   <g data-step="t-data">
     <text class="lbl" x="40" y="112">1 · data</text>
-    <g filter="url(#act-train-rough)">
+    <g>
       <rect class="sk f-in" x="40" y="124" width="520" height="300" rx="12" />
     </g>
     <text class="t" x="60" y="154">thanhkt/nexarm_stack_bowls</text>
@@ -41,12 +35,12 @@
   <!-- 2 cvae encoder -->
   <g data-step="t-cvae">
     <text class="lbl" x="600" y="112">2 · CVAE encoder (training only)</text>
-    <g filter="url(#act-train-rough)">
+    <g>
       <rect class="sk f-enc" x="600" y="124" width="760" height="300" rx="12" />
     </g>
     <text class="t" x="620" y="154">posterior over the style latent</text>
     <text class="s" x="620" y="174">reads the true actions, so it is dropped at inference</text>
-    <rect class="op-a" x="620" y="190" width="60" height="36" rx="4" />
+    <rect class="op op-b" x="620" y="190" width="60" height="36" rx="4" />
     <text class="sm" x="650" y="213" text-anchor="middle">CLS</text>
     <rect class="op" x="686" y="190" width="60" height="36" rx="4" />
     <text class="i" x="716" y="213" text-anchor="middle">s</text>
@@ -66,12 +60,12 @@
     <text class="i" x="1126" y="213" text-anchor="middle">a</text>
     <rect class="op" x="1158" y="190" width="52" height="36" rx="4" />
     <text class="i" x="1184" y="213" text-anchor="middle">a</text>
-    <rect class="sk f-note" x="1216" y="190" width="52" height="36" rx="4" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="1216" y="190" width="52" height="36" rx="4" />
     <text class="i" x="1242" y="213" text-anchor="middle">a</text>
-    <rect class="sk f-note" x="1274" y="190" width="52" height="36" rx="4" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="1274" y="190" width="52" height="36" rx="4" />
     <text class="i" x="1300" y="213" text-anchor="middle">a…</text>
     <text class="sm" x="620" y="246">learned CLS · Linear 6 → 512 for s and each a · + fixed 1D sine positions (102)</text>
-    <text class="sm" x="620" y="266">key-padding mask hides padded actions (hatched)</text>
+    <text class="sm" x="620" y="266">key-padding mask hides padded actions (grey)</text>
     <rect class="op" x="620" y="280" width="720" height="34" rx="5" />
     <text class="o" x="980.0" y="302.0" text-anchor="middle">4 encoder layers · d 512 · 8 heads · FFN 3200 · post-norm</text>
     <path class="ln-t" d="M980 314 V330" marker-end="url(#act-train-ah)" />
@@ -84,7 +78,7 @@
   <!-- 3 sample -->
   <g data-step="t-sample">
     <text class="lbl" x="40" y="462">3 · sample z</text>
-    <g filter="url(#act-train-rough)">
+    <g>
       <rect class="sk f-note" x="40" y="474" width="520" height="286" rx="12" />
     </g>
     <text class="t" x="60" y="504">reparameterization trick</text>
@@ -102,7 +96,7 @@
   <!-- 4 policy -->
   <g data-step="t-policy">
     <text class="lbl" x="600" y="462">4 · ACT network with z</text>
-    <g filter="url(#act-train-rough)">
+    <g>
       <rect class="sk f-dec" x="600" y="474" width="760" height="286" rx="12" />
     </g>
     <text class="t" x="620" y="504">the network from the Inference tab</text>
@@ -130,7 +124,7 @@
   <!-- 5 loss -->
   <g data-step="t-loss">
     <text class="lbl" x="40" y="796">5 · loss</text>
-    <g filter="url(#act-train-rough)">
+    <g>
       <rect class="sk f-out" x="40" y="808" width="620" height="290" rx="12" />
     </g>
     <text class="t" x="60" y="838">masked L1 + β · KL, β = 10</text>
@@ -155,10 +149,10 @@
     <rect class="op" x="478" y="856" width="19" height="16" rx="2" />
     <rect class="op" x="499" y="856" width="19" height="16" rx="2" />
     <rect class="op" x="520" y="856" width="19" height="16" rx="2" />
-    <rect class="sk f-note" x="541" y="856" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="562" y="856" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="583" y="856" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="604" y="856" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="541" y="856" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="562" y="856" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="583" y="856" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="604" y="856" width="19" height="16" rx="2" />
     <text class="sm" x="92" y="869" text-anchor="end">j1</text>
     <rect class="op" x="100" y="874" width="19" height="16" rx="2" />
     <rect class="op" x="121" y="874" width="19" height="16" rx="2" />
@@ -181,10 +175,10 @@
     <rect class="op" x="478" y="874" width="19" height="16" rx="2" />
     <rect class="op" x="499" y="874" width="19" height="16" rx="2" />
     <rect class="op" x="520" y="874" width="19" height="16" rx="2" />
-    <rect class="sk f-note" x="541" y="874" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="562" y="874" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="583" y="874" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="604" y="874" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="541" y="874" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="562" y="874" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="583" y="874" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="604" y="874" width="19" height="16" rx="2" />
     <text class="sm" x="92" y="887" text-anchor="end">j2</text>
     <rect class="op" x="100" y="892" width="19" height="16" rx="2" />
     <rect class="op" x="121" y="892" width="19" height="16" rx="2" />
@@ -207,10 +201,10 @@
     <rect class="op" x="478" y="892" width="19" height="16" rx="2" />
     <rect class="op" x="499" y="892" width="19" height="16" rx="2" />
     <rect class="op" x="520" y="892" width="19" height="16" rx="2" />
-    <rect class="sk f-note" x="541" y="892" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="562" y="892" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="583" y="892" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="604" y="892" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="541" y="892" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="562" y="892" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="583" y="892" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="604" y="892" width="19" height="16" rx="2" />
     <text class="sm" x="92" y="905" text-anchor="end">j3</text>
     <rect class="op" x="100" y="910" width="19" height="16" rx="2" />
     <rect class="op" x="121" y="910" width="19" height="16" rx="2" />
@@ -233,10 +227,10 @@
     <rect class="op" x="478" y="910" width="19" height="16" rx="2" />
     <rect class="op" x="499" y="910" width="19" height="16" rx="2" />
     <rect class="op" x="520" y="910" width="19" height="16" rx="2" />
-    <rect class="sk f-note" x="541" y="910" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="562" y="910" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="583" y="910" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="604" y="910" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="541" y="910" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="562" y="910" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="583" y="910" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="604" y="910" width="19" height="16" rx="2" />
     <text class="sm" x="92" y="923" text-anchor="end">j4</text>
     <rect class="op" x="100" y="928" width="19" height="16" rx="2" />
     <rect class="op" x="121" y="928" width="19" height="16" rx="2" />
@@ -259,10 +253,10 @@
     <rect class="op" x="478" y="928" width="19" height="16" rx="2" />
     <rect class="op" x="499" y="928" width="19" height="16" rx="2" />
     <rect class="op" x="520" y="928" width="19" height="16" rx="2" />
-    <rect class="sk f-note" x="541" y="928" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="562" y="928" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="583" y="928" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="604" y="928" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="541" y="928" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="562" y="928" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="583" y="928" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="604" y="928" width="19" height="16" rx="2" />
     <text class="sm" x="92" y="941" text-anchor="end">j5</text>
     <rect class="op" x="100" y="946" width="19" height="16" rx="2" />
     <rect class="op" x="121" y="946" width="19" height="16" rx="2" />
@@ -285,10 +279,10 @@
     <rect class="op" x="478" y="946" width="19" height="16" rx="2" />
     <rect class="op" x="499" y="946" width="19" height="16" rx="2" />
     <rect class="op" x="520" y="946" width="19" height="16" rx="2" />
-    <rect class="sk f-note" x="541" y="946" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="562" y="946" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="583" y="946" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
-    <rect class="sk f-note" x="604" y="946" width="19" height="16" rx="2" fill="url(#act-train-hatch)" />
+    <rect class="sk f-cell" x="541" y="946" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="562" y="946" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="583" y="946" width="19" height="16" rx="2" />
+    <rect class="sk f-cell" x="604" y="946" width="19" height="16" rx="2" />
     <text class="sm" x="92" y="959" text-anchor="end">grip</text>
     <text class="sm" x="100" y="984">|â − a| over 100 steps (every 4th drawn), padded steps masked</text>
     <text class="m" x="60" y="1024">L1 = Σ mask · |â − a| / (6 · valid steps)</text>
@@ -300,7 +294,7 @@
   <!-- 6 update -->
   <g data-step="t-update">
     <text class="lbl" x="700" y="796">6 · optimizer step</text>
-    <g filter="url(#act-train-rough)">
+    <g>
       <rect class="sk f-dec" x="700" y="808" width="660" height="290" rx="12" />
     </g>
     <rect class="op" x="720" y="828" width="140" height="44" rx="5" />
