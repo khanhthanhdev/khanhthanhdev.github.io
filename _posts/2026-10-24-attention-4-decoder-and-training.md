@@ -117,7 +117,9 @@ Our untrained model gives _mat_ almost nothing, so the loss is high. Training us
 <div class="tf-step" data-step="warmup" data-title="Warm up, then slow down." markdown="1">
 **How big should each nudge be?** The paper uses the Adam optimiser with a learning rate that changes as training goes on:
 
-$$\text{lr} = d_{model}^{-0.5} \cdot \min\!\left(\text{step}^{-0.5},\ \text{step} \cdot \text{warmup}^{-1.5}\right)$$
+$$\text{lr} = \frac{\min\!\left(s^{-0.5},\ s \cdot w^{-1.5}\right)}{\sqrt{d_{model}}}$$
+
+where $$s$$ is the training step and $$w = 4000$$ is the number of warmup steps.
 
 For the first 4000 steps it grows in a straight line. Big steps at the very start, when the weights are random, tend to blow training up. After that it shrinks like $$1/\sqrt{\text{step}}$$, so the model settles down.
 

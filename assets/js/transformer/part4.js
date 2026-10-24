@@ -260,12 +260,15 @@
     const word = (id) => TF.vocab[id];
 
     // Both stacks side by side, bottoms aligned, with the encoder's output running into cross-attention.
-    function overview(encOn, decOn) {
+    // On phones only one stack fits at a readable size: `only` picks it ("enc" or "dec"); the decoder's own
+    // "K, V" arrow stands in for the link.
+    function overview(encOn, decOn, only) {
       const yD = TOP + 70;
       const yE = yD + 330 - 212; // decoder stack is 330 tall, encoder 212
       const xE = 40;
       const xD = 460;
-      layout({ enc: [xE, yE], decB: [xD, yD], link: [0, 0] });
+      if (V.narrow.matches) layout(only === "enc" ? { enc: [xE, yE] } : { decB: [xD, yD] });
+      else layout({ enc: [xE, yE], decB: [xD, yD], link: [0, 0] });
       const yCross = yD + o.decB.boxes.cross.y + o.decB.boxes.cross.height / 2;
       o.link.set(`M ${xE + 100} ${yE - 40} V ${yD - 40} H ${xD - 120} V ${yCross} H ${xD - 70}`);
       o.enc.set(encOn);
@@ -281,7 +284,7 @@
           [null, "ffn", "Then the same feed-forward network as the encoder, each with Add & Norm around it."],
         ];
         const k = Math.min(parts.length - 1, Math.floor(V.clamp(t / 0.8, 0, 0.999) * parts.length));
-        overview(parts[k][0], parts[k][1]);
+        overview(parts[k][0], parts[k][1], k === 0 ? "enc" : "dec");
         strip(parts[k][2]);
       },
 
@@ -299,8 +302,11 @@
         const n = o.n;
         const y = TOP + 50;
         const w = n * C;
-        layout({ MS: [90, y], MM: [90 + w + 50, y], MW: [90 + 2 * (w + 50), y] });
         const a = V.progress(t, 2 * n);
+        // phones show two of the three grids: scores and mask first, then mask and softmax
+        if (!V.narrow.matches) layout({ MS: [90, y], MM: [90 + w + 50, y], MW: [90 + 2 * (w + 50), y] });
+        else if (a <= n) layout({ MS: [90, y], MM: [90 + w + 50, y] });
+        else layout({ MM: [90, y], MW: [90 + w + 50, y] });
         const masked = Math.min(a, n);
         const soft = V.clamp(a - n, 0, n);
         o.MM.reveal(masked * n);
@@ -348,7 +354,7 @@
             `Take the decoder's last row and score every word in the vocabulary: logits = row · Eᵀ, one number per word (${TF.vocab.length}).`
           );
         const terms = V.terms(o.lastRow, TF.weights.embedding[best]);
-        strip(`logit(${quote(word(best))}) = ${terms} = ${fmt(o.dec.logits[best])}. Softmax turns the logits into probabilities.`);
+        strip(`logit(${quote(word(best))}) = ${fmt(o.dec.logits[best])}, the top score. Softmax turns the logits into probabilities. ${terms}`);
       },
 
       generate(t) {
@@ -357,14 +363,13 @@
         const k = V.progress(t, steps);
         o.genRows.show(k);
         if (k === 0) return strip("To write a sentence: start with <s>, pick the likeliest word, append it, and run the decoder again.");
-        if (k > steps)
-          return strip(`Output: “${o.gen.output.map(word).join(" ")}”. Nonsense, because nothing has been trained. The loop is the point.`);
+        if (k > steps) return strip(`Untrained, so it writes nonsense: “${o.gen.output.map(word).join(" ")}”. The loop is the point.`);
         const st = o.gen.steps[k - 1];
         strip(`Step ${k}: the decoder reads ${st.prefix.map(word).join(" ")} and picks ${quote(word(st.next))} (${pct(st.step.probs[st.next])}).`);
       },
 
       loss(t) {
-        layout({ TB: [100, TOP + 40], QB: [430, TOP + 40] });
+        layout({ TB: [100, TOP + 40], QB: V.narrow.matches ? [100, TOP + 40 + o.TB.height + 60] : [430, TOP + 40] });
         const p = o.dec.probs[o.target];
         const ce = TF.crossEntropy(o.dec.probs, o.smooth);
         if (t < 0.4)
@@ -372,7 +377,7 @@
             `Label smoothing: the target puts 90% on ${quote(word(o.target))} and spreads the other 10% thinly over all ${TF.vocab.length - 1} other words.`
           );
         strip(
-          `Loss = −Σ target × log(model) = ${fmt(ce)}. The model gives ${quote(word(o.target))} only ${pct(p)}; training nudges every weight to raise it.`
+          `Loss = ${fmt(ce)}: the model gives ${quote(word(o.target))} only ${pct(p)}. Training nudges every weight to raise it. (−Σ target × log model)`
         );
       },
 
@@ -387,7 +392,7 @@
       },
 
       recap() {
-        overview(["attn", "norm1", "ffn", "norm2"], ["self", "norm1", "cross", "norm2", "ffn", "norm3"]);
+        overview(["attn", "norm1", "ffn", "norm2"], ["self", "norm1", "cross", "norm2", "ffn", "norm3"], "dec");
         strip("The whole Transformer: the paper's Figure 1, built from the pieces of this series.");
       },
     };

@@ -87,7 +87,7 @@ $$\text{FFN}(x) = \max(0,\, x W_1 + b_1)\, W_2 + b_2$$
 
 Notice what this step _doesn't_ do: it never mixes rows. Every word goes through the same two matrices on its own. The paper calls it **position-wise**. Attention moves information between words; the feed-forward network works on what each word has gathered.
 
-In the paper the hidden layer has 2048 numbers per word, against 512 for the model. Most of a Transformer's weights live here.
+In the paper the hidden layer has 2048 numbers per word, against 512 for the model. That makes the feed-forward network about two thirds of each block's weights.
 
 </div>
 
