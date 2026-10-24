@@ -449,7 +449,7 @@
       g.append(
         s("path", { class: "tf-residual tf-side", d: `M -70 ${yIn} H -7` }),
         s("path", { class: "tf-arrow", d: `M -7 ${yIn - 4} L 0 ${yIn} L -7 ${yIn + 4} Z` }),
-        s("text", { class: "tf-small", x: -74, y: yIn + 4, "text-anchor": "end", text: opts.side.label })
+        s("text", { class: "tf-small", x: -38, y: yIn - 8, "text-anchor": "middle", text: opts.side.label })
       );
     }
     if (opts.repeat) {

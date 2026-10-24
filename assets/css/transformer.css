@@ -689,6 +689,22 @@ html[data-theme="dark"] {
   stroke-width: 1.5;
 }
 
+/* Part 4 */
+
+.tf-box-target {
+  fill: var(--tf-paper);
+  stroke-dasharray: 3 3;
+}
+
+.tf-svg .tf-op-small {
+  font-size: 16px;
+}
+
+.tf-svg .tf-word-pick {
+  fill: var(--tf-accent);
+  font-weight: 600;
+}
+
 .tf-block-frame {
   fill: none;
   stroke: var(--tf-grid);

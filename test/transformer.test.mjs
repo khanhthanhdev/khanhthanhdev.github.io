@@ -164,6 +164,7 @@ for (const [part, slug, scene] of [
   [1, "attention-1-self-attention", "part1"],
   [2, "attention-2-multi-head-and-positions", "part2"],
   [3, "attention-3-encoder-block", "part3"],
+  [4, "attention-4-decoder-and-training", "part4"],
 ]) {
   test(`part ${part} renders its scrolly steps, scripts and series navigation`, async () => {
     const html = await readFile(site(`blog/2026/${slug}/index.html`), "utf8");
