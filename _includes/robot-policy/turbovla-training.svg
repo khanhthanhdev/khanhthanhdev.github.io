@@ -11,13 +11,26 @@
   </defs>
   <rect class="tick" x="40" y="33" width="4" height="23" />
   <text class="h" x="58" y="53">TurboVLA learns from mixed real and simulated runs.</text>
-  <text class="s" x="58" y="80">examples/nexarm/train_turbovla.py · 50,000 steps · click a block or use the arrow keys</text>
+  <g class="legend" aria-hidden="true">
+    <rect class="op c-image" x="58" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="78" y="80">IMAGE</text>
+    <rect class="op c-text" x="154" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="174" y="80">TEXT</text>
+    <rect class="op c-state" x="240" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="260" y="80">JOINT STATE</text>
+    <rect class="op-a" x="393" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="413" y="80">ACTIONS</text>
+  </g>
+  <g aria-hidden="true">
+    <rect class="badge" x="1256" y="34" width="104" height="24" rx="4" />
+    <text class="badge-t" x="1308" y="50" text-anchor="middle">SCHEMATIC</text>
+  </g>
 
   <!-- 1 data -->
   <g data-step="t-data">
     <text class="lbl" x="40" y="112">1 · data</text>
     <g>
-      <rect class="sk f-in" x="40" y="124" width="600" height="300" rx="12" />
+      <rect class="sk" x="40" y="124" width="600" height="300" rx="12" />
     </g>
     <rect class="op" x="60" y="144" width="260" height="96" rx="5" />
     <text class="t" x="76" y="176">simulation</text>
@@ -40,42 +53,42 @@
   <g data-step="t-batch">
     <text class="lbl" x="680" y="112">2 · collate and normalize</text>
     <g>
-      <rect class="sk f-in" x="680" y="124" width="680" height="300" rx="12" />
+      <rect class="sk" x="680" y="124" width="680" height="300" rx="12" />
     </g>
-    <rect class="op" x="700" y="144" width="640" height="34" rx="5" />
+    <rect class="op c-image" x="700" y="144" width="640" height="34" rx="5" />
     <text class="o" x="714" y="166.0">images → DINOv3 processor → B × V × 3 × 224 × 224</text>
     <rect class="op" x="700" y="188" width="640" height="34" rx="5" />
     <text class="o" x="714" y="210.0">state, actions → 2 (x − min) / (max − min) − 1</text>
     <rect class="op" x="700" y="232" width="640" height="34" rx="5" />
     <text class="o" x="714" y="254.0">min / max merged over the sim and real statistics</text>
-    <rect class="op" x="700" y="276" width="640" height="34" rx="5" />
+    <rect class="op c-text" x="700" y="276" width="640" height="34" rx="5" />
     <text class="o" x="714" y="298.0">instruction strings, kept as text for BERT</text>
     <text class="sm" x="700" y="340">action chunk, 16 steps · action_is_pad marks steps past the episode end</text>
-    <rect class="op" x="700" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="700" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="717" y="376" text-anchor="middle">1</text>
-    <rect class="op" x="740" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="740" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="757" y="376" text-anchor="middle">2</text>
-    <rect class="op" x="780" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="780" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="797" y="376" text-anchor="middle">3</text>
-    <rect class="op" x="820" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="820" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="837" y="376" text-anchor="middle">4</text>
-    <rect class="op" x="860" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="860" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="877" y="376" text-anchor="middle">5</text>
-    <rect class="op" x="900" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="900" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="917" y="376" text-anchor="middle">6</text>
-    <rect class="op" x="940" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="940" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="957" y="376" text-anchor="middle">7</text>
-    <rect class="op" x="980" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="980" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="997" y="376" text-anchor="middle">8</text>
-    <rect class="op" x="1020" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="1020" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1037" y="376" text-anchor="middle">9</text>
-    <rect class="op" x="1060" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="1060" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1077" y="376" text-anchor="middle">10</text>
-    <rect class="op" x="1100" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="1100" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1117" y="376" text-anchor="middle">11</text>
-    <rect class="op" x="1140" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="1140" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1157" y="376" text-anchor="middle">12</text>
-    <rect class="op" x="1180" y="354" width="34" height="34" rx="3" />
+    <rect class="op-a" x="1180" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1197" y="376" text-anchor="middle">13</text>
     <rect class="sk f-cell" x="1220" y="354" width="34" height="34" rx="3" />
     <text class="sm" x="1237" y="376" text-anchor="middle">14</text>
@@ -91,7 +104,7 @@
   <g data-step="t-forward">
     <text class="lbl" x="40" y="462">3 · forward pass</text>
     <g>
-      <rect class="sk f-enc" x="40" y="474" width="600" height="286" rx="12" />
+      <rect class="sk" x="40" y="474" width="600" height="286" rx="12" />
     </g>
     <text class="t" x="60" y="504">the network from the Inference tab</text>
     <text class="s" x="60" y="524">autocast in bf16 when --precision bf16</text>
@@ -119,7 +132,7 @@
   <g data-step="t-loss">
     <text class="lbl" x="680" y="462">4 · masked L1 loss</text>
     <g>
-      <rect class="sk f-out" x="680" y="474" width="680" height="286" rx="12" />
+      <rect class="sk" x="680" y="474" width="680" height="286" rx="12" />
     </g>
     <text class="t" x="700" y="504">|â − a| per step and joint</text>
     <text class="s" x="700" y="524">padded steps count zero; the gripper column can be re-weighted</text>
@@ -235,7 +248,7 @@
   <g data-step="t-update">
     <text class="lbl" x="40" y="796">5 · optimizer step</text>
     <g>
-      <rect class="sk f-dec" x="40" y="808" width="820" height="290" rx="12" />
+      <rect class="sk" x="40" y="808" width="820" height="290" rx="12" />
     </g>
     <rect class="op" x="60" y="828" width="170" height="44" rx="5" />
     <text class="o" x="145.0" y="855.0" text-anchor="middle">backward</text>
@@ -283,4 +296,5 @@
   </g>
   <path class="ln-d" d="M1360 952 H1384 V96 H340 V122" marker-end="url(#tv-train-ah)" />
   <text class="sm" x="1376" y="540" text-anchor="end" transform="rotate(-90 1376 540)">next batch</text>
+  <text class="lbl" x="40" y="1112">source · examples/nexarm/train_turbovla.py · 50,000 steps · click a block or use the arrow keys</text>
 </svg>

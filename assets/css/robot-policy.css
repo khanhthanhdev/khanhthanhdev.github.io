@@ -3,8 +3,10 @@
    Sits inside the site layout (al-folio navbar, footer, theme toggle). The reading pane takes the site's --global-*
    colours; the visual column (3D stage and diagrams) is drawn in the Screen Works technical-drawing style, with the
    --sw-* tokens from screen-works.css: warm paper, ink hairlines, one accent. The accent marks the actions that run
-   (chunk bars, executed dots in 3D) and the step being read. Module categories are pale fills with ink strokes:
-   glass = observations, light = vision/encoders, organic = action decoder, grid = actions out. */
+   (chunk bars, executed dots in 3D) and the step being read. Modules are ink outlines on paper; colour is categorical
+   and follows the data, one fixed hue per modality (--sw-c-*): image, joint state, style latent, text. A module that
+   only processes one modality takes a pale tint of its hue; tokens of that modality take a stronger tint and a stroke in
+   the hue. Modules that mix modalities stay paper. */
 :root {
   --rp-paper: var(--global-bg-color);
   --rp-panel: var(--global-card-bg-color);
@@ -17,14 +19,14 @@
   --rp-pending: var(--sw-metal);
   --rp-stage-bg: var(--sw-paper);
   --rp-stage-floor: var(--sw-grid);
-  --rp-in: color-mix(in srgb, var(--sw-glass) 62%, var(--sw-paper));
-  --rp-in-line: var(--sw-ink);
-  --rp-enc: color-mix(in srgb, var(--sw-light-soft) 42%, var(--sw-paper));
-  --rp-enc-line: var(--sw-ink);
-  --rp-dec: color-mix(in srgb, var(--sw-organic) 34%, var(--sw-paper));
-  --rp-dec-line: var(--sw-ink);
-  --rp-out: color-mix(in srgb, var(--sw-grid) 50%, var(--sw-paper));
-  --rp-out-line: var(--sw-ink);
+  --rp-in: var(--sw-paper);
+  --rp-enc: var(--sw-paper);
+  --rp-dec: var(--sw-paper);
+  --rp-out: var(--sw-paper);
+  --rp-tint-image: color-mix(in srgb, var(--sw-c-image) 10%, var(--sw-paper));
+  --rp-tint-state: color-mix(in srgb, var(--sw-c-state) 9%, var(--sw-paper));
+  --rp-tint-latent: color-mix(in srgb, var(--sw-c-latent) 10%, var(--sw-paper));
+  --rp-tint-text: color-mix(in srgb, var(--sw-c-text) 8%, var(--sw-paper));
   --rp-note: var(--global-code-bg-color);
   --rp-font-mono: var(--sw-mono);
   --rp-nav: 56px;
@@ -795,6 +797,185 @@
 .rp svg .f-panel {
   fill: var(--sw-paper);
 }
+/* purgecss start ignore */
+/* modality colour: a module that handles one kind of data takes a pale tint, a token of it a stronger tint and a stroke */
+.rp svg .sk.c-image {
+  fill: var(--rp-tint-image);
+}
+.rp svg .sk.c-state {
+  fill: var(--rp-tint-state);
+}
+.rp svg .sk.c-latent {
+  fill: var(--rp-tint-latent);
+}
+.rp svg .sk.c-text {
+  fill: var(--rp-tint-text);
+}
+.rp svg :is(.op, .tok).c-image {
+  fill: color-mix(in srgb, var(--sw-c-image) 22%, var(--sw-paper));
+  stroke: var(--sw-c-image);
+  stroke-width: 1.5;
+}
+.rp svg :is(.op, .tok).c-state {
+  fill: color-mix(in srgb, var(--sw-c-state) 18%, var(--sw-paper));
+  stroke: var(--sw-c-state);
+  stroke-width: 1.5;
+}
+.rp svg :is(.op, .tok).c-latent {
+  fill: color-mix(in srgb, var(--sw-c-latent) 20%, var(--sw-paper));
+  stroke: var(--sw-c-latent);
+  stroke-width: 1.5;
+}
+.rp svg :is(.op, .tok).c-text {
+  fill: color-mix(in srgb, var(--sw-c-text) 16%, var(--sw-paper));
+  stroke: var(--sw-c-text);
+  stroke-width: 1.5;
+}
+/* a line, dot or curve drawn in the modality hue */
+.rp svg [class].s-image {
+  stroke: var(--sw-c-image);
+}
+.rp svg [class].s-state {
+  stroke: var(--sw-c-state);
+}
+.rp svg [class].s-latent {
+  stroke: var(--sw-c-latent);
+}
+.rp svg [class].s-text {
+  stroke: var(--sw-c-text);
+}
+.rp svg [class].s-accent {
+  stroke: var(--sw-accent);
+}
+.rp svg .d-image {
+  fill: var(--sw-c-image);
+}
+.rp svg .d-state {
+  fill: var(--sw-c-state);
+}
+.rp svg .d-latent {
+  fill: var(--sw-c-latent);
+}
+.rp svg .d-text {
+  fill: var(--sw-c-text);
+}
+.rp svg .d-accent {
+  fill: var(--sw-accent);
+}
+.rp svg .d-ink {
+  fill: var(--sw-ink);
+}
+.rp svg .d-paper {
+  fill: var(--sw-paper);
+}
+/* legend swatches and the provenance badge: small caps, outlined */
+.rp svg .sw {
+  stroke-width: 1.5;
+}
+.rp svg .badge {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+.rp svg .badge-t {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+/* engineer's callout: dot at the anchor, straight hairline leader, caps label in a column */
+.rp svg .lead {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+.rp svg .lead-dot {
+  fill: var(--sw-ink);
+}
+.rp svg .cap {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rp svg .cap-n {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 12px;
+  fill: var(--sw-muted);
+}
+/* plots */
+.rp svg .axis {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+.rp svg .grid-l {
+  fill: none;
+  stroke: var(--sw-grid);
+  stroke-width: 1;
+}
+.rp svg .curve {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.rp svg .curve-b {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.rp svg .hull {
+  fill: none;
+  stroke: var(--sw-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+/* Figure build: when a step becomes the one being read, its parts arrive in reading order (fade + 8px rise, one
+   sibling per stagger step, capped so a long row still lands within about a second), then hold. */
+@keyframes rp-build {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes rp-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.rp svg [data-step].is-active > :not(.lbl) {
+  animation: rp-build var(--sw-enter) var(--sw-ease-enter) both;
+  animation-delay: calc(min(var(--i, 0), 10) * var(--sw-stagger));
+}
+/* a row of actions fills in left to right, like the arm running it (--j is the action's index) */
+.rp svg [data-step].is-active .seq > * {
+  animation: rp-build var(--sw-enter) var(--sw-ease-enter) both;
+  animation-delay: calc(var(--sw-enter) + var(--j, 0) * 12ms);
+}
+/* a leader or a trajectory draws from its start, after the thing it names */
+.rp svg [data-step].is-active .draw {
+  stroke-dasharray: 1;
+  animation: rp-draw var(--sw-travel) var(--sw-ease-travel) both;
+  animation-delay: calc(min(var(--i, 0), 10) * var(--sw-stagger) + var(--sw-enter) * 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp svg [data-step].is-active > *,
+  .rp svg [data-step].is-active .seq > *,
+  .rp svg [data-step].is-active .draw {
+    animation: none;
+  }
+}
+/* purgecss end ignore */
 .rp svg .ln {
   fill: none;
   stroke: var(--sw-ink);

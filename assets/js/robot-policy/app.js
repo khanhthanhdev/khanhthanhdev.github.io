@@ -279,6 +279,8 @@ function initExplorer(list, host, reader, controls, { onStep = () => {} } = {}) 
   const n = steps.length;
   const diagram = initDiagram(host);
   const groups = [...diagram.svg.querySelectorAll("[data-step]")];
+  // build order for the step's figure: children arrive one stagger step apart in document (reading) order
+  groups.forEach((g) => [...g.children].forEach((c, k) => c.style.setProperty("--i", k)));
   let index = -1;
   let shown = false;
 

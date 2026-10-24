@@ -25,6 +25,11 @@
   --sw-light-soft: #fff2b0;
   --sw-glass: #dce6ee;
   --sw-organic: #f9d2a4;
+  /* modality: one fixed hue per kind of data, used everywhere that data appears (categorical, like the IC formats) */
+  --sw-c-image: #27ae60;
+  --sw-c-state: #bb321e;
+  --sw-c-latent: #f9426a;
+  --sw-c-text: #9810fa;
   /* type */
   --sw-font: "DM Sans", system-ui, sans-serif;
   --sw-mono: "Noto Sans Mono", ui-monospace, monospace;
@@ -56,6 +61,10 @@ html[data-theme="dark"] {
   --sw-light-soft: #4a4224;
   --sw-glass: #2a3540;
   --sw-organic: #4d3a28;
+  --sw-c-image: #3fcf7f;
+  --sw-c-state: #ef6a52;
+  --sw-c-latent: #ff7a98;
+  --sw-c-text: #b86bff;
 }
 
 /* The figure panel: paper, no border, no shadow */

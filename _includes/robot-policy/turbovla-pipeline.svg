@@ -11,15 +11,28 @@
   </defs>
   <rect class="tick" x="40" y="33" width="4" height="23" />
   <text class="h" x="58" y="53">TurboVLA reads the task, then plans 16 steps.</text>
-  <text class="s" x="58" y="80">Read top to bottom · blocks follow TurboVLA/turbovla/models · click a block or use the arrow keys</text>
+  <g class="legend" aria-hidden="true">
+    <rect class="op c-image" x="58" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="78" y="80">IMAGE</text>
+    <rect class="op c-text" x="154" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="174" y="80">TEXT</text>
+    <rect class="op c-state" x="240" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="260" y="80">JOINT STATE</text>
+    <rect class="op-a" x="393" y="70" width="12" height="12" rx="2" />
+    <text class="cap" x="413" y="80">ACTIONS</text>
+  </g>
+  <g aria-hidden="true">
+    <rect class="badge" x="1256" y="34" width="104" height="24" rx="4" />
+    <text class="badge-t" x="1308" y="50" text-anchor="middle">SCHEMATIC</text>
+  </g>
 
   <!-- 1 observe -->
   <g data-step="observe">
     <text class="lbl" x="40" y="112">1 · observe</text>
     <g>
-      <rect class="sk f-in" x="40" y="124" width="520" height="176" rx="10" />
-      <rect class="sk f-in" x="600" y="124" width="340" height="176" rx="10" />
-      <rect class="sk f-in" x="980" y="124" width="380" height="176" rx="10" />
+      <rect class="sk c-image" x="40" y="124" width="520" height="176" rx="10" />
+      <rect class="sk c-text" x="600" y="124" width="340" height="176" rx="10" />
+      <rect class="sk c-state" x="980" y="124" width="380" height="176" rx="10" />
       <rect class="sk f-cell" x="60" y="166" width="120" height="78" rx="3" />
       <rect class="sk f-cell" x="200" y="166" width="120" height="78" rx="3" />
       <rect class="sk f-cell" x="340" y="166" width="120" height="78" rx="3" />
@@ -34,17 +47,17 @@
     <text class="s" x="620" y="216">the dataset's task string; an empty</text>
     <text class="s" x="620" y="236">task falls back to a default prompt</text>
     <text class="t" x="1000" y="152">joint state s<tspan dy="4" class="ss">t</tspan><tspan dy="-4">​</tspan></text>
-    <rect class="op" x="1000" y="170" width="50" height="40" rx="5" />
+    <rect class="op c-state" x="1000" y="170" width="50" height="40" rx="5" />
     <text class="sm" x="1025.0" y="195.0" text-anchor="middle">j1</text>
-    <rect class="op" x="1057" y="170" width="50" height="40" rx="5" />
+    <rect class="op c-state" x="1057" y="170" width="50" height="40" rx="5" />
     <text class="sm" x="1082.0" y="195.0" text-anchor="middle">j2</text>
-    <rect class="op" x="1114" y="170" width="50" height="40" rx="5" />
+    <rect class="op c-state" x="1114" y="170" width="50" height="40" rx="5" />
     <text class="sm" x="1139.0" y="195.0" text-anchor="middle">j3</text>
-    <rect class="op" x="1171" y="170" width="50" height="40" rx="5" />
+    <rect class="op c-state" x="1171" y="170" width="50" height="40" rx="5" />
     <text class="sm" x="1196.0" y="195.0" text-anchor="middle">j4</text>
-    <rect class="op" x="1228" y="170" width="50" height="40" rx="5" />
+    <rect class="op c-state" x="1228" y="170" width="50" height="40" rx="5" />
     <text class="sm" x="1253.0" y="195.0" text-anchor="middle">j5</text>
-    <rect class="op" x="1285" y="170" width="50" height="40" rx="5" />
+    <rect class="op c-state" x="1285" y="170" width="50" height="40" rx="5" />
     <text class="sm" x="1310.0" y="195.0" text-anchor="middle">grip</text>
     <text class="m" x="1000" y="244">min-max → [-1, 1]</text>
     <text class="s" x="1000" y="268">ranges saved in stats_turbovla.json</text>
@@ -57,7 +70,7 @@
   <g data-step="vision">
     <text class="lbl" x="40" y="342">2 · vision encoder</text>
     <g>
-      <rect class="sk f-enc" x="40" y="352" width="520" height="412" rx="12" />
+      <rect class="sk c-image" x="40" y="352" width="520" height="412" rx="12" />
     </g>
     <text class="t" x="60" y="380">DINOv3 ViT-B/16</text>
     <text class="s" x="60" y="400">each view separately · bf16 autocast · fine-tuned, lr 5e-5</text>
@@ -102,7 +115,7 @@
   <g data-step="language">
     <text class="lbl" x="600" y="342">3 · language encoder</text>
     <g>
-      <rect class="sk f-enc" x="600" y="352" width="340" height="412" rx="12" />
+      <rect class="sk c-text" x="600" y="352" width="340" height="412" rx="12" />
     </g>
     <text class="t" x="620" y="380">BERT-base uncased</text>
     <text class="s" x="620" y="400">frozen, kept in eval mode</text>
@@ -118,42 +131,42 @@
     <text class="sm" x="620" y="606">split at [CLS] [SEP] . ?</text>
     <text class="s" x="620" y="626">tokens see only their</text>
     <text class="s" x="620" y="646">own sentence</text>
-    <rect class="tok f-dec" x="812" y="578" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="828" y="578" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="844" y="578" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="812" y="578" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="828" y="578" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="844" y="578" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="860" y="578" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="876" y="578" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="892" y="578" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="812" y="594" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="828" y="594" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="844" y="594" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="812" y="594" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="828" y="594" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="844" y="594" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="860" y="594" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="876" y="594" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="892" y="594" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="812" y="610" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="828" y="610" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="844" y="610" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="812" y="610" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="828" y="610" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="844" y="610" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="860" y="610" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="876" y="610" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="892" y="610" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="812" y="626" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="828" y="626" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="844" y="626" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="860" y="626" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="876" y="626" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="892" y="626" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="860" y="626" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="876" y="626" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="892" y="626" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="812" y="642" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="828" y="642" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="844" y="642" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="860" y="642" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="876" y="642" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="892" y="642" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="860" y="642" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="876" y="642" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="892" y="642" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="812" y="658" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="828" y="658" width="16" height="16" rx="0" />
     <rect class="tok f-panel" x="844" y="658" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="860" y="658" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="876" y="658" width="16" height="16" rx="0" />
-    <rect class="tok f-dec" x="892" y="658" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="860" y="658" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="876" y="658" width="16" height="16" rx="0" />
+    <rect class="tok c-text" x="892" y="658" width="16" height="16" rx="0" />
     <text class="s" x="620" y="700">padding → key-padding mask</text>
     <text class="m" x="620" y="742">l · L × 256</text>
   </g>
@@ -162,7 +175,7 @@
   <g data-step="state">
     <text class="lbl" x="980" y="342">5 · state tokens</text>
     <g>
-      <rect class="sk f-enc" x="980" y="352" width="380" height="412" rx="12" />
+      <rect class="sk c-state" x="980" y="352" width="380" height="412" rx="12" />
     </g>
     <text class="t" x="1000" y="380">StateProjection</text>
     <text class="s" x="1000" y="400">joint state → two memory tokens</text>
@@ -193,13 +206,13 @@
   <g data-step="interaction">
     <text class="lbl" x="40" y="810">4 · vision ↔ language interaction</text>
     <g>
-      <rect class="sk f-enc" x="40" y="820" width="900" height="530" rx="12" />
+      <rect class="sk" x="40" y="820" width="900" height="530" rx="12" />
     </g>
     <text class="t" x="60" y="850">6 × interaction layer</text>
     <text class="s" x="60" y="870">BiAttentionBlock with shared logits, then a text-only transformer layer</text>
-    <rect class="op" x="60" y="890" width="100" height="32" rx="5" />
+    <rect class="op c-image" x="60" y="890" width="100" height="32" rx="5" />
     <text class="o" x="110.0" y="911.0" text-anchor="middle">LN</text>
-    <rect class="op" x="720" y="890" width="100" height="32" rx="5" />
+    <rect class="op c-text" x="720" y="890" width="100" height="32" rx="5" />
     <text class="o" x="770.0" y="911.0" text-anchor="middle">LN</text>
     <text class="i" x="176" y="898">v̄</text>
     <text class="i" x="700" y="898" text-anchor="end">l̄</text>
@@ -212,10 +225,10 @@
     <text class="sm" x="460.0" y="994.0" text-anchor="middle">one logit matrix · 4 heads · d<tspan dy="4" class="ss">h</tspan><tspan dy="-4">​</tspan> 256</text>
     <path class="ln-t" d="M300 979 H250 V1040" marker-end="url(#tv-pipe-ah)" />
     <path class="ln-t" d="M620 979 H670 V1040" marker-end="url(#tv-pipe-ah)" />
-    <rect class="op" x="100" y="1040" width="300" height="64" rx="5" />
+    <rect class="op c-image" x="100" y="1040" width="300" height="64" rx="5" />
     <text class="o" x="250.0" y="1069.0" text-anchor="middle">softmax over text · values W<tspan dy="4" class="ss">vl</tspan><tspan dy="-4">​</tspan> l̄</text>
     <text class="sm" x="250.0" y="1087.0" text-anchor="middle">W<tspan dy="4" class="ss">o</tspan><tspan dy="-4">​</tspan><tspan dy="-6" class="ss">v</tspan><tspan dy="6">​</tspan> · LayerScale γ<tspan dy="4" class="ss">v</tspan><tspan dy="-4">​</tspan> · DropPath 0.1</text>
-    <rect class="op" x="520" y="1040" width="300" height="64" rx="5" />
+    <rect class="op c-text" x="520" y="1040" width="300" height="64" rx="5" />
     <text class="o" x="670.0" y="1069.0" text-anchor="middle">softmax over image · values W<tspan dy="4" class="ss">vv</tspan><tspan dy="-4">​</tspan> v̄</text>
     <text class="sm" x="670.0" y="1087.0" text-anchor="middle">W<tspan dy="4" class="ss">o</tspan><tspan dy="-4">​</tspan><tspan dy="-6" class="ss">l</tspan><tspan dy="6">​</tspan> · LayerScale γ<tspan dy="4" class="ss">l</tspan><tspan dy="-4">​</tspan> · DropPath 0.1</text>
     <path class="ln-t" d="M80 922 V1136 H238" marker-end="url(#tv-pipe-ah)" />
@@ -229,7 +242,7 @@
     <circle class="op" cx="670" cy="1136" r="12" />
     <path class="ln-t" d="M662 1136 H678 M670 1128 V1144" />
     <path class="ln-t" d="M670 1148 V1172" marker-end="url(#tv-pipe-ah)" />
-    <rect class="op" x="520" y="1172" width="300" height="88" rx="5" />
+    <rect class="op c-text" x="520" y="1172" width="300" height="88" rx="5" />
     <text class="o" x="534" y="1196">text transformer layer, post-norm</text>
     <text class="sm" x="534" y="1220">self-attn · 4 heads · sentence mask</text>
     <text class="sm" x="534" y="1242">Add &amp; LN → FFN 1024, ReLU → Add &amp; LN</text>
@@ -248,7 +261,7 @@
   <g data-step="action">
     <text class="lbl" x="980" y="810">6 · action decoder</text>
     <g>
-      <rect class="sk f-dec" x="980" y="820" width="380" height="530" rx="12" />
+      <rect class="sk" x="980" y="820" width="380" height="530" rx="12" />
     </g>
     <text class="t" x="1000" y="850">ACT-style decoder, no CVAE</text>
     <text class="s" x="1000" y="870">3 layers · pre-norm · d 256 · 8 heads</text>
@@ -285,46 +298,49 @@
   <g data-step="execute">
     <text class="lbl" x="40" y="1392">7 · execute</text>
     <g>
-      <rect class="sk f-out" x="40" y="1404" width="1320" height="166" rx="12" />
+      <rect class="sk" x="40" y="1404" width="1320" height="166" rx="12" />
     </g>
     <text class="t" x="60" y="1434">un-normalize, run 8 of 16, infer again</text>
     <text class="m" x="60" y="1464">a = (â + 1) / 2 · (max − min) + min</text>
     <text class="sm" x="60" y="1492">rollout_turbovla.py --open-loop-steps 8</text>
     <text class="s" x="60" y="1540">after the 8th action: new frames, next cycle</text>
-    <rect class="op-a" x="520" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="542" y="1467" text-anchor="middle">1</text>
-    <rect class="op-a" x="570" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="592" y="1467" text-anchor="middle">2</text>
-    <rect class="op-a" x="620" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="642" y="1467" text-anchor="middle">3</text>
-    <rect class="op-a" x="670" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="692" y="1467" text-anchor="middle">4</text>
-    <rect class="op-a" x="720" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="742" y="1467" text-anchor="middle">5</text>
-    <rect class="op-a" x="770" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="792" y="1467" text-anchor="middle">6</text>
-    <rect class="op-a" x="820" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="842" y="1467" text-anchor="middle">7</text>
-    <rect class="op-a" x="870" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="892" y="1467" text-anchor="middle">8</text>
-    <rect class="sk f-cell" x="920" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="942" y="1467" text-anchor="middle">9</text>
-    <rect class="sk f-cell" x="970" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="992" y="1467" text-anchor="middle">10</text>
-    <rect class="sk f-cell" x="1020" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="1042" y="1467" text-anchor="middle">11</text>
-    <rect class="sk f-cell" x="1070" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="1092" y="1467" text-anchor="middle">12</text>
-    <rect class="sk f-cell" x="1120" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="1142" y="1467" text-anchor="middle">13</text>
-    <rect class="sk f-cell" x="1170" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="1192" y="1467" text-anchor="middle">14</text>
-    <rect class="sk f-cell" x="1220" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="1242" y="1467" text-anchor="middle">15</text>
-    <rect class="sk f-cell" x="1270" y="1440" width="44" height="44" rx="4" />
-    <text class="sm" x="1292" y="1467" text-anchor="middle">16</text>
+    <g class="seq">
+      <rect class="op-a" x="520" y="1440" width="44" height="44" rx="4" style="--j:0" />
+      <text class="sm" x="542" y="1467" text-anchor="middle" style="--j:0">1</text>
+      <rect class="op-a" x="570" y="1440" width="44" height="44" rx="4" style="--j:4" />
+      <text class="sm" x="592" y="1467" text-anchor="middle" style="--j:4">2</text>
+      <rect class="op-a" x="620" y="1440" width="44" height="44" rx="4" style="--j:8" />
+      <text class="sm" x="642" y="1467" text-anchor="middle" style="--j:8">3</text>
+      <rect class="op-a" x="670" y="1440" width="44" height="44" rx="4" style="--j:12" />
+      <text class="sm" x="692" y="1467" text-anchor="middle" style="--j:12">4</text>
+      <rect class="op-a" x="720" y="1440" width="44" height="44" rx="4" style="--j:16" />
+      <text class="sm" x="742" y="1467" text-anchor="middle" style="--j:16">5</text>
+      <rect class="op-a" x="770" y="1440" width="44" height="44" rx="4" style="--j:20" />
+      <text class="sm" x="792" y="1467" text-anchor="middle" style="--j:20">6</text>
+      <rect class="op-a" x="820" y="1440" width="44" height="44" rx="4" style="--j:24" />
+      <text class="sm" x="842" y="1467" text-anchor="middle" style="--j:24">7</text>
+      <rect class="op-a" x="870" y="1440" width="44" height="44" rx="4" style="--j:28" />
+      <text class="sm" x="892" y="1467" text-anchor="middle" style="--j:28">8</text>
+      <rect class="sk f-cell" x="920" y="1440" width="44" height="44" rx="4" style="--j:32" />
+      <text class="sm" x="942" y="1467" text-anchor="middle" style="--j:32">9</text>
+      <rect class="sk f-cell" x="970" y="1440" width="44" height="44" rx="4" style="--j:36" />
+      <text class="sm" x="992" y="1467" text-anchor="middle" style="--j:36">10</text>
+      <rect class="sk f-cell" x="1020" y="1440" width="44" height="44" rx="4" style="--j:40" />
+      <text class="sm" x="1042" y="1467" text-anchor="middle" style="--j:40">11</text>
+      <rect class="sk f-cell" x="1070" y="1440" width="44" height="44" rx="4" style="--j:44" />
+      <text class="sm" x="1092" y="1467" text-anchor="middle" style="--j:44">12</text>
+      <rect class="sk f-cell" x="1120" y="1440" width="44" height="44" rx="4" style="--j:48" />
+      <text class="sm" x="1142" y="1467" text-anchor="middle" style="--j:48">13</text>
+      <rect class="sk f-cell" x="1170" y="1440" width="44" height="44" rx="4" style="--j:52" />
+      <text class="sm" x="1192" y="1467" text-anchor="middle" style="--j:52">14</text>
+      <rect class="sk f-cell" x="1220" y="1440" width="44" height="44" rx="4" style="--j:56" />
+      <text class="sm" x="1242" y="1467" text-anchor="middle" style="--j:56">15</text>
+      <rect class="sk f-cell" x="1270" y="1440" width="44" height="44" rx="4" style="--j:60" />
+      <text class="sm" x="1292" y="1467" text-anchor="middle" style="--j:60">16</text>
+    </g>
     <text class="s" x="718" y="1512" text-anchor="middle">run at 30 Hz · 8 × 33 ms ≈ 0.27 s</text>
     <text class="s" x="1118" y="1512" text-anchor="middle">dropped, replaced by the next chunk</text>
     <path class="ln-d" d="M1310 1540 H560" marker-end="url(#tv-pipe-ah)" />
   </g>
+  <text class="lbl" x="40" y="1592">source · TurboVLA/turbovla/models · click a block or use the arrow keys</text>
 </svg>
