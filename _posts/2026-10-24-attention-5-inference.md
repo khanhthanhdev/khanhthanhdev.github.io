@@ -131,7 +131,7 @@ Pick a model, a context length and a number of sequences served at once:
   <noscript><p>Interactive figure: a KV cache size calculator. It needs JavaScript. Example: Llama 2 7B keeps 512 KiB per token, 2 GiB for 4,096 tokens.</p></noscript>
 </figure>
 
-Try Llama 2 7B at 32,768 tokens and 8 sequences: 128 GiB of cache, for a model whose weights take about 13.5 GB. At long contexts the cache, not the model, decides how much a GPU can serve.
+Try Llama 2 7B at its full 4,096 tokens and 32 sequences: 64 GiB of cache, for a model whose weights take about 13.5 GB. At long contexts the cache, not the model, decides how much a GPU can serve.
 
 ## Which keys a query may read
 
@@ -148,7 +148,7 @@ Patterns are just masks: which (query, key) pairs get a score, and which get $$-
 - **Prefix** (studied in the [T5 paper](https://arxiv.org/abs/1910.10683)): the prompt attends in both directions, like an encoder, and only the answer is causal. It's a halfway house between the paper's encoder–decoder and a decoder-only model.
 - **Sparse patterns** ([Child et al., 2019](https://arxiv.org/abs/1904.10509)): each token reads a local window plus every $$k$$-th earlier token, so two hops can reach anywhere at a cost of about $$n\sqrt{n}$$ instead of $$n^2$$.
 
-Some models mix them. Gemma 2 alternates sliding-window and full-attention layers, and Gemma 3 uses five sliding-window layers for each full one, so most layers have a small cache and a few still see everything.
+Some models mix them. [Gemma 2](https://arxiv.org/abs/2408.00118) alternates sliding-window and full-attention layers, and [Gemma 3](https://arxiv.org/abs/2503.19786) uses five sliding-window layers (of 1,024 tokens) for each full one, so most layers have a small cache and a few still see everything.
 
 ## Going deeper
 
@@ -189,7 +189,7 @@ $$\ell' = e^{m - m'}\ell + \textstyle\sum_j e^{s_j - m'}$$
 
 $$o' = e^{m - m'}\, o + \textstyle\sum_j e^{s_j - m'}\, v_j$$
 
-and the answer is $$o / \ell$$ at the end. The factor $$e^{m - m'}$$ rescales everything so far whenever a bigger score turns up. On the cached step in the figure above, done two keys at a time, it matches the direct softmax to within $$10^{-16}$$, the last digit a computer keeps. FlashAttention is exact, not an approximation; it changes how much memory traffic attention needs, not what it computes.
+and the answer is $$o / \ell$$ at the end. The factor $$e^{m - m'}$$ rescales everything so far whenever a bigger score turns up. On the cached step in the figure above, done two keys at a time, it matches the direct softmax to about $$10^{-16}$$, the last digit a computer keeps. FlashAttention is exact, not an approximation; it changes how much memory traffic attention needs, not what it computes.
 
 ### PagedAttention: the cache as virtual memory
 

@@ -147,7 +147,7 @@
       const linesG = s("g");
       const kvG = s("g");
       svg.append(
-        s("text", { class: "tf-axis", x: 0, y: -12, text: "query heads (one per head, as in part 2)" }),
+        s("text", { class: "tf-axis", x: 0, y: -12, text: "query heads (each with its own W_Q, as in part 2)" }),
         linesG,
         ...Array.from({ length: Q }, (_, i) => s("circle", { class: "tf-head-q", cx: qx(i), cy: 14, r: 12 })),
         kvG,
@@ -189,12 +189,12 @@
     // sequences × 2 bytes (16-bit numbers). Configs are from each model's published config.json.
     kvcalc(root) {
       const models = [
-        { name: "Transformer base (2017)", layers: 6, q: 8, kv: 8, d: 64 },
-        { name: "Llama 2 7B", layers: 32, q: 32, kv: 32, d: 128 },
-        { name: "Llama 2 70B", layers: 80, q: 64, kv: 8, d: 128 },
-        { name: "Llama 3 8B", layers: 32, q: 32, kv: 8, d: 128 },
-        { name: "Mistral 7B", layers: 32, q: 32, kv: 8, d: 128, window: 4096 },
-        { name: "DeepSeek-V2", layers: 60, q: 128, d: 128, latent: 576 },
+        { name: "Transformer base (2017)", layers: 6, q: 8, kv: 8, d: 64, context: 512 },
+        { name: "Llama 2 7B", layers: 32, q: 32, kv: 32, d: 128, context: 4096 },
+        { name: "Llama 2 70B", layers: 80, q: 64, kv: 8, d: 128, context: 4096 },
+        { name: "Llama 3 8B", layers: 32, q: 32, kv: 8, d: 128, context: 8192 },
+        { name: "Mistral 7B", layers: 32, q: 32, kv: 8, d: 128, window: 4096, context: 32768 },
+        { name: "DeepSeek-V2", layers: 60, q: 128, d: 128, latent: 576, context: 131072 },
       ];
       const lengths = [1024, 4096, 8192, 32768, 131072];
       const select = h("select", { id: "tf-kv-model" }, ...models.map((m, i) => h("option", { value: i, text: m.name })));
@@ -258,6 +258,8 @@
             ? "This model uses plain multi-head attention: every query head keeps its own keys and values."
             : `${m.q} query heads share ${m.kv} key/value heads: ${ratio}× less cache than plain multi-head attention.` +
               (m.window && n > m.window ? ` The window keeps only ${m.window.toLocaleString("en")} tokens.` : "");
+        if (n > m.context)
+          note.textContent += ` ${m.name} was trained for ${m.context.toLocaleString("en")} tokens at most: past that, this is arithmetic only.`;
       }
       [select, slider, batch].forEach((el) => el.addEventListener("input", render));
       render();
