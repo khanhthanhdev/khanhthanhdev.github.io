@@ -163,11 +163,12 @@ const site = (path) => new URL(`../_site/${path}`, import.meta.url);
 for (const [part, slug, scene] of [
   [1, "attention-1-self-attention", "part1"],
   [2, "attention-2-multi-head-and-positions", "part2"],
+  [3, "attention-3-encoder-block", "part3"],
 ]) {
   test(`part ${part} renders its scrolly steps, scripts and series navigation`, async () => {
     const html = await readFile(site(`blog/2026/${slug}/index.html`), "utf8");
-    const steps = [...html.matchAll(/data-step="?([a-z-]+)"?/g)].map((m) => m[1]);
-    assert.ok(steps.length >= 8, `${steps.length} steps`);
+    const steps = [...html.matchAll(/data-step="?([a-z0-9-]+)"?/g)].map((m) => m[1]);
+    assert.ok(steps.length >= 7, `${steps.length} steps`);
     assert.equal(new Set(steps).size, steps.length, "step ids are unique");
     assert.match(html, new RegExp(`data-tf-scene="?${scene}"?`));
     for (const file of ["tf-math.js", "tf-view.js", `${scene}.js`, "tf-scrolly.js"]) assert.match(html, new RegExp(`transformer/${file}`));

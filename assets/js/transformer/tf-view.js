@@ -399,6 +399,91 @@
     return api;
   }
 
+  /* ---------------------------------------------------------------- block diagram */
+
+  // The paper's Figure 1 style: boxes stacked bottom to top, data flowing up, residual paths around each sublayer.
+  // rows are listed bottom first: { id, label, kind: "sub" | "norm", skip: id of the sublayer a norm adds back }.
+  // opts.side = { id, label } draws an extra input arriving from the left (cross-attention's encoder output).
+  function block(parent, opts) {
+    const width = opts.width ?? 200;
+    const heights = { sub: 42, norm: 28 };
+    const gap = 24;
+    const g = s("g", { class: "tf-block" });
+    const boxes = {};
+    let y = 0;
+    const order = opts.rows.slice().reverse(); // draw top-down, so y grows downwards
+    const top = s("text", { class: "tf-caps", x: width / 2, y: -30, "text-anchor": "middle", text: opts.output ?? "output" });
+    g.append(top, arrow(width / 2, y - 22, width / 2, y));
+    order.forEach((row, k) => {
+      const hgt = heights[row.kind];
+      const rect = s("rect", { class: `tf-box tf-box-${row.kind}`, x: 0, y, width, height: hgt, rx: 4 });
+      const label = s("text", { class: "tf-block-label", x: width / 2, y: y + hgt / 2 + 4, "text-anchor": "middle", text: row.label });
+      boxes[row.id] = { rect, label, x: 0, y, width, height: hgt };
+      g.append(rect, label);
+      y += hgt;
+      if (k < order.length - 1) g.append(arrow(width / 2, y + gap, width / 2, y));
+      y += gap;
+    });
+    const bottom = y - gap;
+    g.append(
+      arrow(width / 2, bottom + 30, width / 2, bottom),
+      s("text", { class: "tf-caps", x: width / 2, y: bottom + 46, "text-anchor": "middle", text: opts.input ?? "input" })
+    );
+
+    // residual: leave the line just below the sublayer, run up the right side, enter the norm box from the right
+    opts.rows.forEach((row) => {
+      if (!row.skip) return;
+      const sub = boxes[row.skip];
+      const norm = boxes[row.id];
+      const yFrom = sub.y + sub.height + gap / 2;
+      const yTo = norm.y + norm.height / 2;
+      const xr = width + 18;
+      g.append(
+        s("path", { class: "tf-residual", d: `M ${width / 2} ${yFrom} H ${xr} V ${yTo} H ${width + 7}` }),
+        s("path", { class: "tf-arrow", d: `M ${width + 7} ${yTo - 4} L ${width} ${yTo} L ${width + 7} ${yTo + 4} Z` })
+      );
+    });
+    if (opts.side) {
+      const b = boxes[opts.side.id];
+      const yIn = b.y + b.height / 2;
+      g.append(
+        s("path", { class: "tf-residual tf-side", d: `M -70 ${yIn} H -7` }),
+        s("path", { class: "tf-arrow", d: `M -7 ${yIn - 4} L 0 ${yIn} L -7 ${yIn + 4} Z` }),
+        s("text", { class: "tf-small", x: -74, y: yIn + 4, "text-anchor": "end", text: opts.side.label })
+      );
+    }
+    if (opts.repeat) {
+      const frame = s("rect", { class: "tf-block-frame", x: -14, y: -10, width: width + 46, height: bottom + 20, rx: 8 });
+      g.prepend(frame);
+      g.append(s("text", { class: "tf-op", x: width + 44, y: bottom / 2 + 8, text: opts.repeat }));
+    }
+    if (opts.title) g.append(s("text", { class: "tf-mat-title", x: 0, y: -52, text: opts.title }));
+
+    function arrow(x1, y1, x2, y2) {
+      const a = s("g");
+      a.append(
+        s("line", { class: "tf-stroke-muted", x1, y1, x2, y2: y2 + 6 }),
+        s("path", { class: "tf-arrow", d: `M ${x2 - 4} ${y2 + 7} L ${x2} ${y2} L ${x2 + 4} ${y2 + 7} Z` })
+      );
+      return a;
+    }
+
+    parent.append(g);
+    const api = {
+      el: g,
+      boxes,
+      // Lights up the given box ids (an id, a list, or null for none).
+      set(ids) {
+        const on = ids == null ? [] : [].concat(ids);
+        Object.entries(boxes).forEach(([id, b]) => b.rect.classList.toggle("is-on", on.includes(id)));
+      },
+      place: (x, y, o) => place(g, x, y, o),
+      hide: () => hide(g),
+    };
+    hide(g);
+    return api;
+  }
+
   /* ---------------------------------------------------------------- bars */
 
   // Horizontal bars, one per label. kind "prob" draws 0..1; "signed" draws around a centre line.
@@ -437,5 +522,25 @@
     return api;
   }
 
-  TF.view = { h, s, animate, clamp, fmt, terms, place, hide, fitView, boxOf, stage, matrix, progress, sweep, lines, bars, motionQuery, narrow };
+  TF.view = {
+    h,
+    s,
+    animate,
+    clamp,
+    fmt,
+    terms,
+    place,
+    hide,
+    fitView,
+    boxOf,
+    stage,
+    matrix,
+    progress,
+    sweep,
+    lines,
+    block,
+    bars,
+    motionQuery,
+    narrow,
+  };
 })();

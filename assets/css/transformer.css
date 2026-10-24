@@ -660,6 +660,42 @@ html[data-theme="dark"] {
   font-size: 11.5px;
 }
 
+/* block diagrams (parts 3 and 4) */
+
+.tf-block {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transition:
+    transform var(--tf-travel) var(--tf-ease),
+    opacity 450ms ease;
+}
+
+.tf-box-norm {
+  fill: var(--tf-paper);
+}
+
+.tf-svg .tf-block-label {
+  font-size: 12px;
+}
+
+.tf-residual {
+  fill: none;
+  stroke: var(--tf-muted);
+  stroke-width: 1;
+}
+
+.tf-side {
+  stroke: var(--tf-enc);
+  stroke-width: 1.5;
+}
+
+.tf-block-frame {
+  fill: none;
+  stroke: var(--tf-grid);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
 /* ------------------------------------------------------------ series navigation */
 
 .tf-series {
