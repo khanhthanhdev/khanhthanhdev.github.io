@@ -1,5 +1,3 @@
-@use "variables" as v;
-
 // Sidebar Table of Contents
 // ----------------------------------------------------------------------------
 // Clean, left-stuck TOC visually separated from the main content by a vertical
@@ -30,16 +28,24 @@ html[data-theme="dark"] .toc-sidebar {
   position: relative;
 }
 
-// On large screens, pin the TOC to the viewport's left edge and shift the
-// main container so its content stays visually centred in the remaining
-// space. Half-width values are tuned to the sidebar widths below.
+// On large screens, pin the TOC to the viewport's left edge and give the main
+// container the space to its right: up to $toc-content-width wide, centred in
+// what is left, and never closer than 1.5rem to the sidebar or the window edge.
+// (Plain values rather than var() inside calc(), which the site's CSS minifier mangles.)
+$toc-width: 200px;
+$toc-width-xl: 230px;
+$toc-content-width: 1000px;
+
+@mixin beside-toc($sidebar) {
+  margin-left: calc(#{$sidebar} + max(1.5rem, calc((100vw - #{$sidebar} - #{$toc-content-width}) / 2)));
+  margin-right: max(1.5rem, calc((100vw - #{$sidebar} - #{$toc-content-width}) / 2));
+}
+
 @media (min-width: 992px) {
   .container.mt-5:has(.toc-sidebar-container) {
-    // ~250px sidebar / 2 + small buffer. Between ~992px and ~1180px the centred
-    // container sits too close to the fixed sidebar, so grow the padding until
-    // the content starts at least 20px right of the sidebar's edge.
-    padding-left: max(130px, calc(270px - (100vw - #{v.$max-content-width}) / 2));
-    padding-right: 0;
+    width: auto;
+    max-width: none;
+    @include beside-toc($toc-width);
   }
 
   // Collapse the Bootstrap column wrapping the <aside> — the aside itself is
@@ -60,7 +66,7 @@ html[data-theme="dark"] .toc-sidebar {
 
 @media (min-width: 1400px) {
   .container.mt-5:has(.toc-sidebar-container) {
-    padding-left: 150px; // ~290px sidebar / 2 + small buffer
+    @include beside-toc($toc-width-xl);
   }
 }
 
@@ -89,14 +95,14 @@ html[data-theme="dark"] .toc-sidebar {
     position: fixed;
     top: 5rem; // clears the (optionally fixed) navbar
     left: 0;
-    width: 250px;
+    width: $toc-width;
     max-height: calc(100vh - 7rem);
-    padding: 1rem 1rem 1rem 0.75rem;
+    padding: 0.75rem;
   }
 
   @media (min-width: 1400px) {
-    width: 290px;
-    padding: 1rem 1.25rem 1rem 1rem;
+    width: $toc-width-xl;
+    padding: 0.75rem 1rem 0.75rem 1rem;
   }
 
   &.toc-sidebar-hidden {
@@ -266,6 +272,37 @@ html[data-theme="dark"] .toc-sidebar {
 
       .nav-link {
         padding: 0.3rem 0;
+      }
+    }
+  }
+}
+
+// Compact links in the narrow desktop sidebar
+@media (min-width: 992px) {
+  .toc-title {
+    font-size: 14px;
+  }
+
+  .toc-nav {
+    .nav-link {
+      padding: 0.3rem 0;
+      font-size: 14px !important;
+      line-height: 1.35;
+    }
+
+    ul {
+      padding-left: 1.1rem;
+
+      .nav-link {
+        padding: 0.2rem 0;
+      }
+
+      ul {
+        padding-left: 1rem;
+
+        .nav-link {
+          padding: 0.2rem 0;
+        }
       }
     }
   }
