@@ -1,0 +1,635 @@
+/* Sticky scrollytelling figures for the "Attention is all you need" series.
+   Look: the clean (white) dialect of the Screen Works style (see screen-works.css): paper, ink, hairlines,
+   diverging blue/red for signed values, ink for probabilities, one fixed hue each for Q, K and V. */
+
+/* Classes are created from JS, so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+:root {
+  --tf-paper: #ffffff;
+  --tf-cell: #f7f7f7;
+  --tf-grid: #dfdfdf;
+  --tf-ink: #18181b;
+  --tf-muted: #5f636b;
+  --tf-accent: #1f55ff;
+  --tf-marker: #fde047;
+  --tf-neg: #1342ff;
+  --tf-pos: #e7000b;
+  --tf-prob: #18181b;
+  --tf-masked: #ffffff;
+  --tf-q: #9810fa;
+  --tf-k: #1e9e57;
+  --tf-v: #d9730d;
+  --tf-enc: #1342ff;
+  --tf-dec: #bb321e;
+  --tf-font: "DM Sans", system-ui, sans-serif;
+  --tf-mono: "Noto Sans Mono", ui-monospace, monospace;
+  --tf-travel: 700ms;
+  --tf-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html[data-theme="dark"] {
+  --tf-paper: #1b1d22;
+  --tf-cell: #24272d;
+  --tf-grid: #3a3d44;
+  --tf-ink: #ecebe6;
+  --tf-muted: #9a9ea6;
+  --tf-accent: #6b8cff;
+  --tf-marker: #a8860c;
+  --tf-neg: #5b7cff;
+  --tf-pos: #ff5a5f;
+  --tf-prob: #ecebe6;
+  --tf-masked: #1b1d22;
+  --tf-q: #b86bff;
+  --tf-k: #3fcf7f;
+  --tf-v: #f0a04b;
+  --tf-enc: #6b8cff;
+  --tf-dec: #ef6a52;
+}
+
+/* ------------------------------------------------------------ layout */
+
+.tf-scrolly {
+  position: relative;
+  margin: 2.5rem 0;
+  color: var(--tf-ink);
+}
+
+.tf-stage {
+  position: sticky;
+  top: 56px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 58vh;
+  padding: 12px 14px 10px;
+  border-radius: 5px;
+  background: var(--tf-paper);
+  box-shadow: 0 0 0 1px var(--tf-grid);
+  font-family: var(--tf-font);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.tf-steps {
+  position: relative;
+  z-index: 1;
+  padding-top: 4vh;
+}
+
+.tf-step {
+  margin: 0 0 42vh;
+  padding: 14px 16px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--tf-paper) 94%, transparent);
+  box-shadow: 0 0 0 1px var(--tf-grid);
+}
+
+.tf-step:last-child {
+  margin-bottom: 30vh;
+}
+
+.tf-step > :last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 992px) {
+  .tf-scrolly {
+    display: grid;
+    grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+    grid-template-areas: "steps stage";
+    gap: 28px;
+    align-items: start;
+  }
+
+  .tf-stage {
+    grid-area: stage;
+    top: 72px;
+    height: calc(100vh - 92px);
+    max-height: 760px;
+    padding: 16px 18px 12px;
+  }
+
+  .tf-steps {
+    grid-area: steps;
+    padding-top: 26vh;
+  }
+
+  .tf-step {
+    min-height: 115vh;
+    margin-bottom: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    opacity: 0.4;
+    transition: opacity 300ms;
+  }
+
+  .tf-step.is-active {
+    opacity: 1;
+  }
+
+  .tf-step:last-child {
+    min-height: 80vh;
+    margin-bottom: 10vh;
+  }
+
+  .tf-step-body {
+    position: sticky;
+    top: 26vh;
+  }
+
+  .tf-step-body::before {
+    content: "";
+    display: block;
+    width: 28px;
+    height: 2px;
+    margin-bottom: 12px;
+    background: var(--tf-grid);
+  }
+
+  .tf-step.is-active .tf-step-body::before {
+    background: var(--tf-accent);
+  }
+}
+
+/* Wider than the 930px text column on large screens. Fixed width (not vw) so a scrollbar never causes sideways scroll. */
+@media (min-width: 1240px) {
+  .tf-scrolly {
+    margin-left: calc(50% - 590px);
+    margin-right: calc(50% - 590px);
+  }
+}
+
+/* ------------------------------------------------------------ stage chrome */
+
+.tf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tf-counter {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.tf-counter b {
+  margin-right: 6px;
+  color: var(--tf-accent);
+  font-family: var(--tf-mono);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.tf-nav {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.tf-btn {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--tf-grid);
+  border-radius: 5px;
+  background: var(--tf-paper);
+  color: var(--tf-ink);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tf-btn:hover:not(:disabled),
+.tf-btn[aria-pressed="true"] {
+  border-color: var(--tf-accent);
+  background: color-mix(in srgb, var(--tf-accent) 12%, var(--tf-paper));
+}
+
+.tf-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tf-btn:focus-visible,
+.tf-input:focus-visible,
+.tf-link:focus-visible {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: 1px;
+}
+
+.tf-label,
+.tf-controls label {
+  color: var(--tf-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tf-sentence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.tf-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--tf-grid);
+  border-radius: 5px;
+  background: var(--tf-cell);
+  color: var(--tf-ink);
+  font-family: var(--tf-mono);
+  font-size: 0.82rem;
+}
+
+.tf-notes {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--tf-muted);
+  font-size: 0.75rem;
+}
+
+.tf-note {
+  margin: 0;
+}
+
+.tf-link {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tf-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tf-wordlist {
+  margin: 0;
+  color: var(--tf-muted);
+  font-family: var(--tf-mono);
+  font-size: 0.72rem;
+}
+
+.tf-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.tf-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.tf-strip {
+  min-height: 2.8em;
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--tf-grid);
+  color: var(--tf-ink);
+  font-family: var(--tf-mono);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.tf-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.tf-controls:empty,
+.tf-controls[hidden] {
+  display: none;
+}
+
+.tf-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tf-controls input[type="range"] {
+  width: 140px;
+  accent-color: var(--tf-accent);
+}
+
+.tf-controls output {
+  min-width: 3ch;
+  font-family: var(--tf-mono);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 991.98px) {
+  .tf-stage {
+    font-size: 0.78rem;
+  }
+
+  .tf-wordlist,
+  .tf-notes .tf-note {
+    display: none;
+  }
+
+  .tf-strip {
+    min-height: 0;
+    max-height: 4.3em;
+    overflow: hidden;
+    font-size: 0.68rem;
+  }
+}
+
+/* ------------------------------------------------------------ SVG pieces */
+
+.tf-svg text {
+  fill: var(--tf-ink);
+  font-family: var(--tf-font);
+  font-size: 12px;
+}
+
+.tf-mat,
+.tf-lines,
+.tf-bars,
+.tf-obj {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transition:
+    transform var(--tf-travel) var(--tf-ease),
+    opacity 450ms ease;
+}
+
+.tf-svg.no-anim *,
+.tf-svg.no-anim {
+  transition: none !important;
+}
+
+.is-hidden {
+  pointer-events: none;
+}
+
+.no-rows .tf-axis-row {
+  display: none;
+}
+
+.is-dim {
+  filter: saturate(0.2);
+}
+
+.tf-svg .tf-mat-title {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tf-svg .tf-mat-name {
+  font-weight: 500;
+}
+
+.tf-svg .tf-mat-shape,
+.tf-svg .tf-mat-note {
+  fill: var(--tf-muted);
+  font-family: var(--tf-mono);
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.tf-role-q .tf-mat-name {
+  fill: var(--tf-q);
+}
+.tf-role-k .tf-mat-name {
+  fill: var(--tf-k);
+}
+.tf-role-v .tf-mat-name {
+  fill: var(--tf-v);
+}
+
+.tf-cell rect {
+  fill: var(--tf-cell);
+  stroke: var(--tf-paper);
+  stroke-width: 1;
+}
+
+.tf-cell text {
+  font-family: var(--tf-mono);
+  font-size: 9.5px;
+  pointer-events: none;
+}
+
+.tf-svg .tf-cell.is-strong text {
+  fill: var(--tf-paper);
+}
+
+.tf-svg .tf-cell.is-masked text {
+  fill: var(--tf-muted);
+}
+
+.tf-cell.is-empty rect {
+  fill: var(--tf-paper);
+  stroke: var(--tf-grid);
+  stroke-dasharray: 2 2;
+}
+
+.tf-cell.is-faded,
+.tf-svg text.is-faded {
+  opacity: 0.18;
+}
+
+.tf-mat-frame {
+  fill: none;
+  stroke: var(--tf-ink);
+  stroke-width: 1;
+}
+
+.tf-role-q .tf-mat-frame {
+  stroke: var(--tf-q);
+}
+.tf-role-k .tf-mat-frame {
+  stroke: var(--tf-k);
+}
+.tf-role-v .tf-mat-frame {
+  stroke: var(--tf-v);
+}
+
+.tf-svg .tf-axis {
+  fill: var(--tf-muted);
+  font-family: var(--tf-mono);
+  font-size: 10px;
+}
+
+.tf-svg .tf-axis-row {
+  fill: var(--tf-ink);
+  font-family: var(--tf-font);
+  font-size: 11.5px;
+}
+
+.tf-hl {
+  fill: none;
+  stroke: var(--tf-accent);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.tf-hl-cell {
+  fill: color-mix(in srgb, var(--tf-marker) 45%, transparent);
+  stroke: var(--tf-ink);
+}
+
+.tf-hl.is-off {
+  display: none;
+}
+
+.tf-lines line {
+  stroke: var(--tf-ink);
+  stroke-linecap: round;
+  transition:
+    opacity 250ms,
+    stroke-width 250ms;
+}
+
+.tf-dot {
+  fill: var(--tf-ink);
+}
+
+.tf-svg .tf-word {
+  font-size: 12.5px;
+}
+
+.tf-word-left {
+  cursor: pointer;
+}
+
+.tf-svg .tf-word.is-focus {
+  fill: var(--tf-accent);
+}
+
+.tf-bar {
+  fill: var(--tf-muted);
+  transition: width 400ms var(--tf-ease);
+}
+
+.tf-bar.is-focus {
+  fill: var(--tf-accent);
+}
+
+.tf-svg .tf-bar-value {
+  fill: var(--tf-muted);
+  font-family: var(--tf-mono);
+  font-size: 10px;
+}
+
+/* scene-specific helpers */
+
+.tf-arc {
+  fill: none;
+  stroke: var(--tf-grid);
+  stroke-width: 1;
+  transition: stroke 200ms;
+}
+
+.tf-arc.is-on {
+  stroke: var(--tf-accent);
+  stroke-width: 1.5;
+}
+
+.tf-fx {
+  transition: opacity 200ms;
+}
+
+.tf-svg .tf-op {
+  fill: var(--tf-muted);
+  font-size: 22px;
+}
+
+.tf-svg .tf-small {
+  fill: var(--tf-muted);
+  font-size: 10.5px;
+}
+
+.tf-svg .tf-caps {
+  fill: var(--tf-muted);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tf-stroke {
+  fill: none;
+  stroke: var(--tf-ink);
+  stroke-width: 1.5;
+}
+
+.tf-stroke-muted {
+  fill: none;
+  stroke: var(--tf-muted);
+  stroke-width: 1;
+}
+
+.tf-box {
+  fill: var(--tf-cell);
+  stroke: var(--tf-ink);
+  stroke-width: 1;
+}
+
+.tf-box.is-on {
+  fill: color-mix(in srgb, var(--tf-accent) 18%, var(--tf-paper));
+  stroke: var(--tf-accent);
+}
+
+.tf-arrow {
+  fill: var(--tf-muted);
+}
+
+.tf-noscript {
+  margin: auto;
+  color: var(--tf-muted);
+}
+
+/* ------------------------------------------------------------ series navigation */
+
+.tf-series {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 1.5rem 0;
+  padding: 10px 0;
+  border-top: 1px solid var(--tf-grid);
+  border-bottom: 1px solid var(--tf-grid);
+  font-family: var(--tf-font);
+  font-size: 0.85rem;
+}
+
+.tf-series .tf-label {
+  flex-basis: 100%;
+}
+
+.tf-series a,
+.tf-series span {
+  color: var(--tf-muted);
+}
+
+.tf-series [aria-current="page"] {
+  color: var(--tf-ink);
+}
+
+.tf-series b {
+  margin-right: 4px;
+  color: var(--tf-accent);
+  font-family: var(--tf-mono);
+  font-weight: 400;
+}
+
+/* purgecss end ignore */

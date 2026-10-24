@@ -1,0 +1,28 @@
+{% comment %}
+  Navigation for the "Attention is all you need" series. Parts that are not published yet are listed without a link.
+  Usage: {% include tf-series.liquid %} in a post with `series: attention-is-all-you-need` and `part: N`.
+{% endcomment %}
+{% assign tf_titles = 'Self-attention from scratch|Multi-head attention and positions|One encoder block|The decoder, masking and training'
+  | split: '|'
+%}
+{% assign tf_parts = site.posts | where: 'series', 'attention-is-all-you-need' %}
+<nav class="tf-series" aria-label="Series: Attention is all you need">
+  <span class="tf-label">Series · Attention is all you need</span>
+  {% for title in tf_titles %}
+    {% assign n = forloop.index %}
+    {% assign tf_post = tf_parts | where: 'part', n | first %}
+    {% if tf_post == null %}
+      <span
+        ><b>{{ n }}</b>{{ title }} · soon</span
+      >
+    {% elsif tf_post.url == page.url %}
+      <span aria-current="page"
+        ><b>{{ n }}</b>{{ title -}}
+      </span>
+    {% else %}
+      <a href="{{ tf_post.url | relative_url }}"
+        ><b>{{ n }}</b>{{ title -}}
+      </a>
+    {% endif %}
+  {% endfor %}
+</nav>
