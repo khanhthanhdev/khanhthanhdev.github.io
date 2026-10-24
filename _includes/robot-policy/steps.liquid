@@ -25,6 +25,12 @@
       {% if step.where %}
         <div class="rp-where">{{ step.where | markdownify }}</div>
       {% endif %}
+      {% if step.detail %}
+        <div class="rp-step-body rp-step-more">
+          <h3>In more detail</h3>
+          {{ step.detail | markdownify }}
+        </div>
+      {% endif %}
       {% if step.shapes %}
         <div class="rp-step-shapes">{{ step.shapes }}</div>
       {% endif %}

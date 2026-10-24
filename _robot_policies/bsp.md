@@ -40,6 +40,15 @@ steps:
       Û, the other *D* columns the control points Ĉ (*D* = 6 on the NexArm). *N*<sub>i,3</sub> are the cubic
       B-spline basis functions those knots define.
     shapes: "2 observations → segment 16 × (1 knot + D)"
+    detail: |-
+      Why this matters for speed: an action chunk is a list of targets at the demonstration rate. Running it faster means
+      sending the same targets closer together in time, so each command is a bigger jump from the last, and the step between
+      one chunk and the next becomes harder to track. A curve can be sampled as finely as the controller wants at any speed,
+      and the alignment step removes the jump between segments.
+
+      In the paper's Speed Stacking figure, plain Diffusion Policy takes 20.5 s and Diffusion Policy with BSP at 4× takes
+      9.6 s, with visibly smoother gripper paths. The faster run also succeeds less often (7/20 against 14/20 in Table 1), a
+      trade-off the Results tab returns to.
     stage:
       shot: hero
       cams: true
@@ -57,6 +66,14 @@ steps:
       The next segment is inferred asynchronously while the arm is still running the current one. The paper samples at
       100 Hz; the released rollout script defaults to 200 Hz.
     shapes: "n_obs_steps 2 · images 84×84, random 76×76 crops · state"
+    detail: |-
+      The two clocks never wait for each other. The paper's Algorithm 2 launches the next inference in the background as soon
+      as the unexecuted part of the current segment falls below an inference budget, while the controller keeps sampling the
+      current curve. As long as inference returns before the segment runs out, the arm never stops to wait for the network.
+
+      The images are small, 84 × 84, with random 76 × 76 crops during training and a centre crop at inference: the standard
+      Diffusion Policy augmentation. The paper uses a single third-person camera for its pick-and-place tasks and two wrist
+      cameras plus a fixed camera for bimanual Speed Stacking.
     bounds: [16, 106, 518, 304]
     stage:
       shot: front
@@ -76,6 +93,15 @@ steps:
       ε<sub>θ</sub> is the UNet (down dims 256, 512, 1024; kernel 5) predicting the added noise; *K* = 16 inference
       steps of a 100-step squared-cosine schedule.
     shapes: "obs features → UNet × 16 steps → 16 × (1 + D)"
+    detail: |-
+      Diffusion Policy generates its output by starting from Gaussian noise and repeatedly removing the noise the network
+      predicts. Unlike a regression head, which can only output one answer per observation, it can represent several distinct
+      ways of doing a task and sample one of them. That makes it robust to inconsistent demonstrations.
+
+      The 1-D UNet convolves along the 16 rows, so neighbouring knots and control points are generated together and stay
+      consistent. FiLM conditioning scales and shifts the UNet's feature channels by amounts computed from the observation
+      features, which is how what the cameras see steers the denoising. Using 16 DDIM steps instead of the 100 the schedule
+      was trained with is a speed trade: DDIM can skip steps deterministically, so one inference costs 16 UNet passes.
     bounds: [546, 106, 518, 304]
     stage:
       shot: top
@@ -90,10 +116,19 @@ steps:
       generated knots to be ordered, so any knot that would go backwards is pushed just past its neighbour.
     formulas:
       - 'u_i \leftarrow \max(u_i,\ u_{i-1} + \delta)'
+      - 'a(u) = \sum_{i=0}^{11} N_{i,3}(u)\, c_i,\qquad u \in [\,u_3,\ u_{12}\,]'
     where: >-
       δ is a small positive constant. In practice the paper finds that predicted knots are almost always in order
       already.
     shapes: "chunk 10 + 2 × 3 support = 16 knots · 12 control points used"
+    detail: |-
+      The fit treats the sample index of the demonstration as time, so a knot value of 7.5 means 7.5 data steps, 0.75 s at
+      10 Hz. In the training targets the knot column is shifted so that 0 is the current observation; the policy therefore
+      predicts times *relative to now*.
+
+      When decoding, the curve is valid between the fourth knot *u*<sub>3</sub> and the thirteenth *u*<sub>12</sub> (the
+      second formula). The three knots on each side only support the cubic pieces at the ends. How much real time a segment
+      covers is not fixed: it is whatever span the generated knots describe.
     bounds: [1076, 106, 518, 304]
     stage:
       shot: chunk
@@ -108,9 +143,18 @@ steps:
     formulas:
       - 'N_{i,0}(u) = \begin{cases} 1 & u_i \le u < u_{i+1} \\ 0 & \text{otherwise} \end{cases}'
       - 'N_{i,p}(u) = \frac{u - u_i}{u_{i+p} - u_i} N_{i,p-1}(u) + \frac{u_{i+p+1} - u}{u_{i+p+1} - u_{i+1}} N_{i+1,p-1}(u)'
+      - 'N_{i,3}(u) \ge 0,\qquad \sum_i N_{i,3}(u) = 1'
     where: >-
       The Cox–de Boor recursion, with *p* = 3. *N*<sub>i,3</sub> is zero outside [*u*<sub>i</sub>, *u*<sub>i+4</sub>).
     shapes: "a(u) ∈ ℝ⁶ for any u in the segment"
+    detail: |-
+      At any instant only four basis functions are non-zero, so the command at that instant depends on just four control
+      points. The basis functions are also never negative and sum to one everywhere (last formula). The curve therefore
+      always lies inside the convex hull of those four points: it cannot overshoot its control points, which limits how far
+      one bad prediction can send the arm.
+
+      A list of actions has none of these guarantees. Each target is predicted independently of its neighbours, so nothing
+      stops two adjacent targets from disagreeing; with a spline, smoothness is built into the representation.
     bounds: [16, 426, 518, 304]
     stage:
       shot: side
@@ -124,9 +168,18 @@ steps:
       the paper's low-cost arms could no longer track the bimanual Speed Stacking task.
     formulas:
       - 'a_{\text{exec}}(t) = a(n\,t)'
+      - '\dot a_{\text{exec}}(t) = n\, \dot a(n t),\qquad \ddot a_{\text{exec}}(t) = n^{2}\, \ddot a(n t)'
     where: >-
       *n* is the speedup factor and *t* is real time since the segment started.
     shapes: "1× · 100 samples per second of curve · n× · 100 / n"
+    detail: |-
+      In Algorithm 2 the curve parameter is *u* = *n* · (now − *t*<sub>0</sub>). Speeding up changes nothing in the network;
+      it only changes how fast the controller walks along *u*. By the chain rule, velocities scale by *n* and accelerations by
+      *n*² (second formula). That is why 4× is far harder on the motors than 2×: four times the speed needs sixteen times the
+      acceleration.
+
+      The paper's baselines speed up the plain chunk by raising the command rate by *n*. The arm then visits the same
+      targets, but nothing is filled in between them, and the jump between chunks grows with the speed.
     bounds: [546, 426, 518, 304]
     stage:
       shot: chunk
@@ -141,10 +194,22 @@ steps:
       backbone.
     formulas:
       - 't^{\star} = \arg\min_{0 \le t \le \lambda T_{\text{inf}}} \operatorname{MSE}\big(S_{\text{new}}(t),\ a_{\text{last}}\big)'
+      - 't_0 \leftarrow \text{now} - t^{\star} / n,\qquad u = n\,(\text{now} - t_0)'
     where: >-
       *T*<sub>inf</sub> is the measured inference latency and λ > 1 widens the window. On the real arms the window is
       half the segment: λ*T*<sub>inf</sub> = *u*<sub>max</sub>(*S*) / 2.
     shapes: "no jump at segment boundaries"
+    detail: |-
+      The whole loop of Algorithm 2 runs at the control rate:
+
+      - sample the current segment at *u* = *n* · (now − *t*<sub>0</sub>) and send the command;
+      - when less than an inference budget of the segment is left, start a new inference in the background;
+      - when it returns, search the new segment for *t*<sup>⋆</sup>, swap segments, and reset the clock so that *u*
+        continues from *t*<sup>⋆</sup> (second formula).
+
+      The search is a one-dimensional minimization over a short window, cheap compared with the network. The paper applies it
+      on the real arms only: with delta end-effector actions in simulation, "closest to the last action" has no clear
+      meaning. The fork's rollout script has options for it: `--disable-time-align`, `--time-align-larger-t`, `--time-align-error-threshold` (default 0.1) and `--consider-gripper-during-align`.
     bounds: [1076, 426, 518, 304]
     stage:
       shot: hero
@@ -162,6 +227,11 @@ training_steps:
       - '\mathcal{L} = \mathbb{E}_{k,\ \epsilon}\ \big\lVert \epsilon_\theta\big(x^{k}, k, o\big) - \epsilon \big\rVert^2,\qquad x^{0} = [U ; C]'
     where: >-
       *x*<sup>k</sup> is the target matrix with noise of level *k* added; ε is that noise.
+    detail: |-
+      Because only the targets change, everything else in a Diffusion Policy setup carries over: the encoder, the noise
+      schedule, the optimizer and the EMA. The conversion runs once, before training, and is cached on disk next to the
+      dataset (`.bspline_sampler_*.npz`). The cache is keyed on the fit settings, so changing ε or the chunk size triggers a
+      new fit.
   - id: t-data
     title: Demonstrations
     body: >-
@@ -169,7 +239,11 @@ training_steps:
       demonstrations per real task. A pick-and-place has fast, coarse parts (reach, carry, retreat) and slow, precise
       parts (grasp, place). A fixed-rate chunk spends the same resolution on both.
     formulas:
+      - '\{(t_i,\ a_i)\}_{i=0}^{N-1},\qquad t_i = i,\qquad a_i \in \mathbb{R}^{D}'
     shapes: "toy · one joint · 50 Hz · 8 s · 401 samples"
+    detail: |-
+      The fit uses the sample index as time, so the curve's parameter is measured in data steps. The fork's real-robot config and rollout script use 10 Hz data (`--data-freq 10`), so one unit of *u* is 0.1 s. Each episode is fitted as a whole, all action dimensions at
+      once with a single shared knot vector.
     bounds: [16, 106, 518, 398]
   - id: t-fit
     title: Adaptive B-spline fit
@@ -179,9 +253,18 @@ training_steps:
       criterion), then repeats. The code does this with SciPy's FITPACK knot generator and `make_lsq_spline`. Knots end up where the motion bends and are sparse where it is simple.
     formulas:
       - 'E = \max_i \lVert a(t_i) - a_i \rVert \le \varepsilon'
+      - 'C^{\star} = \arg\min_{C} \sum_i \big\lVert a(t_i;\ U, C) - a_i \big\rVert^2'
     where: >-
       The paper and the fork's real-robot config use ε = 0.002 (`max_error`) to keep precise motions. The toy fit uses ε = 0.004 rad and needs 41
       knots for 401 samples.
+    detail: |-
+      For a fixed knot vector, the control points are the ordinary least-squares solution (second formula): the curve that
+      passes as close as possible to every sample. Inserting a knot adds freedom exactly where the curve is worst. The loop
+      stops at the first knot vector whose largest error is within ε, taken over all samples and all joints. If none is, the
+      code keeps the last one it tried and prints a warning.
+
+      With ε = 0.002 in joint units (about 0.11° if the joints are in radians), the fit is close to lossless for position
+      targets, yet a smooth reach needs only a handful of knots.
     bounds: [546, 106, 518, 398]
   - id: t-target
     title: Fixed-size targets
@@ -191,7 +274,13 @@ training_steps:
       is simple and a short time where it is detailed. Near the end of an episode the last control point is repeated to
       fill the window.
     formulas:
-    shapes: "16 × (1 + D) per sample · knots stored as absolute times"
+      - 'x^{0} = \big[\,u_{j:j+16} - t \ ;\ c_{j:j+16}\,\big],\qquad j = \min\{\, j : u_{j+3} \ge t \,\}'
+    shapes: "16 × (1 + D) per sample · knot times in data steps, 0 = the current observation"
+    detail: |-
+      With `stride: 1`, the fork's real-robot setting, a window starts at every knot of the fitted curve. Each observation
+      step is given the first window whose first interior knot *u*<sub>j+3</sub> lies at or after it (the formula), so the
+      target always begins at or just after "now". Consecutive observations can share one window, each with the knot column
+      shifted by its own time.
     bounds: [1076, 106, 518, 398]
   - id: t-loss
     title: Denoising loss
@@ -201,8 +290,16 @@ training_steps:
       knot column is learned exactly like the control points. For a fair comparison, the paper's chunking baselines
       predict 16 future actions with the same visual encoder and the same number of epochs.
     formulas:
+      - 'x^{k} = \sqrt{\bar\alpha_k}\, x^{0} + \sqrt{1 - \bar\alpha_k}\, \epsilon'
+      - '\epsilon \sim \mathcal{N}(0, I),\qquad k \sim \mathcal{U}\{1, \dots, 100\}'
+      - '\mathcal{L} = \big\lVert \epsilon_\theta(x^{k}, k, o_{t-1}, o_t) - \epsilon \big\rVert^2'
     where: >-
       AdamW, lr 10<sup>-4</sup> with 500 warm-up steps and a cosine schedule, batch 64, EMA of the weights.
+    detail: |-
+      Before noise is added, the target is normalized with dataset statistics, as Diffusion Policy does for its action chunks. The knot column, measured in data steps, and the joint columns therefore end up on comparable scales, and the knot column needs no special treatment in the loss.
+
+      The noise level *k* is drawn uniformly for every sample, so a single batch trains the UNet on almost-clean and
+      almost-pure-noise inputs alike. The fork's config trains for 601 epochs.
     bounds: [16, 520, 518, 398]
   - id: t-compare
     title: 16 actions vs 16 knots
@@ -211,6 +308,13 @@ training_steps:
       so detail goes where the trajectory needs it. This is the "adaptive temporal resolution" the paper argues fixed
       chunks lack.
     formulas:
+      - 'T_{\text{chunk}} = 16 \times 0.1\,\text{s} = 1.6\,\text{s}\ \ \text{(always)}'
+      - 'T_{\text{segment}} = (u_{12} - u_3) \times 0.1\,\text{s}\ \ \text{(set by the knots)}'
+    detail: |-
+      On a long, simple reach the 16 knots may span several seconds; around a grasp they may span a fraction of one. The
+      network does not choose a horizon explicitly: the horizon is implied by the knot values it generates. A fixed chunk has
+      to compromise. If it is long, it is coarse at the grasp; if it is short, it re-plans needlessly often during the
+      reach.
     bounds: [546, 520, 518, 398]
   - id: t-eps
     title: Fit tolerance
@@ -220,6 +324,12 @@ training_steps:
       within a sensible range. These are the paper's numbers (Table 3); Push-T actions are pixel positions up to about
       512, which is why ε is so much larger there.
     formulas:
+      - '\text{compression} = \frac{\#\ \text{recorded actions}}{\#\ \text{knot–control-point pairs}}'
+    detail: |-
+      ε is measured in the units of the actions, which is why it has to be chosen per task. A larger tolerance means fewer
+      knots, so each 16-knot window covers more time and every prediction reaches further ahead. A smaller tolerance keeps
+      more detail but spends the window on a shorter stretch. The paper's ablation suggests the policy is not very sensitive
+      to the choice within a sensible range.
     bounds: [1076, 520, 518, 398]
 results:
   measured: false
@@ -261,6 +371,16 @@ links:
 
 BSP is a change of action representation, not a new network. The paper adds it to two backbones, Diffusion Policy ("Diff.+BSP") and an ACT-style regression transformer ("Reg.+BSP"). The released code, and our fork of it, implement the Diffusion Policy variant, so this page follows that one.
 
+The change sits between the network and the motors. A standard Diffusion Policy denoises a 16 × _D_ matrix of future joint targets. BSP denoises a 16 × (1 + _D_) matrix instead. The extra column holds knot times, and the remaining columns hold control points. A B-spline evaluator turns those parameters into a smooth curve, and the controller samples that curve at 100 Hz, optionally _n_ times faster, while the next segment is inferred in the background.
+
+Three properties of cubic B-splines do the work:
+
+- **Continuity.** Velocity and acceleration are continuous inside a segment, so dense sampling never creates corners.
+- **Local support.** Each control point affects only four knot spans, so one bad parameter bends only one piece of the curve.
+- **Free knot placement.** The knot spacing is learned, so a fixed-size output can cover a long, simple motion or a short, detailed one.
+
+The one part that is not about the curve itself is **segment alignment**. When a new segment arrives, it is joined at the point closest to where the arm actually is, instead of at a fixed time.
+
 | Part         | Setting in the `bspline-policy` code                                           |
 | ------------ | ------------------------------------------------------------------------------ |
 | Backbone     | Diffusion Policy: ResNet18 encoder with GroupNorm, 1-D UNet with FiLM          |
@@ -277,6 +397,8 @@ BSP is a change of action representation, not a new network. The paper adds it t
 ## Training
 
 Demonstrations are converted once, before training: each trajectory is fitted with a cubic B-spline by FITPACK knot insertion until the largest error is below ε = 0.002, and the result is cut into 16-knot windows. The UNet then learns to denoise those windows, in the same place where Diffusion Policy would denoise an action chunk.
+
+Nothing else about training changes: same encoder, same noise schedule, same optimizer, same EMA. The paper's baselines are trained for the same number of epochs on 16-action chunks, so the comparison isolates the action representation. Because the fit is cached on disk and keyed on its settings, trying another tolerance or segment size costs one refit, not a change of code.
 
 | Setting    | Value                                                               |
 | ---------- | ------------------------------------------------------------------- |

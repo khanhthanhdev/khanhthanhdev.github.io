@@ -35,6 +35,17 @@ steps:
       *V* camera views, the instruction ℓ and the six-number joint state go in; one forward pass gives 16 rows of five
       joint targets and a gripper target, still in normalized units.
     shapes: "images V × 3×224×224 · text L tokens · state 6 → chunk 16 × 6"
+    detail: |-
+      Most vision-language-action models send both the images and the instruction through a large language model and read
+      the action out of it, a V → L → A path. The TurboVLA paper argues the LLM is not needed for the action. It encodes
+      images and text separately, lets them exchange information directly, and decodes actions from the result, a
+      V + L → A path.
+
+      In the paper's LIBERO setup this gives about 0.2 B parameters, 31.2 ms per inference and 0.9 GiB of inference memory on
+      an RTX 4090, with 97.6 % average success. Those are the paper's numbers, not NexArm measurements.
+
+      Running 8 of the 16 actions is a compromise. The second half of a chunk is the part predicted furthest ahead from an
+      old view, so it is discarded and replaced by a fresh prediction.
     stage:
       shot: hero
       cams: true
@@ -52,6 +63,12 @@ steps:
       *s*<sub>min</sub>, *s*<sub>max</sub> come from `stats_turbovla.json`; μ<sub>IN</sub>, σ<sub>IN</sub> are the
       per-channel ImageNet mean and standard deviation.
     shapes: "V = 2 or 3 views · state 6 in [-1, 1]"
+    detail: |-
+      Unlike ACT, every view is resized to 224 × 224, the resolution DINOv3 is used at. That fixes the token count at 196
+      per view, whatever the camera's resolution.
+
+      Min-max scaling to [-1, 1] is chosen to match the `tanh` at the output. Every action the network can produce lies
+      inside the range seen in training, so the arm is never commanded past a recorded joint limit.
     bounds: [16, 106, 408, 304]
     stage:
       shot: front
@@ -71,6 +88,16 @@ steps:
       *W*<sub>1</sub> is 768 → 1024 (dropout 0.1 after the GELU), *W*<sub>2</sub> is 1024 → 256 and
       *W*<sub>skip</sub> is 768 → 256 without bias. *e*<sub>view</sub> is one learned 256-vector per camera.
     shapes: "V × 196 × 768 → V × 196 × 256 → 588 × 256 with 3 views"
+    detail: |-
+      DINOv3 is trained without labels on a very large image collection, and its patch features are known to be good for
+      dense tasks such as segmentation and depth. That is what a policy needs: where the bowls and the gripper are, not just
+      what the picture is of. Unlike ACT's ResNet it is a transformer. Each 16 × 16 patch becomes a token, and attention
+      inside the backbone already relates distant parts of one view.
+
+      The four register tokens are extra tokens the model uses as scratch space for global information, which would
+      otherwise leak into some patch tokens as artefacts. They and the class token are dropped, so only spatial tokens
+      remain. The projection to 256 keeps everything downstream small: fusion and decoding run at width 256, half of ACT's
+      512.
     bounds: [424, 106, 408, 304]
     stage:
       shot: top
@@ -90,6 +117,13 @@ steps:
       *W*<sub>t</sub> is 768 → 256 with Xavier initialization; sentences are delimited by [CLS], [SEP], "." and "?".
       Padding tokens are also removed from the image-to-text attention.
     shapes: "L × 768 → Linear → L × 256"
+    detail: |-
+      Freezing BERT keeps the language knowledge it learned from text and stops a small robot dataset from overwriting it.
+      On the NexArm the stacking dataset uses a single task prompt, so the text acts mostly as a constant task code. It
+      matters more when one checkpoint is trained on many instructions, as in the paper's LIBERO experiments.
+
+      The sentence mask keeps the sentences of a longer instruction apart in the text-only layers, so "pick up the red bowl.
+      put it in the blue one." is not blurred into one bag of words before it meets the image.
     bounds: [832, 106, 408, 304]
     stage:
       shot: hero
@@ -112,6 +146,17 @@ steps:
       4 heads with *d*<sub>h</sub> = 256 (inner width 1024), DropPath 0.1. The text layer is post-norm with 4 heads and
       a 1024-wide ReLU feed-forward. After layer 6 the streams are concatenated.
     shapes: "(588 + L) × 256 → 6 × interaction → (588 + L) × 256"
+    detail: |-
+      Sharing one logit matrix *S* keeps the two directions consistent: if image patch *i* finds text token *j* relevant,
+      then *j* finds *i* relevant with the same score. Normalizing over the text answers "which words matter for this
+      patch"; normalizing over the images answers "which patches does this word refer to".
+
+      A LayerScale of 10<sup>-4</sup> at initialization means a fresh interaction layer barely changes the pretrained DINOv3
+      and BERT features at first, so early training cannot wreck them. DropPath randomly drops a whole residual branch for a
+      sample during training, a regularizer that is standard in vision transformers.
+
+      Image tokens do not attend to each other in these layers, only to the text. The views are combined later, when the
+      action queries attend to all of them at once.
     bounds: [1240, 106, 408, 304]
     stage:
       shot: side
@@ -128,6 +173,10 @@ steps:
     where: >-
       *W*<sub>a</sub> is 6 → 256 (dropout 0.1 after the GELU), *W*<sub>b</sub> is 256 → 512, reshaped to 2 × 256.
     shapes: "6 → 2 × 256 · memory (588 + L + 2) × 256"
+    detail: |-
+      Keeping the state out of the fusion means the vision-language layers model the scene and the task; the arm's own
+      configuration joins only where actions are decoded. With 588 + *L* image and text tokens in the memory, the two state
+      tokens are a small but always-present part of what the queries can attend to.
     bounds: [16, 426, 408, 304]
     stage:
       shot: side
@@ -148,6 +197,14 @@ steps:
       The three updates repeat for each of the 3 layers. The MLP uses ReLU between its layers; there is no final
       LayerNorm after the last decoder layer.
     shapes: "16 queries × 256 → 3 decoder layers → MLP → tanh → 16 × 6"
+    detail: |-
+      Pre-norm puts the LayerNorm inside each residual branch and leaves the residual stream itself unnormalized, the
+      arrangement most recent transformers use. Unlike ACT there is no latent *z*. TurboVLA regresses one chunk directly
+      with L1, so if the demonstrations contain two different ways of doing something, it has no explicit mechanism to pick
+      one. For a single task teleoperated consistently, this is usually acceptable.
+
+      The 16 queries are learned vectors rather than zeros, and the three layers are all used, so the decoder is both
+      deeper and narrower than ACT's single 512-wide layer.
     bounds: [424, 426, 408, 304]
     stage:
       shot: chunk
@@ -163,6 +220,11 @@ steps:
       - 'a = \tfrac{1}{2}(\hat a + 1)\,(a_{\max} - a_{\min}) + a_{\min}'
       - '\Delta t_{\text{replan}} = 8 \times \tfrac{1}{30}\,\text{s} \approx 0.27\,\text{s}'
     shapes: "8 × 33 ms = 0.27 s between observations"
+    detail: |-
+      Re-planning every 8 steps means the policy looks at the scene 3.75 times per second instead of once every 3.3 seconds
+      as with ACT, so it can react to a bowl that moved. The cost is one network pass per 0.27 s of motion instead of per
+      3.3 s. The paper's 31 ms latency was measured on an RTX 4090 in its LIBERO setup; on the computer driving the NexArm,
+      and with three cameras, it should be measured again, because it adds directly to the time between observing and acting.
     bounds: [832, 426, 408, 304]
     stage:
       shot: hero
@@ -180,6 +242,11 @@ training_steps:
     where: >-
       *o* is the observation (images, instruction, state), *A* the recorded 16-step action chunk, and
       𝒟<sub>mix</sub> the sim/real mixture.
+    detail: |-
+      Compared with ACT the loop is simpler: there is no CVAE and a single loss term. It also takes half the optimizer steps
+      (50,000 instead of 100,000) with a real batch of 16 instead of accumulated batches of 2, and a learning rate five times
+      higher. Most of the network's knowledge comes from the pretrained DINOv3 and BERT, so the policy layers on top have
+      less to learn from scratch.
   - id: t-data
     title: Mix simulation and real data
     body: >-
@@ -192,6 +259,14 @@ training_steps:
       `--real-ratio 0.5` by default; `--no-sim` trains on the real set alone. Indices are drawn with replacement from a
       generator seeded the same on every GPU and then split by rank.
     shapes: "batch 16 per GPU · no gradient accumulation"
+    detail: |-
+      Real teleoperated demonstrations are slow to collect; the MuJoCo scene can generate many scripted episodes with varied
+      lighting, colours and object poses. Domain randomization makes the simulated images vary more than the real ones, so
+      the policy cannot rely on rendering details and has to use what the two domains share: the shapes and positions of the
+      bowls and the arm.
+
+      The real ratio is a trade-off. With too little real data the policy fits the renderer; with too much, the simulation
+      adds little.
     bounds: [16, 106, 518, 398]
   - id: t-batch
     title: Collate and normalize
@@ -204,6 +279,13 @@ training_steps:
       - 'a_{\min} = \min\big(a_{\min}^{\text{sim}}, a_{\min}^{\text{real}}\big),\quad a_{\max} = \max\big(a_{\max}^{\text{sim}}, a_{\max}^{\text{real}}\big)'
       - 'm_k = 1 - \text{is\_pad}_k'
     shapes: "pixels B × V × 3 × 224 × 224 · state B × 6 · actions B × 16 × 6 · mask B × 16"
+    detail: |-
+      Merging the min-max ranges is what makes co-training work. If each domain were scaled with its own range, the same
+      joint angle would map to different normalized values in simulation and on the real arm, and the network would have to
+      learn two coordinate systems at once.
+
+      The pad flags play the same role as in ACT: a chunk that starts near the end of an episode has fewer than 16 real
+      actions, and the missing ones must not count as targets.
     bounds: [546, 106, 518, 398]
   - id: t-forward
     title: Forward pass
@@ -215,6 +297,10 @@ training_steps:
       - '\hat A = \pi_\theta\big(I, \ell, \tilde s\big) \in [-1, 1]^{16 \times 6}'
       - '\theta = \theta_{\text{DINOv3}} \cup \theta_{\text{proj}} \cup \theta_{\text{interaction}} \cup \theta_{\text{head}}'
     shapes: "â · B × 16 × 6"
+    detail: |-
+      bf16 autocast stores activations in 16-bit floats and runs the matrix multiplications in that format, which roughly
+      halves the activation memory and speeds up training on recent GPUs. The weights and the optimizer state stay in 32-bit.
+      BERT receives no gradient, so its activations need not be kept for the backward pass, another memory saving.
     bounds: [1076, 106, 518, 398]
   - id: t-loss
     title: Masked L1 loss
@@ -228,6 +314,12 @@ training_steps:
     where: >-
       `--loss-type mse` or `smooth_l1` replace the absolute error with a squared or Huber error; the masking and the
       normalization stay the same.
+    detail: |-
+      Dividing by the number of valid entries, rather than by the full 16 × 6, keeps the loss on the same scale whether a
+      chunk is complete or cut short.
+
+      The gripper weight exists because the gripper column is where timing errors are most costly: closing a few steps early
+      or late misses the grasp, while a joint error of the same size is just a small correction of the path.
     bounds: [16, 520, 518, 398]
   - id: t-update
     title: Optimizer step
@@ -241,6 +333,10 @@ training_steps:
       - 'p = \frac{u - 1000}{49\,000},\quad \eta_0 = 5 \times 10^{-5}'
     where: >-
       *u* counts optimizer updates. Weight decay is 10<sup>-10</sup>, effectively off.
+    detail: |-
+      The warm-up keeps the large and poorly aimed updates of the first steps from disturbing the pretrained DINOv3 weights.
+      The cosine decay lets late training make small refinements. The paper keeps the rate constant after warm-up, so the
+      decay is a choice of the NexArm script, not part of the method.
     bounds: [546, 520, 518, 398]
   - id: t-ema
     title: Moving average and checkpoint
@@ -252,6 +348,10 @@ training_steps:
     formulas:
       - '\bar\theta \leftarrow 0.999\,\bar\theta + 0.001\,\theta'
       - '\text{averaging window} \approx \frac{1}{1 - 0.999} = 1000 \text{ updates}'
+    detail: |-
+      EMA weights are usually a little better than the final raw weights, because they average over roughly the last
+      thousand updates instead of reflecting whichever batch came last. The raw weights are saved too, so that training can
+      be resumed exactly where it stopped.
     bounds: [1076, 520, 518, 398]
 results:
   measured: false
@@ -286,6 +386,15 @@ links:
 
 TurboVLA keeps ACT's idea of decoding a chunk of actions from learned queries, but replaces the encoder side. Images are encoded by a large self-supervised vision transformer, the task arrives as text, and the two are fused before the action head reads them. The chunk is short (16 actions) and only half of it is run, so the policy re-plans about every quarter second.
 
+The pipeline has four parts:
+
+1. **Encode.** DINOv3 turns each camera view into 196 patch tokens, and a frozen BERT turns the instruction into word tokens. Both are projected to width 256.
+2. **Fuse.** Six bi-attention layers let image tokens read the text and text tokens read the images, through one shared attention matrix per layer.
+3. **Add the state.** The joint state is turned into two tokens and appended to the fused sequence.
+4. **Decode.** Sixteen learned queries read that memory through a three-layer decoder and become 16 actions.
+
+The paper's argument is that skipping a large language model costs little accuracy and saves a great deal of compute: about 0.2 B parameters and 31 ms per step in its LIBERO configuration. On the NexArm the gain is mostly reaction time. A policy that is cheap to run can afford to re-plan every 8 steps instead of every 100.
+
 | Part              | Setting used for the NexArm                                     |
 | ----------------- | --------------------------------------------------------------- |
 | Vision            | DINOv3 ViT-B/16, 224 × 224, views encoded separately, trainable |
@@ -300,6 +409,10 @@ TurboVLA keeps ACT's idea of decoding a chunk of actions from learned queries, b
 ## Training
 
 The training script can mix two sources: scripted bowl-stacking demonstrations generated in the MuJoCo scene with domain randomization, and real teleoperated demonstrations. With `--real-ratio 0.5` a sampler draws each training sample from the real set with probability one half, so the smaller real set is not drowned out by simulation.
+
+There is no CVAE. The model is a plain regressor trained with a masked L1 loss on actions scaled to [-1, 1]. BERT stays frozen; DINOv3 is fine-tuned together with everything else, at the same learning rate. An exponential moving average of the weights is kept throughout training, and that averaged copy is what gets saved and run on the arm.
+
+The paper keeps the learning rate constant after warm-up. The NexArm script decays it with a cosine to 5 % over 50,000 steps. That is the one place where the table below departs from the paper.
 
 | Setting        | Default in `train_turbovla.py`                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------- |
