@@ -57,7 +57,7 @@ html[data-theme="dark"] {
 
 .tf-stage {
   position: sticky;
-  top: 56px;
+  top: 70px;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -70,6 +70,17 @@ html[data-theme="dark"] {
   font-family: var(--tf-font);
   font-weight: 500;
   font-size: 0.85rem;
+}
+
+/* Phones: covers the strip between the navbar and the stage, so step cards don't show through it. */
+.tf-stage::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  right: -16px;
+  left: -16px;
+  height: 14px;
+  background: var(--global-bg-color, var(--tf-paper));
 }
 
 .tf-steps {
@@ -101,6 +112,10 @@ html[data-theme="dark"] {
     grid-template-areas: "steps stage";
     gap: 28px;
     align-items: start;
+  }
+
+  .tf-stage::before {
+    display: none;
   }
 
   .tf-stage {
@@ -378,6 +393,14 @@ html[data-theme="dark"] {
 
 .is-hidden {
   pointer-events: none;
+}
+
+.tf-svg.is-tiny .tf-cell text {
+  display: none;
+}
+
+.has-rows .tf-axis-row {
+  cursor: pointer;
 }
 
 .no-rows .tf-axis-row {

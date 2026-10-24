@@ -7,6 +7,7 @@
   const TF = window.TF;
   const SVG_NS = "http://www.w3.org/2000/svg";
   const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const narrow = window.matchMedia("(max-width: 991.98px)");
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const smoothstep = (t) => t * t * (3 - 2 * t);
@@ -78,7 +79,7 @@
   // Glides the SVG viewBox to fit the given boxes ({x, y, width, height} in viewBox units), so each step fills
   // the stage. Snaps instead of gliding while the svg has .no-anim (a rebuild).
   // minWidth keeps a small figure from being blown up past a comfortable size.
-  function fitView(svg, boxes, pad = 16, minWidth = 560) {
+  function fitView(svg, boxes, pad = 16, minWidth = narrow.matches ? 0 : 560) {
     if (!boxes.length) return;
     let x0 = Math.min(...boxes.map((b) => b.x)) - pad;
     const y0 = Math.min(...boxes.map((b) => b.y)) - pad;
@@ -90,6 +91,9 @@
       x1 += grow;
     }
     const target = [x0, y0, x1 - x0, y1 - y0];
+    // when a 30-unit cell would render under 24 px, its 9.5-unit digits are unreadable: hide them (the strip has the numbers)
+    const k = Math.min(svg.clientWidth / target[2], svg.clientHeight / target[3]) || 1;
+    svg.classList.toggle("is-tiny", 30 * k < 24);
     const state = svg._fit || (svg._fit = { now: target, to: null, cancel: () => {} });
     if (state.to && state.to.every((v, k) => Math.abs(v - target[k]) < 1)) return;
     state.cancel();
@@ -107,6 +111,28 @@
   function boxOf(el, x, y, k = 1) {
     const b = el.getBBox();
     return { x: x + b.x * k, y: y + b.y * k, width: b.width * k, height: b.height * k };
+  }
+
+  // A scene's layout function. objects() returns the scene's current named objects (each with .el or .g). Each
+  // call places the listed ones at [x, y, placeOpts], fades the rest out and zooms the view to fit. On phones,
+  // faded context (opacity below 1) is dropped so the figure that matters gets the room. Keys in noFit are placed
+  // but don't count towards the view (connector lines and the like).
+  function stage(svg, objects, noFit = []) {
+    return function layout(spec) {
+      const o = objects();
+      const boxes = [];
+      Object.keys(o).forEach((key) => {
+        const obj = o[key];
+        const el = obj && (obj.el || obj.g);
+        if (!(el instanceof SVGElement)) return;
+        let at = spec[key];
+        if (at && narrow.matches && at[2] && at[2].opacity < 1) at = null;
+        if (!at) return hide(el);
+        place(el, at[0], at[1], at[2]);
+        if (!noFit.includes(key)) boxes.push(boxOf(el, at[0], at[1], at[2] && at[2].scale));
+      });
+      fitView(svg, boxes);
+    };
   }
 
   /* ---------------------------------------------------------------- matrix */
@@ -145,7 +171,7 @@
     g.append(cellsG, s("rect", { class: "tf-mat-frame", x: 0, y: 0, width, height }));
 
     const rowLabelEls = (opts.rowLabels || []).map((label, i) =>
-      s("text", { class: "tf-axis tf-axis-row", x: -8, y: i * cell + cell / 2 + 4, "text-anchor": "end", text: label })
+      s("text", { class: "tf-axis tf-axis-row", x: -8, y: i * cell + cell / 2 + 4, "text-anchor": "end", "data-i": i, text: label })
     );
     const colLabelEls = (opts.colLabels || []).map((label, j) =>
       s("text", {
@@ -246,6 +272,11 @@
         cells.forEach((c) => c.g.classList.toggle("is-faded", list != null && !list.includes(c.i)));
         rowLabelEls.forEach((el, i) => el.classList.toggle("is-faded", list != null && !list.includes(i)));
       },
+      // Calls fn(i) when a row label is hovered, focused or tapped, and fn(null) when the pointer or focus leaves.
+      onRow(fn) {
+        rowLabelEls.forEach((el, i) => pick(el, i, fn));
+        g.classList.add("has-rows");
+      },
       place: (x, y, o) => place(g, x, y, o),
       hide: () => hide(g),
     };
@@ -253,11 +284,29 @@
     return api;
   }
 
+  // Hover, keyboard focus and tap all pick the same item; on phones (no hover) a tap keeps it picked.
+  function pick(el, i, fn) {
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("role", "button");
+    el.addEventListener("mouseenter", () => fn(i));
+    el.addEventListener("mouseleave", () => fn(null));
+    el.addEventListener("focus", () => fn(i));
+    el.addEventListener("blur", () => fn(null));
+    el.addEventListener("click", () => fn(i));
+  }
+
+  // Maps a step's progress t (0 → 1) to a count 0 … count + 1. The sweep runs over the first 80% of the step and
+  // the last 20% holds the finished state (count + 1), since t only reaches 1 as the next step takes over.
+  function progress(t, count, hold = 0.2) {
+    const u = clamp(t / (1 - hold), 0, 1);
+    return u >= 1 ? count + 1 : Math.floor(u * (count + 1));
+  }
+
   // Sweeps C = A·B cell by cell as t goes 0 → 1: the current row of A, column of B and cell of C light up,
   // and the formula strip writes out the dot product. Returns the active (i, j) or null when done.
   function sweep(A, B, C, t, strip, label) {
     const n = C.rows * C.cols;
-    const k = Math.floor(clamp(t, 0, 1) * (n + 1));
+    const k = progress(t, n);
     C.reveal(k);
     if (k === 0 || k > n) {
       A.clear();
@@ -340,6 +389,9 @@
         focus = i;
         paint();
       },
+      onPick(fn) {
+        left.forEach((el, i) => pick(el, i, fn));
+      },
       place: (x, y, o) => place(g, x, y, o),
       hide: () => hide(g),
     };
@@ -385,5 +437,5 @@
     return api;
   }
 
-  TF.view = { h, s, animate, clamp, fmt, terms, place, hide, fitView, boxOf, matrix, sweep, lines, bars, motionQuery };
+  TF.view = { h, s, animate, clamp, fmt, terms, place, hide, fitView, boxOf, stage, matrix, progress, sweep, lines, bars, motionQuery, narrow };
 })();

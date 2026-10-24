@@ -92,16 +92,12 @@
       o.A.set(head.weights);
       o.Z.set(head.out);
       o.lines.set(head.weights);
-      o.lines.left.forEach((el, i) => {
-        el.addEventListener("mouseenter", () => {
-          hover = i;
-          render(last.step, last.t);
-        });
-        el.addEventListener("mouseleave", () => {
-          hover = null;
-          render(last.step, last.t);
-        });
-      });
+      const pick = (i) => {
+        hover = i;
+        render(last.step, last.t);
+      };
+      o.lines.onPick(pick);
+      o.A.onRow(pick);
     }
 
     /* -------------------------------------------- small scene-only drawings */
@@ -192,27 +188,9 @@
 
     /* -------------------------------------------- render: the whole figure for (step, t) */
 
-    const ALL = ["rnn", "pairs", "E", "X", "Wq", "Wk", "Wv", "Q", "K", "Vm", "Kt", "S", "A", "Z", "sums", "bars", "demo", "lines", "fx"];
+    const layout = V.stage(svg, () => o, ["fx"]);
 
-    // On phones, faded context (opacity below 1) is dropped so the figure that matters gets the room.
-    const narrow = window.matchMedia("(max-width: 991.98px)");
-
-    function layout(spec) {
-      const boxes = [];
-      ALL.forEach((key) => {
-        const obj = o[key];
-        const el = obj.el || obj.g;
-        let at = spec[key];
-        if (at && narrow.matches && at[2] && at[2].opacity < 1) at = null;
-        if (at) {
-          V.place(el, at[0], at[1], at[2]);
-          if (key !== "fx") boxes.push(V.boxOf(el, at[0], at[1]));
-        } else V.hide(el);
-      });
-      V.fitView(svg, boxes);
-    }
-
-    const idx = (t, count) => Math.floor(V.clamp(t, 0, 1) * (count + 1)); // 0 … count+1
+    const idx = (t, count) => V.progress(t, count);
     const quote = (w) => `“${w}”`;
 
     const steps = {
@@ -302,7 +280,7 @@
         o.Q.reveal();
         const at = V.sweep(o.Q, o.Kt, o.S, t, strip, {
           start: "Scores = Q · Kᵀ: every query against every key. Kᵀ is K turned on its side.",
-          done: `A big score means a good match. Look at row ${quote(o.words[argmaxRow()])}.`,
+          done: `A big score means a good match. Look at row ${quote(o.words[storyRow()])}.`,
           cell: (i, j, sum) => `q[${o.words[i]}] · k[${o.words[j]}] = ${sum}`,
         });
         if (!at) o.S.clear();
@@ -344,12 +322,12 @@
         const k = idx(t, n);
         o.A.reveal(Math.min(k, n) * n);
         o.sums.labels.forEach((el, i) => (el.style.opacity = i < k ? "1" : "0"));
-        const i = hover ?? Math.min(Math.max(k - 1, 0), n - 1);
-        o.A.row(k === 0 ? null : i);
+        const i = hover ?? (k > n ? storyRow() : Math.min(Math.max(k - 1, 0), n - 1));
+        o.A.row(k === 0 && hover == null ? null : i);
         o.bars.set(o.head.weights[i], o.head.weights[i].indexOf(Math.max(...o.head.weights[i])));
         const row = o.head.scaled[i];
         strip(
-          k === 0
+          k === 0 && hover == null
             ? "softmax(x)ᵢ = eˣⁱ / Σⱼ eˣʲ, applied to each row on its own."
             : `row ${quote(o.words[i])}: softmax(${row.map((v) => fmt(v)).join(", ")}) = ${o.head.weights[i].map((v) => fmt(v)).join(", ")}`
         );
@@ -389,6 +367,14 @@
       },
     };
 
+    // The row the prose talks about: the first verb ("sat"), or else the clearest match.
+    function storyRow() {
+      const verb = o.enc.ids.findIndex(isVerb);
+      return verb >= 0 ? verb : argmaxRow();
+    }
+    const verbCol = TF.FEATURES.indexOf("verb");
+    const isVerb = (id) => TF.weights.embedding[id][verbCol] > 0.5;
+
     function argmaxRow() {
       // the row whose best weight is largest: the clearest match to point at
       let best = 0;
@@ -402,6 +388,7 @@
 
     function render(step, t) {
       if (!o || !steps[step]) return;
+      if (step !== last.step) hover = null; // a hidden element may never fire mouseleave
       last = { step, t };
       controls.hidden = step !== "scale";
       steps[step](t);

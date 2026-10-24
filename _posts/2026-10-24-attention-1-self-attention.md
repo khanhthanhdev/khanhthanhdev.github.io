@@ -36,7 +36,7 @@ Real models are huge: GPT-3 gives each word 12,288 numbers. Ours gives each word
 - attention with **d_k = 4** numbers per query and key,
 - weights from a fixed random seed, except for one attention head that I wired by hand so it has a clear story to tell.
 
-The model is not trained, so it can't write a sentence. But the arithmetic is exactly the arithmetic of the paper. I checked it against PyTorch's own Transformer layers, and they agree to 15 decimal places.
+The model is not trained, so it can't write a sentence. But the arithmetic is exactly the arithmetic of the paper. I checked it against PyTorch's own Transformer layers, and they agree to within 10⁻¹⁴.
 
 Scroll slowly. Inside each step, scrolling also plays the step: matrices fill in one cell at a time.
 
@@ -118,7 +118,7 @@ Try the demo on the right. Random queries and keys, with $$d_k$$ = 1024 and no d
 
 $$\text{softmax}(x)_i = \frac{e^{x_i}}{\sum_j e^{x_j}}$$
 
-Now row _i_ says how word _i_ splits its attention: a percentage for every word in the sentence. Hover a row label to see it as bars.
+Now row _i_ says how word _i_ splits its attention: a percentage for every word in the sentence. Hover or tap a row label to see it as bars.
 
 Look at _sat_: most of its attention goes to _cat_. The verb found who did the sitting.
 
