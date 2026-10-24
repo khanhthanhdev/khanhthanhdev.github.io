@@ -1,30 +1,34 @@
 /* Robot-policy explorer (/works/robot-policy/): a full-height app under the navbar. The left column shows the 3D stage
    and the diagram of the open tab; the right column is a reading pane whose scroll picks the step the left side shows.
-   Sits inside the site layout (al-folio navbar, footer, theme toggle) and takes its colours from the site's
-   --global-* tokens, so the pages match the rest of the (light-only) portfolio. The only extra hues are the diagram
-   categories: green = observations, amber = vision/encoders, blue = action decoder, rose = actions. */
+   Sits inside the site layout (al-folio navbar, footer, theme toggle). The reading pane takes the site's --global-*
+   colours; the visual column (3D stage and diagrams) is drawn in the Screen Works technical-drawing style, with the
+   --sw-* tokens from screen-works.css: warm paper, ink hairlines, one accent. The accent marks the actions that run
+   (chunk bars, executed dots in 3D) and the step being read. Modules are ink outlines on paper; colour is categorical
+   and follows the data, one fixed hue per modality (--sw-c-*): image, joint state, style latent, text. A module that
+   only processes one modality takes a pale tint of its hue; tokens of that modality take a stronger tint and a stroke in
+   the hue. Modules that mix modalities stay paper. */
 :root {
   --rp-paper: var(--global-bg-color);
   --rp-panel: var(--global-card-bg-color);
   --rp-ink: var(--global-text-color);
   --rp-muted: var(--global-text-color-light);
   --rp-rule: var(--global-divider-color);
-  --rp-accent: var(--global-theme-color);
+  --rp-accent: var(--sw-accent);
   --rp-accent-ink: var(--global-warning-block-title);
-  --rp-blue: var(--global-theme-color);
-  --rp-pending: #8a929c;
-  --rp-stage-bg: #eef0f2;
-  --rp-stage-floor: #dde1e5;
-  --rp-in: #e3f3e5;
-  --rp-in-line: #3f8f4e;
-  --rp-enc: #fcf0cf;
-  --rp-enc-line: #b9850b;
-  --rp-dec: #e1e8fc;
-  --rp-dec-line: #4d74eb;
-  --rp-out: #fae3e7;
-  --rp-out-line: #c24a63;
+  --rp-blue: var(--sw-accent);
+  --rp-pending: var(--sw-metal);
+  --rp-stage-bg: var(--sw-paper);
+  --rp-stage-floor: var(--sw-grid);
+  --rp-in: var(--sw-paper);
+  --rp-enc: var(--sw-paper);
+  --rp-dec: var(--sw-paper);
+  --rp-out: var(--sw-paper);
+  --rp-tint-image: color-mix(in srgb, var(--sw-c-image) 10%, var(--sw-paper));
+  --rp-tint-state: color-mix(in srgb, var(--sw-c-state) 9%, var(--sw-paper));
+  --rp-tint-latent: color-mix(in srgb, var(--sw-c-latent) 10%, var(--sw-paper));
+  --rp-tint-text: color-mix(in srgb, var(--sw-c-text) 8%, var(--sw-paper));
   --rp-note: var(--global-code-bg-color);
-  --rp-font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --rp-font-mono: var(--sw-mono);
   --rp-nav: 56px;
 }
 .rp code,
@@ -83,7 +87,7 @@
   grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
-  background: var(--rp-panel);
+  background: var(--sw-paper);
 }
 /* data-tab is switched from JS, so keep these through PurgeCSS. */
 .rp-app[data-tab="inference"] .rp-visual {
@@ -117,9 +121,7 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rp-ink) 14%, transparent) 1px, transparent 1.4px) 0 0 / 22px 22px,
-    var(--rp-panel);
+  background: var(--sw-paper);
   touch-action: pan-y;
   cursor: grab;
 }
@@ -294,7 +296,6 @@
   background: var(--rp-paper);
   border: 1px solid var(--rp-rule);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
 }
 .rp-contents li button {
   display: block;
@@ -340,8 +341,8 @@
   margin: 1.75rem 0 0;
   padding-top: 0.9rem;
   border-top: 1px solid var(--rp-rule);
-  font: 500 0.75rem/1.4 var(--rp-font-mono);
-  letter-spacing: 0.08em;
+  font: 500 0.75rem/1.4 var(--sw-font);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--rp-muted);
 }
@@ -392,8 +393,8 @@
 }
 .rp-hud-status,
 .rp-hud-chunk {
-  background: color-mix(in srgb, var(--rp-panel) 82%, transparent);
-  border: 1px solid var(--rp-rule);
+  background: var(--sw-paper);
+  border: 1px solid var(--sw-grid);
   border-radius: 4px;
   padding: 6px 8px;
 }
@@ -405,9 +406,8 @@
   gap: 2px;
 }
 .rp-hud-subtask {
-  font:
-    500 15px/1.2 Roboto,
-    sans-serif;
+  font: 500 15px/1.2 var(--sw-font);
+  letter-spacing: -0.01em;
 }
 .rp-hud-clock {
   color: var(--rp-muted);
@@ -427,7 +427,7 @@
 .rp-hud-chunk-bar {
   height: 6px;
   border-radius: 3px;
-  background: color-mix(in srgb, var(--rp-pending) 35%, transparent);
+  background: var(--sw-grid);
   overflow: hidden;
 }
 .rp-hud-chunk-bar span {
@@ -461,15 +461,15 @@
   left: 0;
   bottom: 100%;
   margin-bottom: 2px;
-  font-size: 9.5px;
-  color: var(--rp-muted);
+  font: 500 9.5px/1.2 var(--sw-font);
+  color: var(--sw-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.14em;
 }
 /* data-beat is set from JS, so PurgeCSS cannot see the value in the HTML. */
 .rp-stage[data-beat="observe"] .rp-hud-cam {
   border-color: var(--rp-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rp-accent) 35%, transparent);
+  border-width: 2.5px;
 }
 .rp-hud-joints {
   position: absolute;
@@ -477,8 +477,8 @@
   top: 76px;
   display: none;
   gap: 1px;
-  background: color-mix(in srgb, var(--rp-panel) 82%, transparent);
-  border: 1px solid var(--rp-rule);
+  background: var(--sw-paper);
+  border: 1px solid var(--sw-grid);
   border-radius: 4px;
   padding: 6px 8px;
 }
@@ -516,7 +516,7 @@
   grid-auto-rows: max-content;
   gap: 12px;
   padding: 2rem 0 4.5rem;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--sw-enter) var(--sw-ease-enter);
 }
 .rp-steps > li + li {
   border-top: 1px dashed var(--rp-rule);
@@ -525,9 +525,8 @@
   opacity: 0.42;
 }
 .rp-step-num {
-  font: 500 0.85rem/1 var(--rp-font-mono);
-  letter-spacing: 0.06em;
-  color: var(--rp-muted);
+  font: 400 0.8rem/1 var(--sw-mono);
+  color: var(--sw-muted);
 }
 .rp-step-count {
   font-size: 0.75rem;
@@ -536,12 +535,33 @@
   text-transform: uppercase;
   color: var(--rp-muted);
 }
+/* step title: DM Sans, tight tracking, and the accent tick that grows in on the step being read */
 .rp-steps h2 {
+  position: relative;
   margin: 0;
+  padding-left: 18px;
+  font-family: var(--sw-font);
   font-size: clamp(1.6rem, 2.2vw, 2.05rem);
-  font-weight: 400;
-  line-height: 1.2;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   text-wrap: balance;
+}
+.rp-steps h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.14em;
+  width: 4px;
+  height: 0.9em;
+  background: var(--sw-accent);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform var(--sw-enter) var(--sw-ease-enter);
+}
+.rp-steps > li.is-active h2::before,
+.rp-nojs .rp-steps h2::before {
+  transform: scaleX(1);
 }
 .rp-step-body p {
   margin: 0 0 0.8em;
@@ -686,148 +706,338 @@
   transform-origin: 0 50%;
 }
 
-/* ---------- diagrams (inline SVG) ---------- */
+/* ---------- diagrams (inline SVG), Screen Works technical drawing ---------- */
+.rp-diagram > svg {
+  color: var(--sw-ink);
+}
 .rp svg text {
   fill: currentColor;
-  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--sw-font);
+  font-weight: 500;
 }
 .rp svg .h {
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+.rp svg .tick {
+  fill: var(--sw-accent);
 }
 .rp svg .h2 {
   font-size: 16px;
-  font-weight: 500;
-  fill: var(--rp-muted);
+  fill: var(--sw-muted);
 }
 .rp svg .t {
   font-size: 15px;
-  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 .rp svg .m {
-  font-family: var(--rp-font-mono);
+  font-family: var(--sw-mono);
+  font-weight: 400;
   font-size: 13px;
 }
 .rp svg .s {
   font-size: 13px;
-  fill: var(--rp-muted);
+  fill: var(--sw-muted);
 }
 .rp svg .sm {
-  font-family: var(--rp-font-mono);
+  font-family: var(--sw-mono);
+  font-weight: 400;
   font-size: 12px;
-  fill: var(--rp-muted);
+  fill: var(--sw-muted);
 }
+/* section labels: small spaced capitals */
 .rp svg .lbl {
-  font-size: 14px;
-  fill: var(--rp-muted);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  fill: var(--sw-muted);
 }
+/* module outlines: ink line weight, pale flat fill */
 .rp svg .sk {
-  stroke: currentColor;
-  stroke-width: 1.8;
+  fill: var(--sw-paper);
+  stroke: var(--sw-ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.rp svg .sk.f-note,
+.rp svg .f-note {
+  fill: none;
+  stroke: var(--sw-muted);
+  stroke-width: 1;
+}
+/* camera frames and padded / empty cells: flat grid tone, hairline edge */
+.rp svg .sk.f-cell {
+  fill: var(--sw-grid);
+  stroke: var(--sw-muted);
+  stroke-width: 1;
+}
+.rp svg .f-panel {
+  fill: var(--sw-paper);
+}
+/* modality colour: a module that handles one kind of data takes a pale tint, a token of it a stronger tint and a stroke */
+.rp svg .sk.c-image {
+  fill: var(--rp-tint-image);
+}
+.rp svg .sk.c-state {
+  fill: var(--rp-tint-state);
+}
+.rp svg .sk.c-latent {
+  fill: var(--rp-tint-latent);
+}
+.rp svg .sk.c-text {
+  fill: var(--rp-tint-text);
+}
+.rp svg :is(.op, .tok).c-image {
+  fill: color-mix(in srgb, var(--sw-c-image) 22%, var(--sw-paper));
+  stroke: var(--sw-c-image);
+  stroke-width: 1.5;
+}
+.rp svg :is(.op, .tok).c-state {
+  fill: color-mix(in srgb, var(--sw-c-state) 18%, var(--sw-paper));
+  stroke: var(--sw-c-state);
+  stroke-width: 1.5;
+}
+.rp svg :is(.op, .tok).c-latent {
+  fill: color-mix(in srgb, var(--sw-c-latent) 20%, var(--sw-paper));
+  stroke: var(--sw-c-latent);
+  stroke-width: 1.5;
+}
+.rp svg :is(.op, .tok).c-text {
+  fill: color-mix(in srgb, var(--sw-c-text) 16%, var(--sw-paper));
+  stroke: var(--sw-c-text);
+  stroke-width: 1.5;
+}
+/* a line, dot or curve drawn in the modality hue */
+.rp svg [class].s-image {
+  stroke: var(--sw-c-image);
+}
+.rp svg [class].s-state {
+  stroke: var(--sw-c-state);
+}
+.rp svg [class].s-latent {
+  stroke: var(--sw-c-latent);
+}
+.rp svg [class].s-text {
+  stroke: var(--sw-c-text);
+}
+.rp svg [class].s-accent {
+  stroke: var(--sw-accent);
+}
+.rp svg .d-image {
+  fill: var(--sw-c-image);
+}
+.rp svg .d-state {
+  fill: var(--sw-c-state);
+}
+.rp svg .d-latent {
+  fill: var(--sw-c-latent);
+}
+.rp svg .d-text {
+  fill: var(--sw-c-text);
+}
+.rp svg .d-accent {
+  fill: var(--sw-accent);
+}
+.rp svg .d-ink {
+  fill: var(--sw-ink);
+}
+.rp svg .d-paper {
+  fill: var(--sw-paper);
+}
+/* legend swatches and the provenance badge: small caps, outlined */
+.rp svg .sw {
+  stroke-width: 1.5;
+}
+.rp svg .badge {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+.rp svg .badge-t {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+/* engineer's callout: dot at the anchor, straight hairline leader, caps label in a column */
+.rp svg .lead {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+.rp svg .lead-dot {
+  fill: var(--sw-ink);
+}
+.rp svg .cap {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rp svg .cap-n {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 12px;
+  fill: var(--sw-muted);
+}
+/* plots */
+.rp svg .axis {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+.rp svg .grid-l {
+  fill: none;
+  stroke: var(--sw-grid);
+  stroke-width: 1;
+}
+.rp svg .curve {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 1.5;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
-.rp svg .f-in {
-  fill: var(--rp-in);
-  stroke: var(--rp-in-line);
+.rp svg .curve-b {
+  fill: none;
+  stroke: var(--sw-ink);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
-.rp svg .f-enc {
-  fill: var(--rp-enc);
-  stroke: var(--rp-enc-line);
+.rp svg .hull {
+  fill: none;
+  stroke: var(--sw-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
 }
-.rp svg .f-dec {
-  fill: var(--rp-dec);
-  stroke: var(--rp-dec-line);
+
+/* Figure build: when a step becomes the one being read, its parts arrive in reading order (fade + 8px rise, one
+   sibling per stagger step, capped so a long row still lands within about a second), then hold. */
+@keyframes rp-build {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
-.rp svg .f-out {
-  fill: var(--rp-out);
-  stroke: var(--rp-out-line);
+@keyframes rp-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
-.rp svg .f-note {
-  fill: var(--rp-note);
-  stroke: var(--rp-muted);
+.rp svg [data-step].is-active > :not(.lbl) {
+  animation: rp-build var(--sw-enter) var(--sw-ease-enter) both;
+  animation-delay: calc(min(var(--i, 0), 10) * var(--sw-stagger));
 }
-.rp svg .f-panel {
-  fill: var(--rp-panel);
+/* a row of actions fills in left to right, like the arm running it (--j is the action's index) */
+.rp svg [data-step].is-active .seq > * {
+  animation: rp-build var(--sw-enter) var(--sw-ease-enter) both;
+  animation-delay: calc(var(--sw-enter) + var(--j, 0) * 12ms);
+}
+/* a leader or a trajectory draws from its start, after the thing it names */
+.rp svg [data-step].is-active .draw {
+  stroke-dasharray: 1;
+  animation: rp-draw var(--sw-travel) var(--sw-ease-travel) both;
+  animation-delay: calc(min(var(--i, 0), 10) * var(--sw-stagger) + var(--sw-enter) * 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp svg [data-step].is-active > *,
+  .rp svg [data-step].is-active .seq > *,
+  .rp svg [data-step].is-active .draw {
+    animation: none;
+  }
 }
 .rp svg .ln {
   fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
+  stroke: var(--sw-ink);
+  stroke-width: 1.5;
   stroke-linejoin: round;
 }
 .rp svg .ln-d {
   fill: none;
-  stroke: var(--rp-muted);
-  stroke-width: 1.6;
-  stroke-dasharray: 7 6;
-  stroke-linecap: round;
+  stroke: var(--sw-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 5.6;
 }
+/* the one emphasized path in a plot */
 .rp svg .ln-a {
   fill: none;
-  stroke: var(--rp-accent);
-  stroke-width: 2.4;
-  stroke-linecap: round;
+  stroke: var(--sw-ink);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
 }
 .rp svg .o {
   font-size: 13.5px;
 }
 .rp svg .i {
-  font-family: KaTeX_Math, "Times New Roman", serif;
+  font-family: KaTeX_Math, "STIX Two Math", "Times New Roman", serif;
   font-style: italic;
+  font-weight: 400;
   font-size: 17px;
 }
 .rp svg .ss {
   font-size: 0.72em;
 }
 .rp svg .op {
-  fill: var(--rp-panel);
-  stroke: currentColor;
-  stroke-width: 1.1;
+  fill: var(--sw-paper);
+  stroke: var(--sw-ink);
+  stroke-width: 1;
 }
+/* a key operation or token: the bold stroke */
+.rp svg .op-b {
+  stroke-width: 2.5;
+}
+/* the actions that actually run: accent, tinted 18% toward paper */
 .rp svg .op-a {
-  fill: var(--rp-panel);
-  stroke: var(--rp-accent);
-  stroke-width: 1.8;
+  fill: var(--sw-accent-tint);
+  stroke: var(--sw-accent);
+  stroke-width: 1.5;
 }
 .rp svg .ln-t {
   fill: none;
-  stroke: currentColor;
-  stroke-width: 1.3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.rp svg .ah {
-  fill: currentColor;
-}
-.rp svg .ah-a {
-  fill: var(--rp-accent);
-}
-.rp svg .hatch line {
-  stroke: currentColor;
-  stroke-opacity: 0.16;
-  stroke-width: 1.4;
-}
-.rp svg .tok {
-  stroke: currentColor;
+  stroke: var(--sw-muted);
   stroke-width: 1;
 }
+.rp svg .ah {
+  fill: var(--sw-ink);
+}
+.rp svg .ln-t + .ah,
+.rp svg marker .ah {
+  fill: var(--sw-ink);
+}
+.rp svg .ah-a {
+  fill: var(--sw-ink);
+}
+.rp svg .tok {
+  stroke: var(--sw-ink);
+  stroke-width: 1;
+}
+/* the step being read: others fade toward the paper, its outlines turn accent */
 .rp svg [data-step] {
-  transition: opacity 0.35s ease;
+  transition: opacity var(--sw-enter) var(--sw-ease-enter);
   cursor: pointer;
 }
-.rp svg.has-active [data-step]:not(.is-active) {
-  opacity: 0.32;
+.rp svg [data-step] .sk {
+  transition:
+    stroke var(--sw-enter) var(--sw-ease-enter),
+    stroke-width var(--sw-enter) var(--sw-ease-enter);
 }
-.rp svg [data-step].is-active .sk {
-  stroke-width: 2.6;
+.rp svg.has-active [data-step]:not(.is-active) {
+  opacity: 0.3;
+}
+.rp svg [data-step].is-active .sk:not(.f-note):not(.f-cell) {
+  stroke: var(--sw-accent);
+  stroke-width: 2;
 }
 .rp svg [data-step]:focus-visible {
   outline: none;
 }
 .rp svg [data-step]:focus-visible .sk {
-  stroke: var(--rp-blue);
+  stroke: var(--sw-accent);
 }
 
 /* ---------- training + results articles (site typography, only spacing here) ---------- */
@@ -951,7 +1161,7 @@
   color: var(--rp-accent-ink);
 }
 .rp-pill.done {
-  color: var(--rp-in-line);
+  color: var(--rp-ink);
 }
 .rp-cards {
   display: grid;
@@ -1068,7 +1278,9 @@ a.rp-card:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .rp svg [data-step],
-  .rp-steps > li {
+  .rp svg [data-step] .sk,
+  .rp-steps > li,
+  .rp-steps h2::before {
     transition: none;
   }
 }

@@ -66,7 +66,7 @@ function initDiagram(host) {
     const e = ease(Math.min(1, Math.max(0, t)));
     set(a.map((v, i) => v + (b[i] - v) * e));
   };
-  const fit = (bounds, ms = 700) => {
+  const fit = (bounds, ms = 800) => {
     const target = frame(bounds);
     cancelAnimationFrame(anim);
     if (reducedMotion || ms === 0) return set(target);
@@ -279,6 +279,8 @@ function initExplorer(list, host, reader, controls, { onStep = () => {} } = {}) 
   const n = steps.length;
   const diagram = initDiagram(host);
   const groups = [...diagram.svg.querySelectorAll("[data-step]")];
+  // build order for the step's figure: children arrive one stagger step apart in document (reading) order
+  groups.forEach((g) => [...g.children].forEach((c, k) => c.style.setProperty("--i", k)));
   let index = -1;
   let shown = false;
 
