@@ -18,6 +18,7 @@ js:
   - /assets/js/transformer/tf-view.js
   - /assets/js/transformer/part1.js
   - /assets/js/transformer/tf-scrolly.js
+  - /assets/js/transformer/tf-figures.js
 ---
 
 {% include tf-series.liquid %}
@@ -111,6 +112,8 @@ Why? A dot product adds up $$d_k$$ products. The more terms, the bigger the scor
 
 Try the demo on the right. Random queries and keys, with $$d_k$$ = 1024 and no division, hand nearly 100% to one word. Tick _divide by √d_k_ and the spread comes back.
 
+Where does $$\sqrt{d_k}$$ come from? See [why divide by √d_k](#why-sqrt-dk) further down.
+
 </div>
 
 <div class="tf-step" data-step="softmax" data-title="Softmax turns each row into weights." markdown="1">
@@ -168,6 +171,62 @@ Two things in our figure should bother you.
 - **One question per word.** A single head can only look for one kind of thing at a time. _sat_ wants to know who sat _and_ where.
 
 The paper fixes both, with **positional encodings** and **multi-head attention**. That is part 2.
+
+## Going deeper
+
+The steps above show _what_ happens. This section is about _why_. Each question stands on its own, so skip to the ones you care about.
+
+### Why divide by √d_k? {#why-sqrt-dk}
+
+Picture a fresh model, before any training. Its weights are random, so the numbers in each query and key behave like independent random numbers with mean 0 and variance 1.
+
+A score is a dot product: $$q \cdot k = q_1 k_1 + q_2 k_2 + \dots + q_{d_k} k_{d_k}$$.
+
+- Each product $$q_i k_i$$ has mean 0 and variance $$1 \times 1 = 1$$.
+- The variances of independent terms add up. With $$d_k$$ terms, the variance of $$q \cdot k$$ is $$d_k$$.
+- So the typical size of a score (its standard deviation) is $$\sqrt{d_k}$$.
+
+This is footnote 4 of the paper. With the paper's $$d_k = 64$$, raw scores are typically around ±8. Dividing by $$\sqrt{d_k}$$ brings the spread back to about 1, whatever $$d_k$$ is.
+
+Try it below. The left panel keeps a fixed axis, so you can watch the raw scores spread out as $$d_k$$ grows. The right panel, after dividing, keeps the same shape.
+
+<figure class="tf-figure" data-tf-figure="dk">
+  <noscript><p class="tf-noscript">This figure needs JavaScript. With d_k = 1024, raw scores have a spread of about 32, and a softmax over 10 of them puts about 98% on one word.</p></noscript>
+</figure>
+
+**Why a big spread is bad.** Softmax turns scores into weights. Its gradient, how much weight $$p_i$$ moves when score $$x_j$$ moves, is
+
+$$\frac{\partial p_i}{\partial x_j} = p_i\,(\delta_{ij} - p_j)$$
+
+where $$\delta_{ij}$$ is 1 if $$i = j$$ and 0 otherwise. When one weight is close to 1 and the rest are close to 0, every one of these terms is close to 0. For the winner, $$p_i(1 - p_i) \approx 0$$. For everyone else, $$p_i \approx 0$$.
+
+So almost no gradient flows back to $$W_Q$$ and $$W_K$$, and attention stops learning. In the paper's words, large dot products _"push the softmax function into regions where it has extremely small gradients"_. The table in the figure measures this: at $$d_k = 1024$$ without the division, the top word takes about 98% and the gradient is more than ten times smaller than with it.
+
+One caveat: the "independent, variance 1" picture is exact only at the start of training. Trained queries and keys are not random. But the start is exactly where it matters. A model that can't take its first steps never learns anything.
+
+### Why not divide by d_k?
+
+That over-corrects. The spread would become $$1/\sqrt{d_k}$$: about 0.125 for $$d_k = 64$$. Scores that small make the softmax nearly flat, so every word gets about the same weight and attention can't pick anything out. $$\sqrt{d_k}$$ is the one divisor that keeps the spread at 1 for every size.
+
+There is a twist. After training, queries and keys are no longer independent, and their dot products can grow like $$d_k$$ rather than $$\sqrt{d_k}$$. For that reason, some recipes for very wide models (μP, [Yang et al., 2022](https://arxiv.org/abs/2203.03466)) do divide by $$d_k$$.
+
+### A dot product, or a small network?
+
+Before the Transformer, the popular choice was **additive attention** ([Bahdanau et al., 2014](https://arxiv.org/abs/1409.0473)). It scores a pair with a tiny neural network, $$v^\top \tanh(W_1 q + W_2 k)$$, instead of a dot product.
+
+The paper says the two work about equally well in theory, but dot products are much faster, because all the scores come out of one matrix multiplication. It also notes that _without_ scaling, additive attention beat dot-product attention for larger $$d_k$$. The authors suspected the large-dot-product problem above, which is why they added the $$\sqrt{d_k}$$.
+
+### Why two matrices, W_Q and W_K?
+
+Why not one matrix _W_ for both queries and keys? Then the score of word _i_ looking at word _j_ would be $$x_i W W^\top x_j$$, which is exactly the score of _j_ looking at _i_. Every attention pattern would be symmetric.
+
+Language isn't symmetric. In our hand-wired head, _sat_ looks hard at _cat_ (score 1.92), but _cat_ barely looks at _sat_ (score 0.02). The verb is searching for its subject; the noun isn't searching for its verb. Separate $$W_Q$$ and $$W_K$$ let "what I'm looking for" differ from "what I offer".
+
+### Why softmax?
+
+We want weights that are positive and add up to 1, so the output is a weighted average of the values. Softmax gives that, and it is smooth, so gradients can flow through it. Picking only the top word (a "hard" max) has no useful gradient at all.
+
+A handy property: adding the same number to every score in a row changes nothing, because it cancels between the top and bottom of the fraction. Code uses this to subtract each row's maximum before taking $$e^x$$, so the numbers never overflow. The toy model here does the same.
 
 ## Further reading
 

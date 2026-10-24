@@ -746,4 +746,65 @@ html[data-theme="dark"] {
   font-weight: 400;
 }
 
+/* ------------------------------------------------------------ figures in the "Going deeper" sections */
+
+.tf-figure {
+  margin: 1.5rem 0 2rem;
+  padding: 16px;
+  border: 1px solid var(--tf-grid);
+  border-radius: 8px;
+  background: var(--tf-paper);
+  color: var(--tf-ink);
+  font-family: var(--tf-font);
+}
+
+.tf-hists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px 24px;
+  margin: 12px 0;
+}
+
+.tf-svg.tf-hist {
+  position: static;
+  width: 100%;
+  height: auto;
+}
+
+.tf-table {
+  width: 100%;
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+}
+
+.tf-table th,
+.tf-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--tf-grid);
+  text-align: right;
+}
+
+.tf-table th:first-child {
+  text-align: left;
+}
+
+.tf-table thead th {
+  color: var(--tf-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tf-num {
+  font-family: var(--tf-mono);
+}
+
+.tf-figure figcaption {
+  color: var(--tf-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 /* purgecss end ignore */

@@ -70,7 +70,7 @@ So before the softmax, we add a **mask**: $$-\infty$$ to every score above the d
 
 $$\text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}} + M\right) V$$
 
-Since $$e^{-\infty} = 0$$, those words get exactly zero weight. Each row is a word that can only see itself and the words before it, just like when the model writes for real.
+Since $$e^{-\infty} = 0$$, those words get exactly zero weight. Each row is a word that can only see itself and the words before it, just like when the model writes for real. ([Why not just zero them afterwards?](#why-minus-infinity))
 
 </div>
 
@@ -159,6 +159,55 @@ The paper's encoder–decoder design split into two families almost at once:
 - **Decoder only**, like [GPT](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) (2018): just the right stack, without cross-attention. Masked self-attention and the generation loop from this post are, more or less, how today's chat models write.
 
 The core of every one of them is the equation from part 1.
+
+## Going deeper
+
+### Why −∞ before the softmax, and not 0 after? {#why-minus-infinity}
+
+Adding $$-\infty$$ to a score makes its $$e^{x}$$ exactly 0, so the softmax of a masked row is
+
+$$p_j = \frac{e^{x_j}}{\sum_{l \le i} e^{x_l}} \quad (j \le i)$$
+
+and $$p_j = 0$$ for $$j > i$$.
+
+That is exactly a softmax over the allowed words only. The row still adds up to 1, and future words play no part in it.
+
+Now try it the other way: take the normal softmax, then set the future weights to 0. The row no longer adds up to 1. Worse, the future scores were in the denominator, so the weights that are left still carry a trace of the future words. The model could learn to read that trace.
+
+In real code the mask is usually a large negative number such as $$-10^9$$ rather than true $$-\infty$$. If a whole row is masked (it happens with padding), true infinities give $$0/0$$, which is NaN. The causal mask always leaves the diagonal open, so our toy can use real $$-\infty$$.
+
+### Why one masked pass equals writing word by word
+
+With the mask, the output at position $$i$$ depends only on positions $$0 \dots i$$. Every other part of the decoder works on each position on its own, or looks only backwards. So running the decoder on the whole sentence at once gives each position exactly the same vector as running it on just the words up to that point. In our toy the two agree to the last digit.
+
+That's what makes teacher forcing work: one pass trains all $$n$$ predictions at once. It also explains a trick every chat model uses when generating. Earlier positions never change, so their keys and values can be stored and reused (the **KV cache**). Each new word then costs one new row, rather than a rerun of the whole sentence.
+
+### What label smoothing does to the loss
+
+With a smoothed target $$t$$, the loss $$-\sum_w t(w) \log p(w)$$ is smallest when the model's probabilities equal the target exactly, $$p = t$$. Even then it isn't 0: its lowest value is the target's own entropy. For the paper's shared vocabulary of about 37,000 tokens that floor is about 1.38; for our 35 words it is 0.68.
+
+So the best the model can do is put 90% on the right word, never 100%. Without smoothing, the loss keeps falling as the right word's logit grows, so the model is rewarded for becoming ever more certain. Smoothing removes that reward. The paper reports that this makes the model less certain (worse perplexity) but improves both accuracy and BLEU.
+
+### Why warm up?
+
+The paper doesn't say. There are two common explanations, and they don't exclude each other:
+
+- **Adam needs data first.** Adam divides each step by a running estimate of how big the gradients are. In the first few steps that estimate rests on very few samples, so some steps come out far too large. A small learning rate keeps those early steps safe ([Liu et al., 2019](https://arxiv.org/abs/1908.03265)).
+- **Post-norm is touchy.** With LayerNorm after each add, as in the paper, gradients near the output are large at the start of training. Moving the LayerNorm inside the residual branch (pre-norm) tames them, and such models can train without any warmup ([Xiong et al., 2020](https://arxiv.org/abs/2002.04745)).
+
+For the record, the paper's Adam settings were $$\beta_1 = 0.9$$, $$\beta_2 = 0.98$$, $$\epsilon = 10^{-9}$$. The schedule peaks at step 4000, at $$512^{-0.5} \cdot 4000^{-0.5} \approx 7.0 \times 10^{-4}$$.
+
+### One table for three jobs
+
+The paper uses a single matrix for three jobs: the encoder's input embedding, the decoder's input embedding, and the final layer that turns vectors into word scores ([Press & Wolf, 2016](https://arxiv.org/abs/1608.05859)). With 37,000 tokens and $$d = 512$$, each copy would be about 19 million weights, so sharing saves tens of millions.
+
+It also makes sense: a word's score is high when the decoder's vector points the same way as that word's embedding. The paper also multiplies the embeddings by $$\sqrt{d_{model}}$$ on the way in. A common explanation: a table shared with the output layer starts with small numbers, and the scaling keeps the words from being drowned out by the positional encodings.
+
+### Greedy decoding vs. beam search
+
+Our loop takes the single most likely word every time (**greedy** decoding). That can paint the model into a corner: a word that looks best now can lead to a worse sentence overall.
+
+**Beam search** keeps the best few partial sentences at every step instead of one. The paper keeps 4. A sentence's score is the sum of its words' log-probabilities, which favours short outputs, since every extra word adds a negative number. A **length penalty** ($$\alpha = 0.6$$ in the paper) corrects for that.
 
 ## Further reading
 

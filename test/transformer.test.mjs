@@ -174,6 +174,12 @@ for (const [part, slug, scene, count] of [
     assert.match(html, new RegExp(`data-tf-scene="?${scene}"?`));
     for (const file of ["tf-math.js", "tf-view.js", `${scene}.js`, "tf-scrolly.js"]) assert.match(html, new RegExp(`transformer/${file}`));
     assert.match(html, /class="?tf-series"?/);
+    // every part ends with "why" questions; part 1 also mounts the √d_k figure
+    assert.match(html, /id="?going-deeper"?/);
+    if (part === 1) {
+      assert.match(html, /data-tf-figure="?dk"?/);
+      assert.match(html, /transformer\/tf-figures\.js/);
+    }
     // the prose of every step is server-rendered markdown, readable without JavaScript
     assert.doesNotMatch(html, /\*\*[A-Z][^*]+\*\*/);
   });

@@ -82,7 +82,7 @@ Now the lines turn red and dashed: the same word gets a different output dependi
 
 Waves stay between −1 and 1. They also have a nice property. Treat each sine/cosine pair as a point on a circle. Moving one position later turns the point by the same angle, wherever it starts.
 
-So _"the word just before me"_ is the same rotation at position 3 as at position 300. A weight matrix can learn to recognise it once and use it everywhere. The paper says the authors chose waves because they hoped the model could _"easily learn to attend by relative positions"_.
+So _"the word just before me"_ is the same rotation at position 3 as at position 300. A weight matrix can learn to recognise it once and use it everywhere. ([The proof is below](#shift-is-rotation).) The paper says the authors chose waves because they hoped the model could _"easily learn to attend by relative positions"_.
 
 </div>
 
@@ -98,9 +98,9 @@ Our toy has 2 heads. Head 1 is the hand-wired one from part 1. Head 2 is random.
 <div class="tf-step" data-step="concat" data-title="Heads are joined, then mixed." markdown="1">
 **Each head is made smaller**, so the total cost stays the same. With $$d_{model} = 8$$ and 2 heads, each head works with $$d_k = 8 / 2 = 4$$ numbers.
 
-The heads' outputs are placed side by side ("concatenated") to get back to 8 numbers per word. Then one more matrix, $$W_O$$, mixes them:
+The heads' outputs are placed side by side ("concatenated") to get back to 8 numbers per word. Then one more matrix, $$W_O$$, mixes them. The square brackets mean "side by side":
 
-$$\text{MultiHead}(X) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)\, W_O$$
+$$\text{MultiHead}(X) = [\,\text{head}_1 \cdots \text{head}_h\,]\, W_O$$
 
 The paper uses 8 heads of 64 numbers each: $$8 \times 64 = 512 = d_{model}$$.
 
@@ -131,6 +131,52 @@ Its output has the same shape as its input: one row of $$d_{model}$$ numbers per
 One detail I glossed over: the paper also multiplies the embeddings by $$\sqrt{d_{model}}$$ before adding positions, so the two have similar sizes. In this toy the embeddings already have about the right size, so I left that out.
 
 Attention lets words share information, but it doesn't do much _with_ that information on its own. In part 3 we wrap it in the rest of an encoder block: residual connections, layer normalisation and a small feed-forward network.
+
+## Going deeper
+
+### Why a shift is a rotation {#shift-is-rotation}
+
+Take one sine/cosine pair with speed $$\omega$$. Write $$a = \omega p$$ for the angle at position $$p$$, and $$b = \omega k$$ for the extra angle after $$k$$ more steps. The angle-addition rules say:
+
+$$\sin(a + b) = \sin a \cos b + \cos a \sin b$$
+
+$$\cos(a + b) = \cos a \cos b - \sin a \sin b$$
+
+In matrix form:
+
+$$\begin{pmatrix} \sin(a+b) \\ \cos(a+b) \end{pmatrix} = \begin{pmatrix} \cos b & \sin b \\ -\sin b & \cos b \end{pmatrix} \begin{pmatrix} \sin a \\ \cos a \end{pmatrix}$$
+
+The matrix in the middle is a rotation by the angle $$b = \omega k$$. It depends on $$k$$ but not on $$p$$. So "$$k$$ places later" is the same fixed matrix at every position. A weight matrix like $$W_Q$$ multiplies by fixed matrices, so in principle it can learn "the word just before me" once and have it work everywhere.
+
+### Dot products only see distance
+
+Here's another consequence. Take the dot product of two position rows, $$PE(p)$$ and $$PE(p+k)$$. Each sine/cosine pair contributes $$\sin a \sin b + \cos a \cos b = \cos(a - b)$$, so
+
+$$PE(p) \cdot PE(p+k) = \sum_i \cos(\omega_i k)$$
+
+This depends only on the distance $$k$$, not on where you are. In our toy ($$d = 8$$), positions 3 apart always have a dot product of 1.96, whether they are positions 0 and 3 or 40 and 43.
+
+It's also the same for $$+k$$ and $$-k$$, since cosine doesn't care about sign. On their own, the dot products can't tell "3 words before" from "3 words after". The rotation above can, which is one reason the learned $$W_Q$$ and $$W_K$$ matter.
+
+### Why 10000, and why so many speeds?
+
+The speeds are $$\omega_i = 1 / 10000^{2i/d}$$, so the wavelengths grow geometrically from $$2\pi$$ (about 6 positions) to $$10000 \cdot 2\pi$$ (about 63,000 positions).
+
+Think of the hands of a clock. The fast hand tells neighbouring positions apart, but it repeats every few steps. The slow hands barely move between neighbours, but they tell far-apart positions apart. Together, every position gets a unique pattern, and 10000 makes the slowest wave far longer than any sentence the model will see.
+
+### Learned positions work too
+
+The paper also tried simply _learning_ a vector for each position, like a second embedding table. The results were nearly identical (Table 3, row E). The authors kept the waves because they hoped the model could then handle sentences longer than any it saw in training.
+
+Later models went both ways. BERT and GPT-2 learned their positions. Many of today's models use **RoPE** ([Su et al., 2021](https://arxiv.org/abs/2104.09864)), which takes the rotation above literally: it rotates each query and key by its position, so a score depends only on the distance between the two words.
+
+### Many heads cost the same as one
+
+Each head has its own $$W_Q$$, $$W_K$$ and $$W_V$$, each of size $$d \times (d/h)$$. Over $$h$$ heads that is $$3 \cdot h \cdot d \cdot (d/h) = 3d^2$$ weights, plus $$d^2$$ for $$W_O$$:
+
+$$4d^2 \text{ weights, whatever } h \text{ is.}$$
+
+So splitting into heads is free. The paper tested this (Table 3, row A). One big head scored 0.9 BLEU worse than 8 heads. Too many heads hurt as well: with 32 heads of size 16, quality dropped again. Each head needs enough numbers to ask a useful question.
 
 ## Further reading
 

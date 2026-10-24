@@ -56,7 +56,7 @@ $$X + \text{MultiHead}(X)$$
 
 This is a **residual connection** (from [ResNet](https://arxiv.org/abs/1512.03385), 2015). Attention doesn't have to rebuild each word's vector from scratch. It only has to learn a _change_ to add on top.
 
-That makes deep stacks much easier to train. If a block has nothing useful to add, it can learn to add almost nothing, and the word passes through unharmed.
+That makes deep stacks much easier to train ([here's why](#why-residuals)). If a block has nothing useful to add, it can learn to add almost nothing, and the word passes through unharmed.
 
 </div>
 
@@ -123,6 +123,41 @@ $$\text{out} = \text{LayerNorm}(h + \text{FFN}(h))$$
 All sublayers, and the embeddings too, produce $$d_{model} = 512$$ numbers per word in the paper (8 in our toy), precisely so these additions line up.
 
 Two details from the paper I left out of the figure. Dropout is applied to each sublayer's output before the add, with rate 0.1 in training. And the order shown here, add first and then normalise ("post-norm"), is the original. Most models today normalise first, $$x + \text{Sublayer}(\text{LayerNorm}(x))$$ ("pre-norm"), because it trains more stably in deep stacks.
+
+## Going deeper
+
+### Why residual connections help learning {#why-residuals}
+
+Training works backwards. The loss sends a gradient back through every layer, and each layer multiplies it by its own derivative. With a residual connection, a sublayer computes $$y = x + F(x)$$, so its derivative is
+
+$$\frac{\partial y}{\partial x} = I + \frac{\partial F}{\partial x}$$
+
+The $$I$$ (the identity) is the important part. Going back through $$N$$ blocks multiplies $$N$$ of these together. Multiply out the brackets and one of the terms is just $$I \cdot I \cdots I$$: a path where the gradient reaches the first block untouched, however deep the stack.
+
+Without the skip, the gradient is a product of $$N$$ derivatives $$\partial F / \partial x$$. Products of many factors tend to shrink towards zero or blow up, which is why very deep networks were so hard to train before [ResNet](https://arxiv.org/abs/1512.03385). [Veit et al. (2016)](https://arxiv.org/abs/1605.06431) give another way to see it: a residual network behaves like many shallow networks of different depths, added together.
+
+### Why LayerNorm and not BatchNorm?
+
+**BatchNorm**, common in image models, normalises each feature across all the examples in a batch. **LayerNorm** normalises each word across its own features. For text, LayerNorm is the better fit:
+
+- Sentences in a batch have different lengths and are padded. Batch statistics would mix in padding and depend on which other sentences happen to share the batch.
+- When generating, there is often only one sentence, so there is no batch to average over.
+- LayerNorm treats every word on its own, so it computes exactly the same thing in training and in use.
+
+### Where the weights live
+
+Count the weights in one block of the paper's base model ($$d = 512$$, $$d_{ff} = 2048$$, ignoring the small biases and LayerNorm parameters):
+
+- attention: $$W_Q, W_K, W_V, W_O$$ are 4 matrices of $$d \times d$$, so $$4d^2 \approx 1.05$$ million.
+- feed-forward: $$W_1$$ is $$d \times 4d$$ and $$W_2$$ is $$4d \times d$$, so $$8d^2 \approx 2.1$$ million.
+
+The feed-forward network holds two thirds of each block's weights, and does most of its arithmetic too.
+
+### What does the feed-forward network do?
+
+Read equation (2) one hidden unit at a time. Each of the 2048 hidden units has a column of $$W_1$$, which works like a **key**: its dot product with the word's vector says how well the word matches some pattern. ReLU keeps only positive matches. The matching row of $$W_2$$ is a **value**, added to the output in proportion to the match.
+
+So the network is a big, fixed lookup: _"if the word looks like this, add that"_. [Geva et al. (2021)](https://arxiv.org/abs/2012.14913) found exactly this in trained models. In lower layers, keys tend to fire on surface patterns, such as text ending in a particular word; in higher layers, on topics. In the higher layers, the values push towards likely next words. It looks like attention, except the keys and values are learned once, rather than coming from the sentence.
 
 ## Further reading
 
