@@ -798,6 +798,50 @@
   fill: var(--sw-paper);
 }
 /* purgecss start ignore */
+/* pane-sized type: caption, cell title, body, key numbers, caps labels (sizes in SVG units, read at about 1×) */
+.rp svg .H {
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+.rp svg .T {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+.rp svg .S {
+  font-size: 17px;
+}
+.rp svg .I {
+  font-family: KaTeX_Math, "STIX Two Math", "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+}
+.rp svg .M {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 18px;
+}
+.rp svg .Ms {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 15px;
+  fill: var(--sw-muted);
+}
+.rp svg .C {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+}
+.rp svg .CL {
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  fill: var(--sw-muted);
+}
+.rp svg .CLs {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  fill: var(--sw-muted);
+}
 /* modality colour: a module that handles one kind of data takes a pale tint, a token of it a stronger tint and a stroke */
 .rp svg .sk.c-image {
   fill: var(--rp-tint-image);

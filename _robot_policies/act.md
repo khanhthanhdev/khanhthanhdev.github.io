@@ -52,7 +52,7 @@ steps:
       μ<sub>s</sub>, σ<sub>s</sub> are per-joint statistics computed over the training dataset; ⊘ is element-wise
       division.
     shapes: "observation.images.{front,wrist,top} 3×480×640 · observation.state 6"
-    bounds: [30, 96, 1340, 214]
+    bounds: [16, 106, 518, 304]
     stage:
       shot: front
       cams: true
@@ -71,7 +71,7 @@ steps:
       *y* runs from 1 to *H* = 15 (and *x* from 1 to *W* = 20 in the same way); the y and x codes are concatenated into a
       512-wide position. The backbone trains at lr 10<sup>-5</sup>.
     shapes: "3×480×640 → 512×15×20 → 300 × 512 per camera"
-    bounds: [30, 330, 540, 450]
+    bounds: [546, 106, 518, 304]
     stage:
       shot: top
       cams: true
@@ -90,7 +90,7 @@ steps:
       *W*<sub>z</sub> is 32 → 512 and *W*<sub>s</sub> is 6 → 512; *p*<sub>z</sub>, *p*<sub>s</sub> are learned
       512-vectors.
     shapes: "X, P · 902 × 512 with 3 cameras"
-    bounds: [580, 330, 800, 450]
+    bounds: [1076, 106, 518, 304]
     stage:
       shot: side
       joints: true
@@ -108,7 +108,7 @@ steps:
       *W*<sub>1</sub> is 512 → 3200, *W*<sub>2</sub> is 3200 → 512; 8 heads of width 64; dropout 0.1. After 4 layers,
       *M* = *X*.
     shapes: "902 × 512 → 4 × encoder layer → memory M 902 × 512"
-    bounds: [30, 790, 920, 570]
+    bounds: [16, 426, 518, 304]
     stage:
       shot: side
       joints: true
@@ -126,7 +126,7 @@ steps:
     where: >-
       *p*<sub>dec</sub> is a learned 100 × 512 table; *W*<sub>a</sub> is 512 → 6.
     shapes: "100 queries × 512 → Linear 512→6 → chunk 100 × 6"
-    bounds: [960, 790, 420, 570]
+    bounds: [546, 426, 518, 304]
     stage:
       shot: chunk
       chunk: true
@@ -140,7 +140,7 @@ steps:
       - 'a_k = \sigma_a \odot \hat a_k + \mu_a,\quad k = 1, \dots, 100'
       - '\Delta t_{\text{replan}} = 100 \times \tfrac{1}{30}\,\text{s} \approx 3.33\,\text{s}'
     shapes: "100 actions × 33 ms = 3.33 s between observations"
-    bounds: [30, 1380, 1340, 200]
+    bounds: [1076, 426, 518, 304]
     stage:
       shot: hero
       chunk: true
@@ -169,7 +169,7 @@ training_steps:
     where: >-
       The last 10 % of episodes of each task are held out for the validation loss.
     shapes: "images 2 × V × 3 × 480 × 640 · state 2 × 6 · actions 2 × 100 × 6"
-    bounds: [30, 96, 540, 340]
+    bounds: [16, 106, 518, 398]
   - id: t-cvae
     title: CVAE encoder
     body: >-
@@ -181,7 +181,7 @@ training_steps:
       - '[\,\mu ;\ \log\sigma^2\,] = W_{\text{lat}}\, h_{\text{CLS}} \in \mathbb{R}^{64}'
     where: >-
       102 tokens of width 512; *W*<sub>lat</sub> is 512 → 64, split into two 32-vectors.
-    bounds: [590, 96, 780, 340]
+    bounds: [546, 106, 518, 398]
   - id: t-sample
     title: Reparameterize
     body: >-
@@ -190,7 +190,7 @@ training_steps:
     formulas:
       - 'z = \mu + \sigma \odot \varepsilon,\quad \varepsilon \sim \mathcal{N}(0, I),\quad \sigma = \exp\big(\tfrac{1}{2}\log\sigma^2\big)'
       - 'z_{\text{inference}} = 0'
-    bounds: [30, 446, 540, 324]
+    bounds: [1076, 106, 518, 398]
   - id: t-policy
     title: Policy forward pass
     body: >-
@@ -198,7 +198,7 @@ training_steps:
       network is the one in the Inference tab: ResNet18 tokens, four encoder layers and the one-layer decoder.
     formulas:
       - '\hat A = \pi_\theta(\tilde I, \tilde s, z) \in \mathbb{R}^{100 \times 6}'
-    bounds: [590, 446, 780, 324]
+    bounds: [16, 520, 518, 398]
   - id: t-loss
     title: L1 + KL loss
     body: >-
@@ -209,7 +209,7 @@ training_steps:
       - '\mathcal{L}_{\text{L1}} = \frac{\sum_{k, j} m_k \lvert \hat a_{kj} - \tilde a_{kj} \rvert}{6 \sum_k m_k}'
       - 'D_{\mathrm{KL}} = -\tfrac{1}{2} \sum_{d=1}^{32} \big(1 + \log\sigma_d^2 - \mu_d^2 - \sigma_d^2\big)'
       - '\mathcal{L} = \mathcal{L}_{\text{L1}} + 10\, D_{\mathrm{KL}}'
-    bounds: [30, 780, 640, 330]
+    bounds: [546, 520, 518, 398]
   - id: t-update
     title: Optimizer step
     body: >-
@@ -221,7 +221,7 @@ training_steps:
       - '\theta \leftarrow \operatorname{AdamW}(\theta, g;\ \eta = 10^{-5},\ \lambda = 10^{-4})'
     where: >-
       100,000 optimizer steps in total.
-    bounds: [690, 780, 680, 330]
+    bounds: [1076, 520, 518, 398]
 results:
   measured: false
   summary: >-
@@ -263,11 +263,11 @@ ACT predicts actions in chunks instead of one at a time. Predicting 100 steps at
 | Vision backbone  | ResNet18, ImageNet-1k weights, shared across cameras              |
 | Image tokens     | 1×1 conv to 512, 2D sine position embedding, 300 per 480×640 view |
 | Encoder          | 4 layers, d_model 512, 8 heads, FFN 3200, ReLU, post-norm         |
-| Decoder          | 1 layer, 100 learned queries                                      |
+| Decoder          | 1 layer, 100 learned queries (paper: 7, but its code used only 1) |
 | Action head      | Linear 512 → 6                                                    |
 | Latent           | 32-dimensional CVAE latent, KL weight 10                          |
 | Normalization    | mean / std for state and actions, ImageNet stats for images       |
-| Chunk / executed | 100 / 100 actions, no temporal ensembling                         |
+| Chunk / executed | 100 / 100 actions, no temporal ensembling (paper: ensembling on)  |
 
 ## Training
 

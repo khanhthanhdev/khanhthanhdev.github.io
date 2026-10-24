@@ -52,7 +52,7 @@ steps:
       *s*<sub>min</sub>, *s*<sub>max</sub> come from `stats_turbovla.json`; μ<sub>IN</sub>, σ<sub>IN</sub> are the
       per-channel ImageNet mean and standard deviation.
     shapes: "V = 2 or 3 views · state 6 in [-1, 1]"
-    bounds: [30, 96, 1340, 214]
+    bounds: [16, 106, 408, 304]
     stage:
       shot: front
       cams: true
@@ -71,7 +71,7 @@ steps:
       *W*<sub>1</sub> is 768 → 1024 (dropout 0.1 after the GELU), *W*<sub>2</sub> is 1024 → 256 and
       *W*<sub>skip</sub> is 768 → 256 without bias. *e*<sub>view</sub> is one learned 256-vector per camera.
     shapes: "V × 196 × 768 → V × 196 × 256 → 588 × 256 with 3 views"
-    bounds: [30, 330, 540, 450]
+    bounds: [424, 106, 408, 304]
     stage:
       shot: top
       cams: true
@@ -90,7 +90,7 @@ steps:
       *W*<sub>t</sub> is 768 → 256 with Xavier initialization; sentences are delimited by [CLS], [SEP], "." and "?".
       Padding tokens are also removed from the image-to-text attention.
     shapes: "L × 768 → Linear → L × 256"
-    bounds: [580, 330, 380, 450]
+    bounds: [832, 106, 408, 304]
     stage:
       shot: hero
       cams: false
@@ -112,7 +112,7 @@ steps:
       4 heads with *d*<sub>h</sub> = 256 (inner width 1024), DropPath 0.1. The text layer is post-norm with 4 heads and
       a 1024-wide ReLU feed-forward. After layer 6 the streams are concatenated.
     shapes: "(588 + L) × 256 → 6 × interaction → (588 + L) × 256"
-    bounds: [30, 790, 920, 570]
+    bounds: [1240, 106, 408, 304]
     stage:
       shot: side
       cams: true
@@ -128,7 +128,7 @@ steps:
     where: >-
       *W*<sub>a</sub> is 6 → 256 (dropout 0.1 after the GELU), *W*<sub>b</sub> is 256 → 512, reshaped to 2 × 256.
     shapes: "6 → 2 × 256 · memory (588 + L + 2) × 256"
-    bounds: [960, 330, 420, 450]
+    bounds: [16, 426, 408, 304]
     stage:
       shot: side
       joints: true
@@ -148,7 +148,7 @@ steps:
       The three updates repeat for each of the 3 layers. The MLP uses ReLU between its layers; there is no final
       LayerNorm after the last decoder layer.
     shapes: "16 queries × 256 → 3 decoder layers → MLP → tanh → 16 × 6"
-    bounds: [960, 790, 420, 570]
+    bounds: [424, 426, 408, 304]
     stage:
       shot: chunk
       chunk: true
@@ -163,7 +163,7 @@ steps:
       - 'a = \tfrac{1}{2}(\hat a + 1)\,(a_{\max} - a_{\min}) + a_{\min}'
       - '\Delta t_{\text{replan}} = 8 \times \tfrac{1}{30}\,\text{s} \approx 0.27\,\text{s}'
     shapes: "8 × 33 ms = 0.27 s between observations"
-    bounds: [30, 1380, 1340, 200]
+    bounds: [832, 426, 408, 304]
     stage:
       shot: hero
       chunk: true
@@ -192,7 +192,7 @@ training_steps:
       `--real-ratio 0.5` by default; `--no-sim` trains on the real set alone. Indices are drawn with replacement from a
       generator seeded the same on every GPU and then split by rank.
     shapes: "batch 16 per GPU · no gradient accumulation"
-    bounds: [30, 96, 620, 340]
+    bounds: [16, 106, 518, 398]
   - id: t-batch
     title: Collate and normalize
     body: >-
@@ -204,7 +204,7 @@ training_steps:
       - 'a_{\min} = \min\big(a_{\min}^{\text{sim}}, a_{\min}^{\text{real}}\big),\quad a_{\max} = \max\big(a_{\max}^{\text{sim}}, a_{\max}^{\text{real}}\big)'
       - 'm_k = 1 - \text{is\_pad}_k'
     shapes: "pixels B × V × 3 × 224 × 224 · state B × 6 · actions B × 16 × 6 · mask B × 16"
-    bounds: [670, 96, 700, 340]
+    bounds: [546, 106, 518, 398]
   - id: t-forward
     title: Forward pass
     body: >-
@@ -215,7 +215,7 @@ training_steps:
       - '\hat A = \pi_\theta\big(I, \ell, \tilde s\big) \in [-1, 1]^{16 \times 6}'
       - '\theta = \theta_{\text{DINOv3}} \cup \theta_{\text{proj}} \cup \theta_{\text{interaction}} \cup \theta_{\text{head}}'
     shapes: "â · B × 16 × 6"
-    bounds: [30, 446, 620, 324]
+    bounds: [1076, 106, 518, 398]
   - id: t-loss
     title: Masked L1 loss
     body: >-
@@ -228,7 +228,7 @@ training_steps:
     where: >-
       `--loss-type mse` or `smooth_l1` replace the absolute error with a squared or Huber error; the masking and the
       normalization stay the same.
-    bounds: [670, 446, 700, 324]
+    bounds: [16, 520, 518, 398]
   - id: t-update
     title: Optimizer step
     body: >-
@@ -241,7 +241,7 @@ training_steps:
       - 'p = \frac{u - 1000}{49\,000},\quad \eta_0 = 5 \times 10^{-5}'
     where: >-
       *u* counts optimizer updates. Weight decay is 10<sup>-10</sup>, effectively off.
-    bounds: [30, 780, 840, 330]
+    bounds: [546, 520, 518, 398]
   - id: t-ema
     title: Moving average and checkpoint
     body: >-
@@ -252,7 +252,7 @@ training_steps:
     formulas:
       - '\bar\theta \leftarrow 0.999\,\bar\theta + 0.001\,\theta'
       - '\text{averaging window} \approx \frac{1}{1 - 0.999} = 1000 \text{ updates}'
-    bounds: [890, 780, 480, 330]
+    bounds: [1076, 520, 518, 398]
 results:
   measured: false
   summary: >-
@@ -301,15 +301,15 @@ TurboVLA keeps ACT's idea of decoding a chunk of actions from learned queries, b
 
 The training script can mix two sources: scripted bowl-stacking demonstrations generated in the MuJoCo scene with domain randomization, and real teleoperated demonstrations. With `--real-ratio 0.5` a sampler draws each training sample from the real set with probability one half, so the smaller real set is not drowned out by simulation.
 
-| Setting        | Default in `train_turbovla.py`                                     |
-| -------------- | ------------------------------------------------------------------ |
-| Data           | sim + real, or either alone (`--no-sim` for real only)             |
-| Batch          | 16 per device, no accumulation                                     |
-| Optimizer      | AdamW, lr 5e-5 for the head, interaction and DINOv3                |
-| Schedule       | 1,000 warm-up steps, cosine to 5 %, 50,000 steps, save every 5,000 |
-| Loss           | L1 over non-padded chunk steps, optional `--gripper-loss-weight`   |
-| Stability      | gradient clipping at 1.0, EMA of weights with decay 0.999          |
-| Starting point | from scratch, or the released RoboTwin checkpoint                  |
+| Setting        | Default in `train_turbovla.py`                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| Data           | sim + real, or either alone (`--no-sim` for real only)                                             |
+| Batch          | 16 per device, no accumulation                                                                     |
+| Optimizer      | AdamW, lr 5e-5 for the head, interaction and DINOv3                                                |
+| Schedule       | 1,000 warm-up steps, cosine to 5 %, 50,000 steps, save every 5,000 (paper: constant after warm-up) |
+| Loss           | L1 over non-padded chunk steps, optional `--gripper-loss-weight`                                   |
+| Stability      | gradient clipping at 1.0, EMA of weights with decay 0.999                                          |
+| Starting point | from scratch, or the released RoboTwin checkpoint                                                  |
 
 <div class="rp-callout" markdown="1">
 **The checkpoint carries its own contract.** `config.json` stores the camera keys in order, the image size, the fps and the default task prompt, and `stats_turbovla.json` stores the min-max ranges. The rollout script reads both, so a checkpoint trained without the top camera is run without it.

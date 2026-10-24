@@ -1,337 +1,306 @@
-<svg viewBox="0 0 1400 1120" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="act-train-title act-train-desc">
-  <title id="act-train-title">ACT training as a conditional VAE</title>
-  <desc id="act-train-desc">A batch of real demonstrations gives images, the joint state and the next 100 actions; a CVAE encoder reads a learned class token, the state and the 100 actions and outputs the mean and log variance of a 32 dimensional latent; a sample z is drawn with the reparameterization trick; the ACT network from the Inference tab predicts the chunk with z as its first token; the loss is the masked L1 error plus ten times the KL divergence to a unit Gaussian; AdamW updates all weights at a constant learning rate.</desc>
+<svg viewBox="0 0 1610 958" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="act-train-title act-train-desc">
+  <title id="act-train-title">ACT training step</title>
+  <desc id="act-train-desc">A batch of recorded images, joint states and 100-step action chunks. A CVAE encoder reads the true actions and gives the mean and variance of a 32-dimensional style latent; z is sampled with the reparameterization trick and becomes the first token of the policy. The loss is the masked L1 error of the predicted chunk plus ten times the KL divergence; AdamW updates all weights at a constant learning rate.</desc>
   <defs>
-    <marker id="act-train-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+    <marker id="act-train-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
       <path class="ah" d="M0,1 L10,5 L0,9 z" />
     </marker>
-    <marker id="act-train-ah-a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
-      <path class="ah-a" d="M0,1 L10,5 L0,9 z" />
-    </marker>
   </defs>
-  <rect class="tick" x="40" y="33" width="4" height="23" />
-  <text class="h" x="58" y="53">ACT learns to rebuild the recorded chunk.</text>
-  <g class="legend" aria-hidden="true">
-    <rect class="op c-image" x="58" y="70" width="12" height="12" rx="2" />
-    <text class="cap" x="78" y="80">IMAGE</text>
-    <rect class="op c-state" x="154" y="70" width="12" height="12" rx="2" />
-    <text class="cap" x="174" y="80">JOINT STATE</text>
-    <rect class="op c-latent" x="307" y="70" width="12" height="12" rx="2" />
-    <text class="cap" x="327" y="80">STYLE LATENT</text>
-    <rect class="op-a" x="470" y="70" width="12" height="12" rx="2" />
-    <text class="cap" x="490" y="80">ACTIONS</text>
+  <rect class="tick" x="40" y="22" width="6" height="34" />
+  <text class="H" x="62" y="51">ACT learns to rebuild the recorded chunk.</text>
+  <g aria-hidden="true">
+    <rect class="op c-image" x="62" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="86" y="89">IMAGE</text>
+    <rect class="op c-state" x="173" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="197" y="89">JOINT STATE</text>
+    <rect class="op c-latent" x="347" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="371" y="89">STYLE LATENT</text>
+    <rect class="op-a" x="532" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="556" y="89">ACTIONS</text>
   </g>
   <g aria-hidden="true">
-    <rect class="badge" x="1256" y="34" width="104" height="24" rx="4" />
-    <text class="badge-t" x="1308" y="50" text-anchor="middle">SCHEMATIC</text>
+    <rect class="badge" x="1449" y="26" width="121" height="30" rx="5" />
+    <text class="C" x="1509.5" y="46" text-anchor="middle">SCHEMATIC</text>
   </g>
 
-  <!-- 1 data -->
+  <path class="ln" d="M510 315 H568" marker-end="url(#act-train-ah)" />
+  <path class="ln" d="M1040 315 H1098" marker-end="url(#act-train-ah)" />
+  <path class="ln" d="M1335.0 480 V506 H378 V562" marker-end="url(#act-train-ah)" />
+  <path class="ln" d="M510 729 H568" marker-end="url(#act-train-ah)" />
+  <path class="ln" d="M1040 729 H1098" marker-end="url(#act-train-ah)" />
+
   <g data-step="t-data">
-    <text class="lbl" x="40" y="112">1 · data</text>
+    <text class="CL" x="40" y="136">1 · data</text>
     <g>
-      <rect class="sk" x="40" y="124" width="520" height="300" rx="12" />
+      <rect class="sk" x="40" y="150" width="470" height="330" rx="10" />
     </g>
-    <text class="t" x="60" y="154">thanhkt/nexarm_stack_bowls</text>
-    <text class="s" x="60" y="174">real teleoperated demonstrations · last 10 % of episodes held out</text>
-    <rect class="op c-image" x="60" y="192" width="480" height="34" rx="5" />
-    <text class="o" x="74" y="214.0">images · V × 3 × 480 × 640 · ImageNet mean / std</text>
-    <rect class="op c-state" x="60" y="236" width="480" height="34" rx="5" />
-    <text class="o" x="74" y="258.0">state s · 6, mean / std</text>
-    <rect class="op-a" x="60" y="280" width="480" height="34" rx="5" />
-    <text class="o" x="74" y="302.0">actions a · 100 × 6, mean / std + action_is_pad</text>
-    <text class="m" x="60" y="352">batch 2 × gradient accumulation 8 = 16</text>
-    <text class="s" x="60" y="378">statistics come from the dataset, not the training split</text>
+    <text class="T" x="62" y="190">A batch of demonstrations</text>
+    <rect class="op c-image" x="62" y="218" width="426" height="46" rx="4" />
+    <text class="S" x="275" y="246" text-anchor="middle">images · V × 3 × 480 × 640</text>
+    <rect class="op c-state" x="62" y="276" width="426" height="46" rx="4" />
+    <text class="S" x="275" y="304" text-anchor="middle">joint state · 6</text>
+    <rect class="op-a" x="62" y="334" width="426" height="46" rx="4" />
+    <text class="S" x="275" y="362" text-anchor="middle">actions · 100 × 6, padded past the end</text>
+    <text class="Ms" x="62" y="414">thanhkt/nexarm_stack_bowls · last 10 % held out</text>
+    <text class="M" x="62" y="458">batch 2 × 8 accumulation = 16</text>
   </g>
-  <path class="ln" d="M560 270 H600" marker-end="url(#act-train-ah)" />
-
-  <!-- 2 cvae encoder -->
   <g data-step="t-cvae">
-    <text class="lbl" x="600" y="112">2 · CVAE encoder (training only)</text>
+    <text class="CL" x="570" y="136">2 · CVAE encoder · training only</text>
     <g>
-      <rect class="sk c-latent" x="600" y="124" width="760" height="300" rx="12" />
+      <rect class="sk c-latent" x="570" y="150" width="470" height="330" rx="10" />
     </g>
-    <text class="t" x="620" y="154">posterior over the style latent</text>
-    <text class="s" x="620" y="174">reads the true actions, so it is dropped at inference</text>
-    <rect class="op op-b" x="620" y="190" width="60" height="36" rx="4" />
-    <text class="sm" x="650" y="213" text-anchor="middle">CLS</text>
-    <rect class="op c-state" x="686" y="190" width="60" height="36" rx="4" />
-    <text class="i" x="716" y="213" text-anchor="middle">s</text>
-    <rect class="op-a" x="752" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="778" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="810" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="836" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="868" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="894" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="926" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="952" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="984" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="1010" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="1042" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="1068" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="1100" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="1126" y="213" text-anchor="middle">a</text>
-    <rect class="op-a" x="1158" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="1184" y="213" text-anchor="middle">a</text>
-    <rect class="sk f-cell" x="1216" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="1242" y="213" text-anchor="middle">a</text>
-    <rect class="sk f-cell" x="1274" y="190" width="52" height="36" rx="4" />
-    <text class="i" x="1300" y="213" text-anchor="middle">a…</text>
-    <text class="sm" x="620" y="246">learned CLS · Linear 6 → 512 for s and each a · + fixed 1D sine positions (102)</text>
-    <text class="sm" x="620" y="266">key-padding mask hides padded actions (grey)</text>
-    <rect class="op" x="620" y="280" width="720" height="34" rx="5" />
-    <text class="o" x="980.0" y="302.0" text-anchor="middle">4 encoder layers · d 512 · 8 heads · FFN 3200 · post-norm</text>
-    <path class="ln-t" d="M980 314 V330" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="620" y="330" width="720" height="34" rx="5" />
-    <text class="o" x="980.0" y="352.0" text-anchor="middle">CLS output → Linear 512 → 64 = [μ ; log σ²]</text>
-    <text class="m" x="620" y="400">μ, log σ² ∈ ℝ<tspan dy="-6" class="ss">32</tspan><tspan dy="6">​</tspan></text>
+    <text class="T" x="592" y="190">Encode the true chunk</text>
+    <rect class="op op-b" x="592" y="218" width="52" height="44" rx="4" />
+    <text class="Ms" x="618" y="245" text-anchor="middle">CLS</text>
+    <rect class="op c-state" x="650" y="218" width="40" height="44" rx="4" />
+    <text class="I" x="670" y="245" text-anchor="middle">s</text>
+    <rect class="op-a" x="696" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="712" y="245" text-anchor="middle">a</text>
+    <rect class="op-a" x="734" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="750" y="245" text-anchor="middle">a</text>
+    <rect class="op-a" x="772" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="788" y="245" text-anchor="middle">a</text>
+    <rect class="op-a" x="810" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="826" y="245" text-anchor="middle">a</text>
+    <rect class="op-a" x="848" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="864" y="245" text-anchor="middle">a</text>
+    <rect class="op-a" x="886" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="902" y="245" text-anchor="middle">a</text>
+    <rect class="op-a" x="924" y="218" width="32" height="44" rx="4" />
+    <text class="I" x="940" y="245" text-anchor="middle">a</text>
+    <rect class="sk f-cell" x="962" y="218" width="50" height="44" rx="4" />
+    <text class="Ms" x="987" y="245" text-anchor="middle">pad</text>
+    <path class="ln-t" d="M805 268 L805 298" marker-end="url(#act-train-ah)" />
+    <rect class="op" x="592" y="300" width="426" height="48" rx="4" />
+    <text class="S" x="805" y="329" text-anchor="middle">4 encoder layers · d 512</text>
+    <path class="ln-t" d="M805 350 L805 378" marker-end="url(#act-train-ah)" />
+    <rect class="op op-b c-latent" x="705" y="380" width="200" height="48" rx="4" />
+    <text class="S" x="805" y="409" text-anchor="middle">μ, log σ² · 32 each</text>
+    <text class="M" x="592" y="458">[CLS] output → Linear 512 → 64</text>
   </g>
-  <path class="ln" d="M980 424 V446 H300 V470" marker-end="url(#act-train-ah)" />
-
-  <!-- 3 sample -->
   <g data-step="t-sample">
-    <text class="lbl" x="40" y="462">3 · sample z</text>
+    <text class="CL" x="1100" y="136">3 · sample z</text>
     <g>
-      <rect class="sk f-note" x="40" y="474" width="520" height="286" rx="12" />
+      <rect class="sk" x="1100" y="150" width="470" height="330" rx="10" />
     </g>
-    <text class="t" x="60" y="504">reparameterization trick</text>
-    <text class="m" x="60" y="534">z = μ + exp(½ log σ²) ⊙ ε,  ε ~ N(0, I)</text>
-    <text class="s" x="60" y="558">gradients flow to μ and log σ² through z</text>
-    <path class="ln-t" d="M80 710 H520" />
-    <path class="ln-d" d="M80.0 709.5 L82.2 709.4 L84.4 709.4 L86.6 709.3 L88.8 709.3 L91.0 709.2 L93.2 709.1 L95.4 709.0 L97.6 708.9 L99.8 708.8 L102.0 708.7 L104.2 708.6 L106.4 708.5 L108.6 708.4 L110.8 708.2 L113.0 708.1 L115.2 707.9 L117.4 707.7 L119.6 707.5 L121.8 707.3 L124.0 707.1 L126.2 706.9 L128.4 706.6 L130.6 706.4 L132.8 706.1 L135.0 705.8 L137.2 705.4 L139.4 705.1 L141.6 704.7 L143.8 704.4 L146.0 704.0 L148.2 703.5 L150.4 703.1 L152.6 702.6 L154.8 702.1 L157.0 701.6 L159.2 701.1 L161.4 700.5 L163.6 699.9 L165.8 699.3 L168.0 698.6 L170.2 697.9 L172.4 697.2 L174.6 696.5 L176.8 695.7 L179.0 694.9 L181.2 694.1 L183.4 693.3 L185.6 692.4 L187.8 691.5 L190.0 690.5 L192.2 689.6 L194.4 688.6 L196.6 687.6 L198.8 686.5 L201.0 685.4 L203.2 684.4 L205.4 683.2 L207.6 682.1 L209.8 681.0 L212.0 679.8 L214.2 678.6 L216.4 677.4 L218.6 676.2 L220.8 674.9 L223.0 673.7 L225.2 672.5 L227.4 671.2 L229.6 670.0 L231.8 668.7 L234.0 667.5 L236.2 666.2 L238.4 665.0 L240.6 663.8 L242.8 662.6 L245.0 661.4 L247.2 660.2 L249.4 659.0 L251.6 657.9 L253.8 656.8 L256.0 655.7 L258.2 654.7 L260.4 653.7 L262.6 652.7 L264.8 651.8 L267.0 650.9 L269.2 650.0 L271.4 649.2 L273.6 648.5 L275.8 647.8 L278.0 647.1 L280.2 646.6 L282.4 646.0 L284.6 645.6 L286.8 645.2 L289.0 644.8 L291.2 644.5 L293.4 644.3 L295.6 644.1 L297.8 644.0 L300.0 644.0 L302.2 644.0 L304.4 644.1 L306.6 644.3 L308.8 644.5 L311.0 644.8 L313.2 645.2 L315.4 645.6 L317.6 646.0 L319.8 646.6 L322.0 647.1 L324.2 647.8 L326.4 648.5 L328.6 649.2 L330.8 650.0 L333.0 650.9 L335.2 651.8 L337.4 652.7 L339.6 653.7 L341.8 654.7 L344.0 655.7 L346.2 656.8 L348.4 657.9 L350.6 659.0 L352.8 660.2 L355.0 661.4 L357.2 662.6 L359.4 663.8 L361.6 665.0 L363.8 666.2 L366.0 667.5 L368.2 668.7 L370.4 670.0 L372.6 671.2 L374.8 672.5 L377.0 673.7 L379.2 674.9 L381.4 676.2 L383.6 677.4 L385.8 678.6 L388.0 679.8 L390.2 681.0 L392.4 682.1 L394.6 683.2 L396.8 684.4 L399.0 685.4 L401.2 686.5 L403.4 687.6 L405.6 688.6 L407.8 689.6 L410.0 690.5 L412.2 691.5 L414.4 692.4 L416.6 693.3 L418.8 694.1 L421.0 694.9 L423.2 695.7 L425.4 696.5 L427.6 697.2 L429.8 697.9 L432.0 698.6 L434.2 699.3 L436.4 699.9 L438.6 700.5 L440.8 701.1 L443.0 701.6 L445.2 702.1 L447.4 702.6 L449.6 703.1 L451.8 703.5 L454.0 704.0 L456.2 704.4 L458.4 704.7 L460.6 705.1 L462.8 705.4 L465.0 705.8 L467.2 706.1 L469.4 706.4 L471.6 706.6 L473.8 706.9 L476.0 707.1 L478.2 707.3 L480.4 707.5 L482.6 707.7 L484.8 707.9 L487.0 708.1 L489.2 708.2 L491.4 708.4 L493.6 708.5 L495.8 708.6 L498.0 708.7 L500.2 708.8 L502.4 708.9 L504.6 709.0 L506.8 709.1 L509.0 709.2 L511.2 709.3 L513.4 709.3 L515.6 709.4 L517.8 709.4 L520.0 709.5" />
-    <path class="ln-a s-latent draw" pathLength="1" d="M80.0 710.0 L82.2 710.0 L84.4 710.0 L86.6 710.0 L88.8 710.0 L91.0 710.0 L93.2 710.0 L95.4 710.0 L97.6 710.0 L99.8 710.0 L102.0 710.0 L104.2 710.0 L106.4 710.0 L108.6 710.0 L110.8 710.0 L113.0 710.0 L115.2 710.0 L117.4 710.0 L119.6 710.0 L121.8 710.0 L124.0 710.0 L126.2 710.0 L128.4 710.0 L130.6 710.0 L132.8 710.0 L135.0 710.0 L137.2 710.0 L139.4 710.0 L141.6 710.0 L143.8 710.0 L146.0 710.0 L148.2 710.0 L150.4 710.0 L152.6 710.0 L154.8 710.0 L157.0 710.0 L159.2 710.0 L161.4 710.0 L163.6 710.0 L165.8 710.0 L168.0 710.0 L170.2 710.0 L172.4 710.0 L174.6 710.0 L176.8 710.0 L179.0 710.0 L181.2 710.0 L183.4 710.0 L185.6 710.0 L187.8 710.0 L190.0 710.0 L192.2 710.0 L194.4 710.0 L196.6 710.0 L198.8 710.0 L201.0 710.0 L203.2 710.0 L205.4 710.0 L207.6 710.0 L209.8 710.0 L212.0 710.0 L214.2 710.0 L216.4 710.0 L218.6 710.0 L220.8 710.0 L223.0 710.0 L225.2 710.0 L227.4 710.0 L229.6 710.0 L231.8 710.0 L234.0 710.0 L236.2 709.9 L238.4 709.9 L240.6 709.9 L242.8 709.9 L245.0 709.8 L247.2 709.8 L249.4 709.7 L251.6 709.7 L253.8 709.6 L256.0 709.5 L258.2 709.3 L260.4 709.2 L262.6 708.9 L264.8 708.7 L267.0 708.4 L269.2 708.0 L271.4 707.6 L273.6 707.0 L275.8 706.4 L278.0 705.7 L280.2 704.8 L282.4 703.8 L284.6 702.7 L286.8 701.4 L289.0 699.9 L291.2 698.2 L293.4 696.2 L295.6 694.1 L297.8 691.7 L300.0 689.0 L302.2 686.1 L304.4 682.9 L306.6 679.5 L308.8 675.8 L311.0 671.8 L313.2 667.6 L315.4 663.2 L317.6 658.5 L319.8 653.7 L322.0 648.8 L324.2 643.8 L326.4 638.7 L328.6 633.6 L330.8 628.6 L333.0 623.6 L335.2 618.9 L337.4 614.4 L339.6 610.1 L341.8 606.2 L344.0 602.7 L346.2 599.7 L348.4 597.1 L350.6 595.1 L352.8 593.6 L355.0 592.7 L357.2 592.4 L359.4 592.7 L361.6 593.6 L363.8 595.1 L366.0 597.1 L368.2 599.7 L370.4 602.7 L372.6 606.2 L374.8 610.1 L377.0 614.4 L379.2 618.9 L381.4 623.6 L383.6 628.6 L385.8 633.6 L388.0 638.7 L390.2 643.8 L392.4 648.8 L394.6 653.7 L396.8 658.5 L399.0 663.2 L401.2 667.6 L403.4 671.8 L405.6 675.8 L407.8 679.5 L410.0 682.9 L412.2 686.1 L414.4 689.0 L416.6 691.7 L418.8 694.1 L421.0 696.2 L423.2 698.2 L425.4 699.9 L427.6 701.4 L429.8 702.7 L432.0 703.8 L434.2 704.8 L436.4 705.7 L438.6 706.4 L440.8 707.0 L443.0 707.6 L445.2 708.0 L447.4 708.4 L449.6 708.7 L451.8 708.9 L454.0 709.2 L456.2 709.3 L458.4 709.5 L460.6 709.6 L462.8 709.7 L465.0 709.7 L467.2 709.8 L469.4 709.8 L471.6 709.9 L473.8 709.9 L476.0 709.9 L478.2 709.9 L480.4 710.0 L482.6 710.0 L484.8 710.0 L487.0 710.0 L489.2 710.0 L491.4 710.0 L493.6 710.0 L495.8 710.0 L498.0 710.0 L500.2 710.0 L502.4 710.0 L504.6 710.0 L506.8 710.0 L509.0 710.0 L511.2 710.0 L513.4 710.0 L515.6 710.0 L517.8 710.0 L520.0 710.0" />
-    <text class="sm" x="240.0" y="636.0" text-anchor="end">prior N(0, 1)</text>
-    <text class="sm" x="389.2" y="606">q(z | s, a)</text>
-    <text class="s" x="60" y="744">one of 32 dimensions shown; at inference z = 0, the prior mean</text>
+    <text class="T" x="1122" y="190">Sample a style</text>
+    <path class="axis" d="M1122 388 H1548" />
+    <path class="ln-d" d="M1122.0 388.0 L1124.7 388.0 L1127.4 388.0 L1130.0 388.0 L1132.7 388.0 L1135.4 387.9 L1138.1 387.9 L1140.8 387.9 L1143.4 387.9 L1146.1 387.9 L1148.8 387.9 L1151.5 387.8 L1154.2 387.8 L1156.8 387.8 L1159.5 387.7 L1162.2 387.7 L1164.9 387.6 L1167.5 387.6 L1170.2 387.5 L1172.9 387.4 L1175.6 387.3 L1178.3 387.2 L1180.9 387.1 L1183.6 386.9 L1186.3 386.8 L1189.0 386.6 L1191.7 386.4 L1194.3 386.2 L1197.0 385.9 L1199.7 385.6 L1202.4 385.3 L1205.1 384.9 L1207.7 384.5 L1210.4 384.1 L1213.1 383.6 L1215.8 383.1 L1218.5 382.5 L1221.1 381.9 L1223.8 381.2 L1226.5 380.5 L1229.2 379.7 L1231.8 378.8 L1234.5 377.9 L1237.2 376.9 L1239.9 375.8 L1242.6 374.7 L1245.2 373.5 L1247.9 372.2 L1250.6 370.9 L1253.3 369.5 L1256.0 368.1 L1258.6 366.5 L1261.3 365.0 L1264.0 363.3 L1266.7 361.7 L1269.4 359.9 L1272.0 358.2 L1274.7 356.4 L1277.4 354.6 L1280.1 352.8 L1282.8 350.9 L1285.4 349.1 L1288.1 347.3 L1290.8 345.5 L1293.5 343.7 L1296.2 342.0 L1298.8 340.4 L1301.5 338.8 L1304.2 337.2 L1306.9 335.8 L1309.5 334.5 L1312.2 333.2 L1314.9 332.1 L1317.6 331.1 L1320.3 330.3 L1322.9 329.5 L1325.6 328.9 L1328.3 328.5 L1331.0 328.2 L1333.7 328.0 L1336.3 328.0 L1339.0 328.2 L1341.7 328.5 L1344.4 328.9 L1347.1 329.5 L1349.7 330.3 L1352.4 331.1 L1355.1 332.1 L1357.8 333.2 L1360.5 334.5 L1363.1 335.8 L1365.8 337.2 L1368.5 338.8 L1371.2 340.4 L1373.8 342.0 L1376.5 343.7 L1379.2 345.5 L1381.9 347.3 L1384.6 349.1 L1387.2 350.9 L1389.9 352.8 L1392.6 354.6 L1395.3 356.4 L1398.0 358.2 L1400.6 359.9 L1403.3 361.7 L1406.0 363.3 L1408.7 365.0 L1411.4 366.5 L1414.0 368.1 L1416.7 369.5 L1419.4 370.9 L1422.1 372.2 L1424.8 373.5 L1427.4 374.7 L1430.1 375.8 L1432.8 376.9 L1435.5 377.9 L1438.2 378.8 L1440.8 379.7 L1443.5 380.5 L1446.2 381.2 L1448.9 381.9 L1451.5 382.5 L1454.2 383.1 L1456.9 383.6 L1459.6 384.1 L1462.3 384.5 L1464.9 384.9 L1467.6 385.3 L1470.3 385.6 L1473.0 385.9 L1475.7 386.2 L1478.3 386.4 L1481.0 386.6 L1483.7 386.8 L1486.4 386.9 L1489.1 387.1 L1491.7 387.2 L1494.4 387.3 L1497.1 387.4 L1499.8 387.5 L1502.5 387.6 L1505.1 387.6 L1507.8 387.7 L1510.5 387.7 L1513.2 387.8 L1515.8 387.8 L1518.5 387.8 L1521.2 387.9 L1523.9 387.9 L1526.6 387.9 L1529.2 387.9 L1531.9 387.9 L1534.6 387.9 L1537.3 388.0 L1540.0 388.0 L1542.6 388.0 L1545.3 388.0 L1548.0 388.0" />
+    <path class="curve-b s-latent draw" pathLength="1" d="M1122.0 388.0 L1124.7 388.0 L1127.4 388.0 L1130.0 388.0 L1132.7 388.0 L1135.4 388.0 L1138.1 388.0 L1140.8 388.0 L1143.4 388.0 L1146.1 388.0 L1148.8 388.0 L1151.5 388.0 L1154.2 388.0 L1156.8 388.0 L1159.5 388.0 L1162.2 388.0 L1164.9 388.0 L1167.5 388.0 L1170.2 388.0 L1172.9 388.0 L1175.6 388.0 L1178.3 388.0 L1180.9 388.0 L1183.6 388.0 L1186.3 388.0 L1189.0 388.0 L1191.7 388.0 L1194.3 388.0 L1197.0 388.0 L1199.7 388.0 L1202.4 388.0 L1205.1 388.0 L1207.7 388.0 L1210.4 388.0 L1213.1 388.0 L1215.8 388.0 L1218.5 388.0 L1221.1 388.0 L1223.8 388.0 L1226.5 388.0 L1229.2 388.0 L1231.8 388.0 L1234.5 388.0 L1237.2 388.0 L1239.9 388.0 L1242.6 388.0 L1245.2 388.0 L1247.9 388.0 L1250.6 388.0 L1253.3 388.0 L1256.0 388.0 L1258.6 388.0 L1261.3 388.0 L1264.0 388.0 L1266.7 388.0 L1269.4 388.0 L1272.0 388.0 L1274.7 388.0 L1277.4 388.0 L1280.1 388.0 L1282.8 388.0 L1285.4 388.0 L1288.1 388.0 L1290.8 388.0 L1293.5 388.0 L1296.2 388.0 L1298.8 388.0 L1301.5 388.0 L1304.2 388.0 L1306.9 388.0 L1309.5 387.9 L1312.2 387.9 L1314.9 387.8 L1317.6 387.7 L1320.3 387.5 L1322.9 387.2 L1325.6 386.7 L1328.3 386.1 L1331.0 385.1 L1333.7 383.7 L1336.3 381.7 L1339.0 379.1 L1341.7 375.6 L1344.4 371.2 L1347.1 365.6 L1349.7 358.7 L1352.4 350.6 L1355.1 341.2 L1357.8 330.5 L1360.5 318.9 L1363.1 306.7 L1365.8 294.3 L1368.5 282.2 L1371.2 270.9 L1373.8 261.1 L1376.5 253.3 L1379.2 248.0 L1381.9 245.4 L1384.6 245.7 L1387.2 248.9 L1389.9 254.9 L1392.6 263.2 L1395.3 273.3 L1398.0 284.8 L1400.6 297.1 L1403.3 309.5 L1406.0 321.6 L1408.7 333.0 L1411.4 343.4 L1414.0 352.5 L1416.7 360.4 L1419.4 366.9 L1422.1 372.3 L1424.8 376.5 L1427.4 379.7 L1430.1 382.2 L1432.8 384.0 L1435.5 385.3 L1438.2 386.2 L1440.8 386.9 L1443.5 387.3 L1446.2 387.6 L1448.9 387.7 L1451.5 387.8 L1454.2 387.9 L1456.9 387.9 L1459.6 388.0 L1462.3 388.0 L1464.9 388.0 L1467.6 388.0 L1470.3 388.0 L1473.0 388.0 L1475.7 388.0 L1478.3 388.0 L1481.0 388.0 L1483.7 388.0 L1486.4 388.0 L1489.1 388.0 L1491.7 388.0 L1494.4 388.0 L1497.1 388.0 L1499.8 388.0 L1502.5 388.0 L1505.1 388.0 L1507.8 388.0 L1510.5 388.0 L1513.2 388.0 L1515.8 388.0 L1518.5 388.0 L1521.2 388.0 L1523.9 388.0 L1526.6 388.0 L1529.2 388.0 L1531.9 388.0 L1534.6 388.0 L1537.3 388.0 L1540.0 388.0 L1542.6 388.0 L1545.3 388.0 L1548.0 388.0" />
+    <text class="Ms" x="1207.2" y="328" text-anchor="middle">prior N(0, 1)</text>
+    <text class="Ms" x="1420.2" y="259.4">q(z | s, a)</text>
+    <text class="Ms" x="1122" y="414">one of 32 dimensions · at inference z = 0</text>
+    <text class="M" x="1122" y="458">z = μ + σ ⊙ ε,  ε ~ N(0, I)</text>
   </g>
-  <path class="ln" d="M560 616 H600" marker-end="url(#act-train-ah)" />
-
-  <!-- 4 policy -->
   <g data-step="t-policy">
-    <text class="lbl" x="600" y="462">4 · ACT network with z</text>
+    <text class="CL" x="40" y="550">4 · ACT network with z</text>
     <g>
-      <rect class="sk" x="600" y="474" width="760" height="286" rx="12" />
+      <rect class="sk" x="40" y="564" width="470" height="330" rx="10" />
     </g>
-    <text class="t" x="620" y="504">the network from the Inference tab</text>
-    <text class="s" x="620" y="524">z replaces the zero latent as the first encoder token</text>
-    <rect class="op c-image" x="620" y="548" width="150" height="64" rx="5" />
-    <text class="o" x="695.0" y="577.0" text-anchor="middle">ResNet18</text>
-    <text class="sm" x="695.0" y="595.0" text-anchor="middle">× V cameras</text>
-    <path class="ln-t" d="M770 580 H800" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="800" y="548" width="190" height="64" rx="5" />
-    <text class="o" x="895.0" y="577.0" text-anchor="middle">encoder × 4</text>
-    <text class="sm" x="895.0" y="595.0" text-anchor="middle">[z, s, 300V image]</text>
-    <path class="ln-t" d="M990 580 H1020" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="1020" y="548" width="150" height="64" rx="5" />
-    <text class="o" x="1095.0" y="577.0" text-anchor="middle">decoder × 1</text>
-    <text class="sm" x="1095.0" y="595.0" text-anchor="middle">100 queries</text>
-    <path class="ln-t" d="M1170 580 H1200" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="1200" y="548" width="140" height="64" rx="5" />
-    <text class="o" x="1270.0" y="577.0" text-anchor="middle">Linear 512→6</text>
-    <text class="sm" x="1270.0" y="595.0" text-anchor="middle">â · 100 × 6</text>
-    <text class="s" x="620" y="680">dropout 0.1 everywhere · ImageNet-initialized backbone, BatchNorm frozen</text>
-    <text class="s" x="620" y="704">lr 1e-5 for the backbone and for the rest (two parameter groups)</text>
+    <text class="T" x="62" y="604">The policy, given z</text>
+    <rect class="op op-b c-latent" x="62" y="642" width="44" height="48" rx="4" />
+    <text class="I" x="84" y="671" text-anchor="middle">z</text>
+    <text class="CLs" x="62" y="710">FIRST TOKEN</text>
+    <path class="ln-t" d="M106 666 L122 666" marker-end="url(#act-train-ah)" />
+    <rect class="op c-image" x="124" y="642" width="110" height="48" rx="4" />
+    <text class="S" x="179" y="671" text-anchor="middle">ResNet18</text>
+    <path class="ln-t" d="M234 666 L248 666" marker-end="url(#act-train-ah)" />
+    <rect class="op" x="252" y="642" width="110" height="48" rx="4" />
+    <text class="S" x="307" y="671" text-anchor="middle">encoder ×4</text>
+    <path class="ln-t" d="M362 666 L376 666" marker-end="url(#act-train-ah)" />
+    <rect class="op" x="380" y="642" width="110" height="48" rx="4" />
+    <text class="S" x="435" y="671" text-anchor="middle">decoder ×1</text>
+    <path class="ln-t" d="M433 690 L433 724" marker-end="url(#act-train-ah)" />
+    <rect class="op-a" x="388" y="728" width="13" height="13" rx="0" />
+    <rect class="op-a" x="403" y="728" width="13" height="13" rx="0" />
+    <rect class="op-a" x="418" y="728" width="13" height="13" rx="0" />
+    <rect class="op-a" x="433" y="728" width="13" height="13" rx="0" />
+    <rect class="op-a" x="448" y="728" width="13" height="13" rx="0" />
+    <rect class="op-a" x="463" y="728" width="13" height="13" rx="0" />
+    <rect class="op-a" x="388" y="743" width="13" height="13" rx="0" />
+    <rect class="op-a" x="403" y="743" width="13" height="13" rx="0" />
+    <rect class="op-a" x="418" y="743" width="13" height="13" rx="0" />
+    <rect class="op-a" x="433" y="743" width="13" height="13" rx="0" />
+    <rect class="op-a" x="448" y="743" width="13" height="13" rx="0" />
+    <rect class="op-a" x="463" y="743" width="13" height="13" rx="0" />
+    <rect class="op-a" x="388" y="758" width="13" height="13" rx="0" />
+    <rect class="op-a" x="403" y="758" width="13" height="13" rx="0" />
+    <rect class="op-a" x="418" y="758" width="13" height="13" rx="0" />
+    <rect class="op-a" x="433" y="758" width="13" height="13" rx="0" />
+    <rect class="op-a" x="448" y="758" width="13" height="13" rx="0" />
+    <rect class="op-a" x="463" y="758" width="13" height="13" rx="0" />
+    <text class="Ms" x="378" y="756" text-anchor="end">â · 100 × 6</text>
+    <text class="Ms" x="62" y="828">the network from the Inference tab</text>
+    <text class="M" x="62" y="872">z replaces the zero latent</text>
   </g>
-  <path class="ln" d="M980 760 V782 H340 V804" marker-end="url(#act-train-ah)" />
-
-  <!-- 5 loss -->
   <g data-step="t-loss">
-    <text class="lbl" x="40" y="796">5 · loss</text>
+    <text class="CL" x="570" y="550">5 · loss</text>
     <g>
-      <rect class="sk" x="40" y="808" width="620" height="290" rx="12" />
+      <rect class="sk" x="570" y="564" width="470" height="330" rx="10" />
     </g>
-    <text class="t" x="60" y="838">masked L1 + β · KL, β = 10</text>
-    <rect class="op" x="100" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="121" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="142" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="163" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="184" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="205" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="226" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="247" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="268" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="289" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="310" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="331" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="352" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="373" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="394" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="415" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="436" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="457" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="478" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="499" y="856" width="19" height="16" rx="2" />
-    <rect class="op" x="520" y="856" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="541" y="856" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="562" y="856" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="583" y="856" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="604" y="856" width="19" height="16" rx="2" />
-    <text class="sm" x="92" y="869" text-anchor="end">j1</text>
-    <rect class="op" x="100" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="121" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="142" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="163" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="184" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="205" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="226" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="247" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="268" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="289" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="310" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="331" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="352" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="373" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="394" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="415" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="436" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="457" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="478" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="499" y="874" width="19" height="16" rx="2" />
-    <rect class="op" x="520" y="874" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="541" y="874" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="562" y="874" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="583" y="874" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="604" y="874" width="19" height="16" rx="2" />
-    <text class="sm" x="92" y="887" text-anchor="end">j2</text>
-    <rect class="op" x="100" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="121" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="142" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="163" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="184" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="205" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="226" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="247" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="268" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="289" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="310" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="331" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="352" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="373" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="394" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="415" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="436" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="457" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="478" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="499" y="892" width="19" height="16" rx="2" />
-    <rect class="op" x="520" y="892" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="541" y="892" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="562" y="892" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="583" y="892" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="604" y="892" width="19" height="16" rx="2" />
-    <text class="sm" x="92" y="905" text-anchor="end">j3</text>
-    <rect class="op" x="100" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="121" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="142" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="163" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="184" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="205" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="226" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="247" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="268" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="289" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="310" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="331" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="352" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="373" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="394" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="415" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="436" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="457" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="478" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="499" y="910" width="19" height="16" rx="2" />
-    <rect class="op" x="520" y="910" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="541" y="910" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="562" y="910" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="583" y="910" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="604" y="910" width="19" height="16" rx="2" />
-    <text class="sm" x="92" y="923" text-anchor="end">j4</text>
-    <rect class="op" x="100" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="121" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="142" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="163" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="184" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="205" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="226" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="247" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="268" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="289" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="310" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="331" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="352" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="373" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="394" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="415" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="436" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="457" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="478" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="499" y="928" width="19" height="16" rx="2" />
-    <rect class="op" x="520" y="928" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="541" y="928" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="562" y="928" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="583" y="928" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="604" y="928" width="19" height="16" rx="2" />
-    <text class="sm" x="92" y="941" text-anchor="end">j5</text>
-    <rect class="op" x="100" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="121" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="142" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="163" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="184" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="205" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="226" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="247" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="268" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="289" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="310" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="331" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="352" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="373" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="394" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="415" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="436" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="457" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="478" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="499" y="946" width="19" height="16" rx="2" />
-    <rect class="op" x="520" y="946" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="541" y="946" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="562" y="946" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="583" y="946" width="19" height="16" rx="2" />
-    <rect class="sk f-cell" x="604" y="946" width="19" height="16" rx="2" />
-    <text class="sm" x="92" y="959" text-anchor="end">grip</text>
-    <text class="sm" x="100" y="984">|â − a| over 100 steps (every 4th drawn), padded steps masked</text>
-    <text class="m" x="60" y="1024">L1 = Σ mask · |â − a| / (6 · valid steps)</text>
-    <text class="m" x="60" y="1050">KL = −½ Σ<tspan dy="4" class="ss">j</tspan><tspan dy="-4">​</tspan> (1 + log σ<tspan dy="4" class="ss">j</tspan><tspan dy="-4">​</tspan>² − μ<tspan dy="4" class="ss">j</tspan><tspan dy="-4">​</tspan>² − σ<tspan dy="4" class="ss">j</tspan><tspan dy="-4">​</tspan>²), mean over batch</text>
-    <text class="s" x="60" y="1078">the KL keeps q(z | s, a) near N(0, I), so z = 0 is a typical style</text>
+    <text class="T" x="592" y="604">Rebuild the chunk</text>
+    <text class="Ms" x="622" y="648" text-anchor="end">j1</text>
+    <rect class="op" x="632" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 36%, var(--sw-paper))" />
+    <rect class="op" x="649" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 43%, var(--sw-paper))" />
+    <rect class="op" x="666" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 13%, var(--sw-paper))" />
+    <rect class="op" x="683" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 15%, var(--sw-paper))" />
+    <rect class="op" x="700" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 14%, var(--sw-paper))" />
+    <rect class="op" x="717" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="734" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 36%, var(--sw-paper))" />
+    <rect class="op" x="751" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="768" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 20%, var(--sw-paper))" />
+    <rect class="op" x="785" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 48%, var(--sw-paper))" />
+    <rect class="op" x="802" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="819" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="836" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="853" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 17%, var(--sw-paper))" />
+    <rect class="op" x="870" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 22%, var(--sw-paper))" />
+    <rect class="op" x="887" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 13%, var(--sw-paper))" />
+    <rect class="op" x="904" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 14%, var(--sw-paper))" />
+    <rect class="op" x="921" y="632" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="sk f-cell" x="938" y="632" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="955" y="632" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="972" y="632" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="989" y="632" width="15" height="20" rx="1" />
+    <text class="Ms" x="622" y="672" text-anchor="end">j2</text>
+    <rect class="op" x="632" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 21%, var(--sw-paper))" />
+    <rect class="op" x="649" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 10%, var(--sw-paper))" />
+    <rect class="op" x="666" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 8%, var(--sw-paper))" />
+    <rect class="op" x="683" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 29%, var(--sw-paper))" />
+    <rect class="op" x="700" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 15%, var(--sw-paper))" />
+    <rect class="op" x="717" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 15%, var(--sw-paper))" />
+    <rect class="op" x="734" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 10%, var(--sw-paper))" />
+    <rect class="op" x="751" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 15%, var(--sw-paper))" />
+    <rect class="op" x="768" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 35%, var(--sw-paper))" />
+    <rect class="op" x="785" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="802" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="819" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 22%, var(--sw-paper))" />
+    <rect class="op" x="836" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 20%, var(--sw-paper))" />
+    <rect class="op" x="853" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="870" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 20%, var(--sw-paper))" />
+    <rect class="op" x="887" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="op" x="904" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 9%, var(--sw-paper))" />
+    <rect class="op" x="921" y="656" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 17%, var(--sw-paper))" />
+    <rect class="sk f-cell" x="938" y="656" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="955" y="656" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="972" y="656" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="989" y="656" width="15" height="20" rx="1" />
+    <text class="Ms" x="622" y="696" text-anchor="end">j3</text>
+    <rect class="op" x="632" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 47%, var(--sw-paper))" />
+    <rect class="op" x="649" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 22%, var(--sw-paper))" />
+    <rect class="op" x="666" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 21%, var(--sw-paper))" />
+    <rect class="op" x="683" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 31%, var(--sw-paper))" />
+    <rect class="op" x="700" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="717" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 17%, var(--sw-paper))" />
+    <rect class="op" x="734" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 14%, var(--sw-paper))" />
+    <rect class="op" x="751" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 23%, var(--sw-paper))" />
+    <rect class="op" x="768" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 8%, var(--sw-paper))" />
+    <rect class="op" x="785" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 8%, var(--sw-paper))" />
+    <rect class="op" x="802" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 27%, var(--sw-paper))" />
+    <rect class="op" x="819" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper))" />
+    <rect class="op" x="836" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 10%, var(--sw-paper))" />
+    <rect class="op" x="853" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 23%, var(--sw-paper))" />
+    <rect class="op" x="870" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 10%, var(--sw-paper))" />
+    <rect class="op" x="887" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 20%, var(--sw-paper))" />
+    <rect class="op" x="904" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="op" x="921" y="680" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="sk f-cell" x="938" y="680" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="955" y="680" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="972" y="680" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="989" y="680" width="15" height="20" rx="1" />
+    <text class="Ms" x="622" y="720" text-anchor="end">j4</text>
+    <rect class="op" x="632" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="649" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper))" />
+    <rect class="op" x="666" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="683" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 42%, var(--sw-paper))" />
+    <rect class="op" x="700" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 17%, var(--sw-paper))" />
+    <rect class="op" x="717" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 14%, var(--sw-paper))" />
+    <rect class="op" x="734" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 30%, var(--sw-paper))" />
+    <rect class="op" x="751" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 8%, var(--sw-paper))" />
+    <rect class="op" x="768" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 21%, var(--sw-paper))" />
+    <rect class="op" x="785" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper))" />
+    <rect class="op" x="802" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 36%, var(--sw-paper))" />
+    <rect class="op" x="819" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 20%, var(--sw-paper))" />
+    <rect class="op" x="836" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 17%, var(--sw-paper))" />
+    <rect class="op" x="853" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 24%, var(--sw-paper))" />
+    <rect class="op" x="870" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 38%, var(--sw-paper))" />
+    <rect class="op" x="887" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 14%, var(--sw-paper))" />
+    <rect class="op" x="904" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="921" y="704" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="sk f-cell" x="938" y="704" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="955" y="704" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="972" y="704" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="989" y="704" width="15" height="20" rx="1" />
+    <text class="Ms" x="622" y="744" text-anchor="end">j5</text>
+    <rect class="op" x="632" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 30%, var(--sw-paper))" />
+    <rect class="op" x="649" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 24%, var(--sw-paper))" />
+    <rect class="op" x="666" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="683" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 22%, var(--sw-paper))" />
+    <rect class="op" x="700" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 27%, var(--sw-paper))" />
+    <rect class="op" x="717" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 8%, var(--sw-paper))" />
+    <rect class="op" x="734" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 13%, var(--sw-paper))" />
+    <rect class="op" x="751" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 32%, var(--sw-paper))" />
+    <rect class="op" x="768" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 31%, var(--sw-paper))" />
+    <rect class="op" x="785" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper))" />
+    <rect class="op" x="802" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper))" />
+    <rect class="op" x="819" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 23%, var(--sw-paper))" />
+    <rect class="op" x="836" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="853" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="op" x="870" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 19%, var(--sw-paper))" />
+    <rect class="op" x="887" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 19%, var(--sw-paper))" />
+    <rect class="op" x="904" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 27%, var(--sw-paper))" />
+    <rect class="op" x="921" y="728" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 28%, var(--sw-paper))" />
+    <rect class="sk f-cell" x="938" y="728" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="955" y="728" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="972" y="728" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="989" y="728" width="15" height="20" rx="1" />
+    <text class="Ms" x="622" y="768" text-anchor="end">grip</text>
+    <rect class="op" x="632" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="op" x="649" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="666" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="683" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 16%, var(--sw-paper))" />
+    <rect class="op" x="700" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 25%, var(--sw-paper))" />
+    <rect class="op" x="717" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 32%, var(--sw-paper))" />
+    <rect class="op" x="734" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 8%, var(--sw-paper))" />
+    <rect class="op" x="751" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 24%, var(--sw-paper))" />
+    <rect class="op" x="768" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-paper))" />
+    <rect class="op" x="785" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="802" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="819" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 12%, var(--sw-paper))" />
+    <rect class="op" x="836" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 11%, var(--sw-paper))" />
+    <rect class="op" x="853" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 19%, var(--sw-paper))" />
+    <rect class="op" x="870" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 19%, var(--sw-paper))" />
+    <rect class="op" x="887" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 9%, var(--sw-paper))" />
+    <rect class="op" x="904" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 9%, var(--sw-paper))" />
+    <rect class="op" x="921" y="752" width="15" height="20" rx="1" style="fill: color-mix(in srgb, var(--sw-accent) 15%, var(--sw-paper))" />
+    <rect class="sk f-cell" x="938" y="752" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="955" y="752" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="972" y="752" width="15" height="20" rx="1" />
+    <rect class="sk f-cell" x="989" y="752" width="15" height="20" rx="1" />
+    <text class="Ms" x="632" y="794">darker = larger |â − a| · grey = padded</text>
+    <text class="Ms" x="592" y="828">+ KL(q ‖ N(0, I)) summed over 32 dims</text>
+    <text class="M" x="592" y="872">L1 + 10 · KL</text>
   </g>
-  <path class="ln" d="M660 952 H700" marker-end="url(#act-train-ah)" />
-
-  <!-- 6 update -->
   <g data-step="t-update">
-    <text class="lbl" x="700" y="796">6 · optimizer step</text>
+    <text class="CL" x="1100" y="550">6 · optimizer step</text>
     <g>
-      <rect class="sk" x="700" y="808" width="660" height="290" rx="12" />
+      <rect class="sk" x="1100" y="564" width="470" height="330" rx="10" />
     </g>
-    <rect class="op" x="720" y="828" width="140" height="44" rx="5" />
-    <text class="o" x="790.0" y="855.0" text-anchor="middle">backward × 8</text>
-    <path class="ln-t" d="M860 850 H878" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="878" y="828" width="150" height="44" rx="5" />
-    <text class="o" x="953.0" y="855.0" text-anchor="middle">clip ‖g‖ ≤ 10</text>
-    <path class="ln-t" d="M1028 850 H1046" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="1046" y="828" width="140" height="44" rx="5" />
-    <text class="o" x="1116.0" y="855.0" text-anchor="middle">AdamW step</text>
-    <path class="ln-t" d="M1186 850 H1204" marker-end="url(#act-train-ah)" />
-    <rect class="op" x="1204" y="828" width="136" height="44" rx="5" />
-    <text class="o" x="1272.0" y="855.0" text-anchor="middle">zero grad</text>
-    <text class="o" x="720" y="904">AdamW · lr 1e-5 · weight decay 1e-4</text>
-    <text class="s" x="720" y="926">no scheduler: the rate stays constant</text>
-    <path class="ln-t" d="M760 950 V1020 H1060" />
-    <text class="sm" x="1060" y="1038" text-anchor="end">step 100k</text>
-    <text class="sm" x="754" y="954" text-anchor="end">lr</text>
-    <path class="ln-a" d="M760 962 H1060" />
-    <text class="sm" x="1090" y="966">1e-5</text>
-    <text class="s" x="720" y="1052">100,000 steps · checkpoint and held-out L1 every 5,000</text>
-    <text class="s" x="720" y="1074">held-out L1 does not measure stacking success</text>
+    <text class="T" x="1122" y="604">Update every weight</text>
+    <rect class="op" x="1122" y="632" width="150" height="44" rx="4" />
+    <text class="S" x="1197" y="659" text-anchor="middle">backward × 8</text>
+    <path class="ln-t" d="M1272 654 L1290 654" marker-end="url(#act-train-ah)" />
+    <rect class="op" x="1294" y="632" width="110" height="44" rx="4" />
+    <text class="S" x="1349" y="659" text-anchor="middle">clip 10</text>
+    <path class="ln-t" d="M1404 654 L1422 654" marker-end="url(#act-train-ah)" />
+    <rect class="op" x="1426" y="632" width="110" height="44" rx="4" />
+    <text class="S" x="1481" y="659" text-anchor="middle">AdamW</text>
+    <path class="axis" d="M1152 712 V802 H1548" />
+    <path class="curve-b" d="M1152 734 H1548" />
+    <text class="Ms" x="1144" y="738" text-anchor="end">lr</text>
+    <text class="Ms" x="1548" y="726" text-anchor="end">1e-5, constant</text>
+    <text class="Ms" x="1548" y="822" text-anchor="end">step 100k</text>
+    <text class="M" x="1122" y="872">weight decay 1e-4 · no schedule</text>
   </g>
-  <path class="ln-d" d="M1360 952 H1384 V96 H300 V122" marker-end="url(#act-train-ah)" />
-  <text class="sm" x="1376" y="540" text-anchor="end" transform="rotate(-90 1376 540)">next batch</text>
-  <text class="lbl" x="40" y="1112">source · lerobot train, ACT preset · 100,000 steps · click a block or use the arrow keys</text>
+  <text class="CL" x="40" y="934">source · lerobot train, ACT preset · 100,000 steps · click a block or use the arrow keys</text>
 </svg>

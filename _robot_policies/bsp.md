@@ -2,8 +2,8 @@
 layout: robot-policy
 title: B-spline Policy on the NexArm
 model_name: BSP
-full_name: B-spline Policy, ACT with a B-spline action head
-description: The ACT network with a different output. Instead of 16 actions it predicts 16 knots and control points of a cubic B-spline, which the controller samples at 100 Hz and can run several times faster.
+full_name: B-spline Policy, Diffusion Policy with B-spline actions
+description: A Diffusion Policy that denoises the knots and control points of a cubic B-spline instead of a list of actions; the controller samples the curve at 100 Hz and can run it several times faster.
 order: 3
 policy:
   horizon: 100
@@ -19,26 +19,27 @@ facts:
   - label: control rate
     value: 100 Hz
   - label: output per segment
-    value: 16 × 7
+    value: 16 × (1 + D)
   - label: fit tolerance ε
     value: "0.002"
 steps:
   - id: overview
     title: One control cycle
     body: >-
-      B-spline Policy (BSP) keeps the network from the ACT page and changes what comes out of it. Instead of a list of
-      future joint targets, the head predicts the **parameters of a curve**: 16 knots and their control points, which
-      define one cubic B-spline segment. The controller samples that curve at 100 Hz. It can also move along it
-      *n* times faster, and when the next segment arrives it is joined at the point that matches where the arm actually
-      is. This page follows the paper's "Reg.+BSP" setup, the ACT-style variant; it has not been trained on the NexArm
-      yet.
+      B-spline Policy (BSP) keeps a standard Diffusion Policy and changes what it generates. Instead of a list of future
+      joint targets, it denoises the **parameters of a curve**: 16 knots and their control points, which define one
+      cubic B-spline segment. The controller samples that curve at 100 Hz. It can also move along it *n* times faster,
+      and when the next segment arrives it is joined at the point that matches where the arm actually is. This page
+      follows the "Diff.+BSP" variant, the one implemented in the released code and in our `bspline-policy` fork; it has
+      not been trained on the NexArm yet.
     formulas:
-      - '[\hat U ;\ \hat C] = \pi_\theta\big(I_t^{1..V},\ s_t\big) \in \mathbb{R}^{16 \times (1 + 6)}'
+      - '[\hat U ;\ \hat C] \sim \pi_\theta\big(\cdot \mid o_{t-1},\ o_t\big),\qquad [\hat U ;\ \hat C] \in \mathbb{R}^{16 \times (1 + D)}'
       - 'a(u) = \sum_i N_{i,3}(u)\, c_i'
     where: >-
-      Û are 16 knot values and Ĉ the matching control points, one six-number joint target each. *N*<sub>i,3</sub> are
-      the cubic B-spline basis functions those knots define.
-    shapes: "images V × 3×H×W · state 6 → segment 16 × (1 knot + 6)"
+      *o* is one observation (camera frames and joint state); the policy sees the last two. Column 0 holds the 16 knots
+      Û, the other *D* columns the control points Ĉ (*D* = 6 on the NexArm). *N*<sub>i,3</sub> are the cubic
+      B-spline basis functions those knots define.
+    shapes: "2 observations → segment 16 × (1 knot + D)"
     stage:
       shot: hero
       cams: true
@@ -46,35 +47,36 @@ steps:
   - id: observe
     title: Observe
     body: >-
-      The inputs are the same as for ACT: one frame per camera and the six-number joint state. The paper uses absolute
-      joint positions as actions on its real arms, which matches the NexArm's joint-target interface. Two clocks run at
-      once. The policy produces a new segment about 10 times a second, and the controller sends a command 100 times a
+      The policy reads the last two observations, each with every camera frame and the joint state, as Diffusion Policy
+      does. The paper uses absolute joint positions as actions on its real arms, which matches the NexArm's joint-target
+      interface. Two clocks run at once. The policy produces a new segment about 10 times a second, and the controller sends a command 100 times a
       second by sampling the current segment.
     formulas:
       - 'f_{\text{policy}} = 10\ \text{Hz},\qquad f_{\text{control}} = 100\ \text{Hz}'
     where: >-
-      The next segment is inferred asynchronously while the arm is still running the current one.
-    shapes: "observation.images.* · observation.state 6"
-    bounds: [30, 96, 1340, 214]
+      The next segment is inferred asynchronously while the arm is still running the current one. The paper samples at
+      100 Hz; the released rollout script defaults to 200 Hz.
+    shapes: "n_obs_steps 2 · images 84×84, random 76×76 crops · state"
+    bounds: [16, 106, 518, 304]
     stage:
       shot: front
       cams: true
       frustums: true
   - id: network
-    title: ACT-style network
+    title: Diffusion Policy
     body: >-
-      The backbone is a regression transformer like the one on the ACT page. In the paper's real-robot runs the image
-      encoder is DINOv2. The head now outputs 16 knot values and their 6-D control points instead of 16 actions. The
-      paper does not say how this maps onto the query slots; the figure shows one natural layout, one knot and one
-      control point per slot. Either way the output is a fixed-size tensor, so a chunking backbone can take it with
-      little change.
+      The network is Diffusion Policy's: a ResNet18 encoder with GroupNorm turns the images into a feature vector, which
+      together with the joint state conditions a 1-D temporal UNet through FiLM. Starting from pure noise, the UNet
+      removes noise from a 16-row matrix in 16 DDIM steps. The only change BSP makes is one extra channel: column 0 of
+      every row is a knot, the other columns are a control point.
     formulas:
-      - '\hat y_k = W_{\text{out}}\, q_k \in \mathbb{R}^{7},\qquad k = 1, \dots, 16'
-      - '[\hat u_k ;\ \hat c_k] = \hat y_k'
+      - 'x^{K} \sim \mathcal{N}(0, I),\qquad x^{k-1} = \operatorname{DDIM}\big(x^{k},\ \epsilon_\theta(x^{k}, k, o)\big)'
+      - 'x^{0} = [\hat U ;\ \hat C] \in \mathbb{R}^{16 \times (1 + D)}'
     where: >-
-      *q*<sub>k</sub> is the decoder output for slot *k*; the first number is the knot, the other six the control point.
-    shapes: "16 query slots → Linear → 16 × 7"
-    bounds: [30, 330, 540, 450]
+      ε<sub>θ</sub> is the UNet (down dims 256, 512, 1024; kernel 5) predicting the added noise; *K* = 16 inference
+      steps of a 100-step squared-cosine schedule.
+    shapes: "obs features → UNet × 16 steps → 16 × (1 + D)"
+    bounds: [546, 106, 518, 304]
     stage:
       shot: top
       cams: true
@@ -82,17 +84,17 @@ steps:
     title: Knots and control points
     body: >-
       The knots set *where in time* each piece of the curve begins and ends, and they do not have to be evenly spaced.
-      The control points set *where the curve goes*: it follows them without passing through them. A cubic segment needs
-      neighbouring knots for support, and 6 of the 16 are boundary-support knots; the inner ones bound the part that
-      runs. The paper gives only the total, so the figure draws them as 3 on each side, the usual split for a cubic. A regressor does not guarantee ordered knots, so any knot that would go backwards is pushed just past
-      its neighbour.
+      The control points set *where the curve goes*: it follows them without passing through them. A segment is a chunk
+      of 10 knots plus 3 boundary-support knots on each side, 16 rows in all. A cubic spline over 16 knots has 12
+      control points, so the decoder uses the first 12 rows' control points and ignores the last 4. Nothing forces the
+      generated knots to be ordered, so any knot that would go backwards is pushed just past its neighbour.
     formulas:
       - 'u_i \leftarrow \max(u_i,\ u_{i-1} + \delta)'
     where: >-
       δ is a small positive constant. In practice the paper finds that predicted knots are almost always in order
       already.
-    shapes: "U 16 non-decreasing · C 16 × 6"
-    bounds: [580, 330, 800, 450]
+    shapes: "chunk 10 + 2 × 3 support = 16 knots · 12 control points used"
+    bounds: [1076, 106, 518, 304]
     stage:
       shot: chunk
       chunk: true
@@ -109,7 +111,7 @@ steps:
     where: >-
       The Cox–de Boor recursion, with *p* = 3. *N*<sub>i,3</sub> is zero outside [*u*<sub>i</sub>, *u*<sub>i+4</sub>).
     shapes: "a(u) ∈ ℝ⁶ for any u in the segment"
-    bounds: [30, 790, 920, 570]
+    bounds: [16, 426, 518, 304]
     stage:
       shot: side
       joints: true
@@ -125,7 +127,7 @@ steps:
     where: >-
       *n* is the speedup factor and *t* is real time since the segment started.
     shapes: "1× · 100 samples per second of curve · n× · 100 / n"
-    bounds: [960, 790, 420, 570]
+    bounds: [546, 426, 518, 304]
     stage:
       shot: chunk
       chunk: true
@@ -143,7 +145,7 @@ steps:
       *T*<sub>inf</sub> is the measured inference latency and λ > 1 widens the window. On the real arms the window is
       half the segment: λ*T*<sub>inf</sub> = *u*<sub>max</sub>(*S*) / 2.
     shapes: "no jump at segment boundaries"
-    bounds: [30, 1380, 1340, 200]
+    bounds: [1076, 426, 518, 304]
     stage:
       shot: hero
       chunk: true
@@ -152,14 +154,14 @@ training_steps:
   - id: overview
     title: One training step
     body: >-
-      Training is ordinary behaviour cloning with different targets. Every demonstration is first converted into a
-      B-spline with an adaptive fit. At each observation the target is the next 16 knots and their control points, and
-      the network regresses them. The figures use a toy single-joint trajectory; the fitting, the windows and the
+      Training is ordinary Diffusion Policy training with different targets. Every demonstration is first converted into
+      a B-spline with an adaptive fit. At each observation the target is the next 16 knots and their control points, and
+      the UNet learns to denoise them. The figures use a toy single-joint trajectory; the fitting, the windows and the
       basis functions are computed from it, not drawn by hand.
     formulas:
-      - '\min_\theta\ \mathbb{E}_{(o, U, C)}\ \mathcal{L}\big(\pi_\theta(o),\ [U ; C]\big)'
+      - '\mathcal{L} = \mathbb{E}_{k,\ \epsilon}\ \big\lVert \epsilon_\theta\big(x^{k}, k, o\big) - \epsilon \big\rVert^2,\qquad x^{0} = [U ; C]'
     where: >-
-      The paper does not state the loss *ℒ* for the regression variant; ACT's L1 is the natural drop-in.
+      *x*<sup>k</sup> is the target matrix with noise of level *k* added; ε is that noise.
   - id: t-data
     title: Demonstrations
     body: >-
@@ -168,19 +170,19 @@ training_steps:
       parts (grasp, place). A fixed-rate chunk spends the same resolution on both.
     formulas:
     shapes: "toy · one joint · 50 Hz · 8 s · 401 samples"
-    bounds: [30, 96, 620, 340]
+    bounds: [16, 106, 518, 398]
   - id: t-fit
     title: Adaptive B-spline fit
     body: >-
       Algorithm 1 of the paper starts with no interior knots and fits a cubic B-spline by least squares. It checks the
       largest error and, if it is above the tolerance, inserts a knot where the residual is largest (the FITPACK
-      criterion), then repeats. Knots end up where the motion bends and are sparse where it is simple.
+      criterion), then repeats. The code does this with SciPy's FITPACK knot generator and `make_lsq_spline`. Knots end up where the motion bends and are sparse where it is simple.
     formulas:
       - 'E = \max_i \lVert a(t_i) - a_i \rVert \le \varepsilon'
     where: >-
-      The paper uses ε = 0.002 on its real tasks to keep precise motions. The toy fit uses ε = 0.004 rad and needs 41
+      The paper and the fork's real-robot config use ε = 0.002 (`max_error`) to keep precise motions. The toy fit uses ε = 0.004 rad and needs 41
       knots for 401 samples.
-    bounds: [670, 96, 700, 340]
+    bounds: [546, 106, 518, 398]
   - id: t-target
     title: Fixed-size targets
     body: >-
@@ -189,16 +191,19 @@ training_steps:
       is simple and a short time where it is detailed. Near the end of an episode the last control point is repeated to
       fill the window.
     formulas:
-    shapes: "16 knots + 16 control points per sample"
-    bounds: [30, 446, 620, 324]
+    shapes: "16 × (1 + D) per sample · knots stored as absolute times"
+    bounds: [1076, 106, 518, 398]
   - id: t-loss
-    title: Regress the parameters
+    title: Denoising loss
     body: >-
-      The network predicts the 16 × 7 parameters and is trained against the fitted ones, exactly where ACT would be
-      trained against a 16-step action chunk. For a fair comparison, the paper's chunking baselines also predict 16
-      future actions, with the same visual encoder and the same number of epochs.
+      As in Diffusion Policy, a random noise level is picked, that much noise is added to the target matrix, and the
+      UNet, conditioned on the observations, predicts the noise. The loss is the squared error of that prediction. The
+      knot column is learned exactly like the control points. For a fair comparison, the paper's chunking baselines
+      predict 16 future actions with the same visual encoder and the same number of epochs.
     formulas:
-    bounds: [670, 446, 700, 324]
+    where: >-
+      AdamW, lr 10<sup>-4</sup> with 500 warm-up steps and a cosine schedule, batch 64, EMA of the weights.
+    bounds: [16, 520, 518, 398]
   - id: t-compare
     title: 16 actions vs 16 knots
     body: >-
@@ -206,7 +211,7 @@ training_steps:
       so detail goes where the trajectory needs it. This is the "adaptive temporal resolution" the paper argues fixed
       chunks lack.
     formulas:
-    bounds: [30, 780, 640, 330]
+    bounds: [546, 520, 518, 398]
   - id: t-eps
     title: Fit tolerance
     body: >-
@@ -215,15 +220,15 @@ training_steps:
       within a sensible range. These are the paper's numbers (Table 3); Push-T actions are pixel positions up to about
       512, which is why ε is so much larger there.
     formulas:
-    bounds: [690, 780, 680, 330]
+    bounds: [1076, 520, 518, 398]
 results:
   measured: false
   summary: >-
     BSP has not been trained or run on the NexArm yet. The planned evaluation is the same as for ACT and TurboVLA, plus
-    the speedup at which success starts to fall. For reference, the paper reports results on 6-DoF ARX5 arms. With the
-    ACT-style backbone at 4×, BSP halved the average Table Cleaning time from 23.57 s to 11.80 s (14/20 vs 13/20
-    successes). At 1×, it raised Speed Stacking success from 8/20 to 16/20, but at 4× the bimanual task failed
-    completely because the arms could not track the faster commands.
+    the speedup at which success starts to fall. For reference, the paper reports Diffusion Policy results on 6-DoF ARX5
+    arms. At 4×, BSP cut Cube Picking from 3.52 s to 2.45 s (20/20 both) and Table Cleaning from 23.31 s to 18.05 s
+    (12/20 vs 11/20). At 1×, it raised Table Cleaning success from 11/20 to 15/20. On bimanual Speed Stacking at 4× it
+    was faster (9.62 s vs 10.49 s) but succeeded less often (7/20 vs 9/20).
   metrics:
     - name: Stacking success rate
       method: Fraction of trials that end with the bowls nested and released, judged from the front camera.
@@ -232,10 +237,10 @@ results:
     - name: Achieved speedup
       method: Time to stack at 1× divided by time to stack at the target speedup (2×, 4×).
     - name: Command smoothness
-      method: Peak joint acceleration of the executed commands, BSP vs the ACT chunk baseline at the same speed.
+      method: Peak joint acceleration of the executed commands, BSP vs the plain Diffusion Policy chunk at the same speed.
   protocol:
     - Fixed bowl start poses drawn from the recorded workspace, the same list for every policy.
-    - Each policy is run at 1×, 2× and 4×; for ACT the baseline speedup is a faster command rate.
+    - Each policy is run at 1×, 2× and 4×; for the chunk baseline the speedup is a faster command rate.
     - A trial ends at success, at a collision, or after 60 seconds.
 links:
   - label: "B-spline Policy: Accelerating Manipulation Policies via B-spline Action Representations"
@@ -244,6 +249,9 @@ links:
   - label: Project page
     url: https://b-spline-policy.github.io/
     note: videos of the real-robot runs
+  - label: bspline-policy (fork)
+    url: https://github.com/khanhthanhdev/bspline-policy
+    note: the Diffusion Policy implementation this page follows
   - label: lerobot-nexarm
     url: https://github.com/khanhthanhdev/lerobot-nexarm
     note: robot, simulation and training code
@@ -251,31 +259,34 @@ links:
 
 ## Architecture
 
-BSP is a change of action representation, not a new network. The paper adds it to two backbones, Diffusion Policy ("Diff.+BSP") and an ACT-style regression transformer ("Reg.+BSP"). This page follows the second, because it is the closest to the ACT policy already on the NexArm.
+BSP is a change of action representation, not a new network. The paper adds it to two backbones, Diffusion Policy ("Diff.+BSP") and an ACT-style regression transformer ("Reg.+BSP"). The released code, and our fork of it, implement the Diffusion Policy variant, so this page follows that one.
 
-| Part          | Setting in the paper                                                   |
-| ------------- | ---------------------------------------------------------------------- |
-| Backbone      | ACT-style regression transformer; DINOv2 image encoder on real robots  |
-| Output        | 16 knots and their control points, 6 of the knots are boundary support |
-| Spline        | cubic (degree 3) B-spline                                              |
-| Action space  | absolute joint positions on the real arms                              |
-| Rates         | policy about 10 Hz, controller samples the curve at 100 Hz             |
-| Speedup       | `a_exec(t) = a(n t)`, n = 1, 2 or 4 in the experiments                 |
-| Segment join  | align to the last executed action within half a segment                |
-| Knot validity | `u_i ← max(u_i, u_{i-1} + δ)`                                          |
+| Part         | Setting in the `bspline-policy` code                                           |
+| ------------ | ------------------------------------------------------------------------------ |
+| Backbone     | Diffusion Policy: ResNet18 encoder with GroupNorm, 1-D UNet with FiLM          |
+| Observations | last 2 steps; images 84 × 84 with 76 × 76 random crops                         |
+| Denoising    | DDIM, 100 training steps, 16 inference steps, ε-prediction                     |
+| Output       | 16 × (1 + D): knot in column 0, control point in the rest                      |
+| Segment      | chunk 10 + 3 support knots per side; 12 control points used                    |
+| Spline       | cubic (degree 3) B-spline                                                      |
+| Action space | absolute joint positions on the real arms                                      |
+| Rates        | data 10 Hz; controller samples the curve at 100 Hz (paper) or 200 Hz (default) |
+| Speedup      | `a_exec(t) = a(n t)`, `--speed-up-times` 1, 2 or 4                             |
+| Segment join | align to the last executed action within half a segment                        |
 
 ## Training
 
-Demonstrations are converted once, before training: each trajectory is fitted with a cubic B-spline by adaptive knot insertion until the largest error is below ε = 0.002. The network then regresses the next 16 knots and their control points at every observation step, in the same place where ACT regresses its action chunk.
+Demonstrations are converted once, before training: each trajectory is fitted with a cubic B-spline by FITPACK knot insertion until the largest error is below ε = 0.002, and the result is cut into 16-knot windows. The UNet then learns to denoise those windows, in the same place where Diffusion Policy would denoise an action chunk.
 
-| Setting    | Value                                                            |
-| ---------- | ---------------------------------------------------------------- |
-| Fit        | FITPACK-style knot insertion, ε = 0.002 (Push-T: ε = 1)          |
-| Target     | nearest future 16 knots + control points, last point repeated    |
-| Baselines  | 16-action chunks, same encoder, same number of epochs            |
-| Real tasks | Cube Picking, Table Cleaning, Speed Stacking; 200–300 demos each |
-| Simulation | Push-T, RoboMimic, RoboCasa                                      |
+| Setting    | Value                                                               |
+| ---------- | ------------------------------------------------------------------- |
+| Fit        | SciPy FITPACK knots + least squares, `max_error` 0.002              |
+| Target     | nearest future 16 knots + control points, last point repeated       |
+| Loss       | squared error of the predicted noise                                |
+| Optimizer  | AdamW, lr 1e-4, betas (0.95, 0.999), 500 warm-up steps, cosine, EMA |
+| Baselines  | 16-action chunks, same encoder, same number of epochs               |
+| Real tasks | Cube Picking, Table Cleaning, Speed Stacking; 200–300 demos each    |
 
 <div class="rp-callout" markdown="1">
-**Not trained on the NexArm yet.** The architecture, the rates and the numbers on this page come from the paper. The figures use a toy single-joint trajectory: the fit, the knot windows, the basis functions and the alignment are computed from it, but it is not a NexArm recording.
+**Not trained on the NexArm yet.** The architecture and settings come from the `bspline-policy` code and the paper. The figures use a toy single-joint trajectory: the fit, the knot windows, the basis functions and the alignment are computed from it, but it is not a NexArm recording.
 </div>
