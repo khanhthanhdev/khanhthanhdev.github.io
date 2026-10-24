@@ -186,6 +186,31 @@ function typeset(root) {
       console.error(err);
     }
   });
+  fitFormulas(root);
+}
+
+// A formula wider than the reading pane is scaled down to fit, to at most 70 % of its size; past that it scrolls.
+// Panels hidden behind another tab measure 0 wide, so each formula is fitted again whenever its width changes.
+function fitFormulas(root) {
+  const fit = (el) => {
+    const w = el.clientWidth;
+    if (!w || Number(el.dataset.fitWidth) === w) return;
+    el.dataset.fitWidth = w;
+    el.style.removeProperty("--fit");
+    const d = el.querySelector(".katex-display");
+    if (d && d.scrollWidth > d.clientWidth) el.style.setProperty("--fit", Math.max(0.7, d.clientWidth / d.scrollWidth).toFixed(3));
+  };
+  const els = root.querySelectorAll(".rp-tex.is-typeset");
+  if (!("ResizeObserver" in window)) return els.forEach(fit);
+  const ro = new ResizeObserver((entries) => entries.forEach((e) => fit(e.target)));
+  els.forEach((el) => ro.observe(el));
+  // KaTeX's webfonts can arrive after the first measurement; fit again once they have.
+  document.fonts?.ready.then(() =>
+    els.forEach((el) => {
+      delete el.dataset.fitWidth;
+      fit(el);
+    })
+  );
 }
 
 // Page numbers with gaps: always the first and last step and the neighbours of the current one, e.g. ‹ 1 2 3 … 6 7 ›.

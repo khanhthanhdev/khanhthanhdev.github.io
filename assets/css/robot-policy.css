@@ -572,18 +572,20 @@
 .rp-step-body p:last-child {
   margin-bottom: 0;
 }
+/* formulas: display math, centred and set larger than the text; a line too wide for the pane scrolls on its own */
 .rp-formulas {
   display: grid;
-  gap: 2px;
-  padding: 6px 14px;
+  gap: 4px;
+  padding: 14px 18px;
   border-left: 3px solid var(--rp-accent);
   background: var(--rp-panel);
   border-radius: 0 6px 6px 0;
-  overflow-x: auto;
 }
 .rp-tex {
+  min-width: 0;
   font-family: var(--rp-font-mono);
-  font-size: 12.5px;
+  font-size: 14px;
+  text-align: center;
   white-space: pre-wrap;
   padding: 4px 0;
 }
@@ -593,14 +595,34 @@
   padding: 0;
 }
 .rp-tex .katex-display {
-  margin: 0.55em 0;
-  text-align: left;
+  margin: 0.5em 0;
+  padding: 0.15em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .rp-tex .katex-display > .katex {
-  text-align: left;
+  text-align: center;
 }
 .rp-tex .katex {
-  font-size: 1.2em;
+  font-size: calc(var(--tex-size, 1.5em) * var(--fit, 1));
+}
+/* the longer explanation under a step's formulas */
+.rp-step-more {
+  padding-top: 4px;
+}
+.rp-step-more h3 {
+  margin: 0 0 0.5em;
+  font: 500 0.75rem/1 var(--sw-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rp-muted);
+}
+.rp-step-more ul {
+  margin: 0 0 0.8em;
+  padding-left: 1.2em;
+  font-size: 1.02rem;
+  line-height: 1.7;
 }
 .rp-where p {
   margin: 0 0 0.4em;
@@ -746,12 +768,6 @@
   fill: var(--sw-muted);
 }
 /* section labels: small spaced capitals */
-.rp svg .lbl {
-  font-size: 11.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  fill: var(--sw-muted);
-}
 /* module outlines: ink line weight, pale flat fill */
 .rp svg .sk {
   fill: var(--sw-paper);
@@ -759,20 +775,55 @@
   stroke-width: 1.5;
   stroke-linejoin: round;
 }
-.rp svg .sk.f-note,
-.rp svg .f-note {
-  fill: none;
-  stroke: var(--sw-muted);
-  stroke-width: 1;
-}
 /* camera frames and padded / empty cells: flat grid tone, hairline edge */
 .rp svg .sk.f-cell {
   fill: var(--sw-grid);
   stroke: var(--sw-muted);
   stroke-width: 1;
 }
-.rp svg .f-panel {
-  fill: var(--sw-paper);
+/* pane-sized type: caption, cell title, body, key numbers, caps labels (sizes in SVG units, read at about 1×) */
+.rp svg .H {
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+.rp svg .T {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+.rp svg .S {
+  font-size: 17px;
+}
+.rp svg .I {
+  font-family: KaTeX_Math, "STIX Two Math", "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+}
+.rp svg .M {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 18px;
+}
+.rp svg .Ms {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-size: 15px;
+  fill: var(--sw-muted);
+}
+.rp svg .C {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+}
+.rp svg .CL {
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  fill: var(--sw-muted);
+}
+.rp svg .CLs {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  fill: var(--sw-muted);
 }
 /* modality colour: a module that handles one kind of data takes a pale tint, a token of it a stronger tint and a stroke */
 .rp svg .sk.c-image {
@@ -964,12 +1015,6 @@
   stroke-dasharray: 4 5.6;
 }
 /* the one emphasized path in a plot */
-.rp svg .ln-a {
-  fill: none;
-  stroke: var(--sw-ink);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-}
 .rp svg .o {
   font-size: 13.5px;
 }
@@ -1007,9 +1052,6 @@
 }
 .rp svg .ln-t + .ah,
 .rp svg marker .ah {
-  fill: var(--sw-ink);
-}
-.rp svg .ah-a {
   fill: var(--sw-ink);
 }
 .rp svg .tok {
@@ -1258,6 +1300,12 @@ a.rp-card:hover {
   .rp-step-body p {
     font-size: 1rem;
     line-height: 1.7;
+  }
+  .rp-tex {
+    --tex-size: 1.3em;
+  }
+  .rp-formulas {
+    padding: 12px 10px;
   }
   .rp-pager button {
     min-width: 30px;
