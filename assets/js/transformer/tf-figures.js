@@ -127,6 +127,221 @@
       slider.addEventListener("input", render);
       render();
     },
+
+    // Multi-head, grouped-query and multi-query attention: 8 query heads, and a slider for how many key/value
+    // heads they share. The cache holds one K and one V per key/value head.
+    heads(root) {
+      const Q = 8;
+      const kvs = [8, 4, 2, 1];
+      const names = { 8: "multi-head (MHA)", 4: "grouped-query (GQA)", 2: "grouped-query (GQA)", 1: "multi-query (MQA)" };
+      const slider = h("input", { type: "range", min: 0, max: kvs.length - 1, step: 1, value: 1, id: "tf-heads-fig" });
+      const out = h("output", { for: "tf-heads-fig" });
+      const W = 560;
+      const svg = s("svg", {
+        class: "tf-svg tf-hist",
+        viewBox: "-20 -30 600 220",
+        role: "img",
+        "aria-label": "Query heads and the key/value heads they read",
+      });
+      const qx = (i) => (i + 0.5) * (W / Q);
+      const linesG = s("g");
+      const kvG = s("g");
+      svg.append(
+        s("text", { class: "tf-axis", x: 0, y: -12, text: "query heads (one per head, as in part 2)" }),
+        linesG,
+        ...Array.from({ length: Q }, (_, i) => s("circle", { class: "tf-head-q", cx: qx(i), cy: 14, r: 12 })),
+        kvG,
+        s("text", { class: "tf-axis", x: 0, y: 186, text: "key/value heads (what the cache stores)" })
+      );
+      const note = h("p", { class: "tf-figure-note" });
+      root.replaceChildren(
+        h("div", { class: "tf-controls" }, h("label", { for: "tf-heads-fig", text: "key/value heads" }), slider, out),
+        svg,
+        note,
+        h("figcaption", {
+          text: "Each query head still computes its own attention weights. Query heads in the same group read the same keys and values, so only the key/value heads go in the cache. The sizes are memory arithmetic, not measurements.",
+        })
+      );
+      function render() {
+        const kv = kvs[Number(slider.value)];
+        const group = Q / kv;
+        const kx = (g) => (g + 0.5) * (W / kv);
+        linesG.replaceChildren(
+          ...Array.from({ length: Q }, (_, i) => s("line", { class: "tf-head-link", x1: qx(i), y1: 26, x2: kx(Math.floor(i / group)), y2: 132 }))
+        );
+        kvG.replaceChildren(
+          ...Array.from({ length: kv }, (_, g) => [
+            s("rect", { class: "tf-head-k", x: kx(g) - 22, y: 132, width: 20, height: 34, rx: 3 }),
+            s("rect", { class: "tf-head-v", x: kx(g) + 2, y: 132, width: 20, height: 34, rx: 3 }),
+          ]).flat()
+        );
+        out.textContent = `${kv}: ${names[kv]}`;
+        note.textContent =
+          kv === Q
+            ? "Every query head has its own keys and values: 8 K and 8 V per token, per layer. This is the paper's design."
+            : `Each group of ${group} query heads shares one K and one V. The cache is ${kv} / ${Q} = ${Math.round((100 * kv) / Q)}% of the multi-head size.`;
+      }
+      slider.addEventListener("input", render);
+      render();
+    },
+
+    // How big the KV cache gets for real models: 2 (K and V) × layers × key/value heads × head size × tokens ×
+    // sequences × 2 bytes (16-bit numbers). Configs are from each model's published config.json.
+    kvcalc(root) {
+      const models = [
+        { name: "Transformer base (2017)", layers: 6, q: 8, kv: 8, d: 64 },
+        { name: "Llama 2 7B", layers: 32, q: 32, kv: 32, d: 128 },
+        { name: "Llama 2 70B", layers: 80, q: 64, kv: 8, d: 128 },
+        { name: "Llama 3 8B", layers: 32, q: 32, kv: 8, d: 128 },
+        { name: "Mistral 7B", layers: 32, q: 32, kv: 8, d: 128, window: 4096 },
+        { name: "DeepSeek-V2", layers: 60, q: 128, d: 128, latent: 576 },
+      ];
+      const lengths = [1024, 4096, 8192, 32768, 131072];
+      const select = h("select", { id: "tf-kv-model" }, ...models.map((m, i) => h("option", { value: i, text: m.name })));
+      select.value = "1";
+      const slider = h("input", { type: "range", min: 0, max: lengths.length - 1, step: 1, value: 1, id: "tf-kv-len" });
+      const out = h("output", { for: "tf-kv-len" });
+      const batch = h("select", { id: "tf-kv-batch" }, ...[1, 8, 32].map((b) => h("option", { value: b, text: String(b) })));
+      const cells = {};
+      const row = (key, label) =>
+        h("tr", {}, h("th", { scope: "row", text: label }), ...["tok", "all"].map((c) => (cells[key + c] = h("td", { class: "tf-num" }))));
+      const table = h(
+        "table",
+        { class: "tf-table" },
+        h("thead", {}, h("tr", {}, h("th", { text: "" }), h("th", { text: "per token" }), h("th", { text: "whole cache" }))),
+        h("tbody", {}, row("this", "this model"), row("mha", "same model, one K/V per query head"), row("mqa", "same model, one K/V head"))
+      );
+      const note = h("p", { class: "tf-figure-note" });
+      root.replaceChildren(
+        h(
+          "div",
+          { class: "tf-controls tf-controls-wrap" },
+          h("label", { for: "tf-kv-model", text: "model" }),
+          select,
+          h("label", { for: "tf-kv-len", text: "tokens" }),
+          slider,
+          out,
+          h("label", { for: "tf-kv-batch", text: "sequences" }),
+          batch
+        ),
+        table,
+        note,
+        h("figcaption", {
+          text: "16-bit numbers, self-attention cache only. Layer counts and head sizes are from each model's published configuration. DeepSeek-V2 caches a 576-number latent per layer instead of per-head keys and values; Mistral 7B attends only to the last 4,096 tokens, so its cache stops growing there.",
+        })
+      );
+      const bytes = (v) => {
+        const units = ["B", "KiB", "MiB", "GiB", "TiB"];
+        let k = 0;
+        while (v >= 1024 && k < units.length - 1) ((v /= 1024), k++);
+        return `${v >= 100 || k === 0 ? Math.round(v) : v.toFixed(v >= 10 ? 1 : 2)} ${units[k]}`;
+      };
+      function render() {
+        const m = models[Number(select.value)];
+        const n = lengths[Number(slider.value)];
+        const b = Number(batch.value);
+        const kept = Math.min(n, m.window ?? Infinity);
+        const perToken = (kv) => 2 * m.layers * kv * m.d * 2;
+        const own = m.latent ? m.layers * m.latent * 2 : perToken(m.kv);
+        out.textContent = n.toLocaleString("en");
+        const fill = (key, tok) => {
+          cells[key + "tok"].textContent = bytes(tok);
+          cells[key + "all"].textContent = bytes(tok * kept * b);
+        };
+        fill("this", own);
+        fill("mha", perToken(m.q));
+        fill("mqa", perToken(1));
+        const ratio = perToken(m.q) / own;
+        note.textContent = m.latent
+          ? `Multi-head latent attention: ${m.latent} numbers per token per layer, ${Math.round(ratio)}× less than ${m.q} full key/value heads.`
+          : m.kv === m.q
+            ? "This model uses plain multi-head attention: every query head keeps its own keys and values."
+            : `${m.q} query heads share ${m.kv} key/value heads: ${ratio}× less cache than plain multi-head attention.` +
+              (m.window && n > m.window ? ` The window keeps only ${m.window.toLocaleString("en")} tokens.` : "");
+      }
+      [select, slider, batch].forEach((el) => el.addEventListener("input", render));
+      render();
+    },
+
+    // Attention patterns as masks: which keys (columns) each query (row) may read, and what that means for the cache.
+    masks(root) {
+      const N = 10;
+      const patterns = [
+        {
+          id: "full",
+          name: "Full",
+          ok: () => true,
+          text: "Encoder self-attention (parts 1–3): every word reads every word. Nothing is generated, so nothing is cached.",
+        },
+        {
+          id: "causal",
+          name: "Causal",
+          ok: (i, j) => j <= i,
+          text: "Decoder self-attention (part 4) and every GPT-style model: each token reads itself and the past. The cache keeps every token.",
+        },
+        {
+          id: "window",
+          name: "Sliding window",
+          ok: (i, j) => j <= i && i - j < 4,
+          text: "Each token reads only the last 4 (Mistral 7B uses 4,096). The cache keeps only the window, so its size stops growing. Stacked layers still pass information further back, one window per layer.",
+        },
+        {
+          id: "sinks",
+          name: "Sinks + window",
+          ok: (i, j) => j <= i && (j < 2 || i - j < 3),
+          text: "StreamingLLM: a window plus the first few tokens, which models learn to park spare attention on. Dropping them breaks a windowed model; keeping them lets it run on almost forever.",
+        },
+        {
+          id: "prefix",
+          name: "Prefix",
+          ok: (i, j) => j < 4 || j <= i,
+          text: "Prefix LM (T5, UL2): the prompt (first 4) reads itself in both directions, like an encoder; the answer is causal. The prompt's keys and values are cached once.",
+        },
+      ];
+      const C = 22;
+      const svg = s("svg", {
+        class: "tf-svg tf-hist tf-mask-fig",
+        viewBox: `-60 -30 ${N * C + 80} ${N * C + 50}`,
+        role: "img",
+        "aria-label": "Attention mask",
+      });
+      const rects = [];
+      svg.append(
+        s("text", { class: "tf-axis", x: 0, y: -12, text: "keys →" }),
+        s("text", { class: "tf-axis", x: -8, y: 14, "text-anchor": "end", text: "queries" }),
+        s("text", { class: "tf-axis", x: -8, y: 28, "text-anchor": "end", text: "↓" })
+      );
+      for (let i = 0; i < N; i++)
+        for (let j = 0; j < N; j++) {
+          const r = s("rect", { class: "tf-mask-cell", x: j * C + 1, y: i * C + 1, width: C - 2, height: C - 2, rx: 2 });
+          rects.push({ r, i, j });
+          svg.append(r);
+        }
+      const buttons = patterns.map((p, k) => h("button", { type: "button", class: "tf-btn tf-chip", "aria-pressed": "false", text: p.name }));
+      const note = h("p", { class: "tf-figure-note" });
+      const stats = h("p", { class: "tf-figure-note tf-num" });
+      root.replaceChildren(
+        h("div", { class: "tf-controls tf-controls-wrap", role: "group", "aria-label": "Attention pattern" }, ...buttons),
+        svg,
+        stats,
+        note
+      );
+      function show(k) {
+        const p = patterns[k];
+        buttons.forEach((b, i) => b.setAttribute("aria-pressed", String(i === k)));
+        let on = 0;
+        rects.forEach(({ r, i, j }) => {
+          const ok = p.ok(i, j);
+          on += ok;
+          r.classList.toggle("is-on", ok);
+        });
+        const last = Array.from({ length: N }, (_, j) => p.ok(N - 1, j)).filter(Boolean).length;
+        stats.textContent = `${on} of ${N * N} pairs computed · the last query reads ${last} keys`;
+        note.textContent = p.text;
+      }
+      buttons.forEach((b, k) => b.addEventListener("click", () => show(k)));
+      show(1);
+    },
   };
 
   document.querySelectorAll("[data-tf-figure]").forEach((root) => {

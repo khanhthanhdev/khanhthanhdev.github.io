@@ -807,4 +807,79 @@ html[data-theme="dark"] {
   line-height: 1.5;
 }
 
+/* part 5 */
+
+.tf-work {
+  fill: var(--tf-dec);
+  fill-opacity: 0.55;
+  transition:
+    opacity 0.25s ease,
+    fill-opacity 0.4s ease;
+}
+
+.tf-work.is-new {
+  fill-opacity: 1;
+}
+
+.tf-work.is-skipped {
+  fill: var(--tf-cell);
+  fill-opacity: 1;
+  stroke: var(--tf-grid);
+  stroke-dasharray: 2 2;
+}
+
+.tf-head-q {
+  fill: color-mix(in srgb, var(--tf-q) 20%, var(--tf-paper));
+  stroke: var(--tf-q);
+}
+
+.tf-head-k {
+  fill: color-mix(in srgb, var(--tf-k) 25%, var(--tf-paper));
+  stroke: var(--tf-k);
+}
+
+.tf-head-v {
+  fill: color-mix(in srgb, var(--tf-v) 25%, var(--tf-paper));
+  stroke: var(--tf-v);
+}
+
+.tf-head-link {
+  stroke: var(--tf-muted);
+  stroke-width: 1;
+}
+
+.tf-mask-cell {
+  fill: var(--tf-cell);
+}
+
+.tf-mask-cell.is-on {
+  fill: var(--tf-ink);
+}
+
+.tf-svg.tf-mask-fig {
+  display: block;
+  max-width: 340px;
+  margin: 12px auto;
+}
+
+.tf-figure select {
+  height: 28px;
+  border: 1px solid var(--tf-grid);
+  border-radius: 5px;
+  background: var(--tf-paper);
+  color: var(--tf-ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.tf-figure-note {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.tf-figure-note.tf-num {
+  color: var(--tf-muted);
+  font-size: 0.8rem;
+}
+
 /* purgecss end ignore */

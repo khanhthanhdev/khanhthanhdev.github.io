@@ -291,6 +291,69 @@
     return { memory, steps, output: prefix.slice(1) };
   }
 
+  /* ---------------------------------------------------------------- inference with a KV cache */
+
+  // An empty cache for one sentence. Cross-attention keys and values come from the encoder's output, which never
+  // changes while writing, so they are computed once here. Self-attention keys and values start empty and grow by
+  // one row per generated token.
+  function kvCache(memory, options = {}) {
+    const weights = options.weights || defaultWeights;
+    const layers = weights.decoder.slice(0, options.layers ?? config.layers).map((W) => ({
+      self: W.self.heads.map(() => ({ K: [], V: [] })),
+      cross: W.cross.heads.map((h) => ({ K: matmul(memory, h.Wk), V: matmul(memory, h.Wv) })),
+    }));
+    return { weights, layers, length: 0 };
+  }
+
+  // One decoder step for one new token: only its own row is computed. Its query attends over every cached key,
+  // including the one it just added, so no mask is needed. Gives the same numbers as decode() on the whole prefix.
+  function decodeStep(cache, id) {
+    const { weights } = cache;
+    const pos = cache.length;
+    // the new token sits at position `pos`, not 0: take that row of the positional encoding
+    let x = [add([weights.embedding[id]], [positionalEncoding(pos + 1)[pos]])[0]];
+    const layers = cache.layers.map((C, l) => {
+      const W = weights.decoder[l];
+      const selfHeads = W.self.heads.map((h, i) => {
+        const c = C.self[i];
+        const q = matmul(x, h.Wq);
+        const k = matmul(x, h.Wk)[0];
+        const v = matmul(x, h.Wv)[0];
+        c.K.push(k);
+        c.V.push(v);
+        return { q, k, v, ...attention(q, c.K.slice(), c.V.slice()) }; // a snapshot: the cache keeps growing
+      });
+      const selfOut = matmul(concatCols(...selfHeads.map((h) => h.out)), W.self.Wo);
+      const norm1 = addNorm(x, selfOut, W.norm1);
+      const crossHeads = W.cross.heads.map((h, i) => attention(matmul(norm1.out, h.Wq), C.cross[i].K, C.cross[i].V));
+      const crossOut = matmul(concatCols(...crossHeads.map((h) => h.out)), W.cross.Wo);
+      const norm2 = addNorm(norm1.out, crossOut, W.norm2);
+      const ffn = feedForward(norm2.out, W.ffn);
+      const norm3 = addNorm(norm2.out, ffn.out, W.norm3);
+      x = norm3.out;
+      return { selfHeads, crossHeads, out: x[0] };
+    });
+    cache.length++;
+    const logits = weights.embedding.map((row) => dot(x[0], row));
+    return { pos, id, layers, out: x[0], logits, probs: softmax(logits) };
+  }
+
+  // Greedy generation with the cache: the same output as generate(), with one new row per step.
+  function generateCached(tokens, maxSteps = 5, options = {}) {
+    const memory = encode(tokens, options).out;
+    const cache = kvCache(memory, options);
+    const steps = [];
+    let id = vocabIndex["<s>"];
+    for (let s = 0; s < maxSteps; s++) {
+      const step = decodeStep(cache, id);
+      const next = step.probs.indexOf(Math.max(...step.probs));
+      steps.push({ step, next });
+      id = next;
+      if (next === vocabIndex["</s>"]) break;
+    }
+    return { memory, cache, steps, output: steps.map((s) => s.next) };
+  }
+
   /* ---------------------------------------------------------------- training bits (section 5) */
 
   // Learning-rate schedule, eq. (3).
@@ -338,6 +401,9 @@
     decoderLayer,
     decode,
     generate,
+    kvCache,
+    decodeStep,
+    generateCached,
     learningRate,
     smoothTarget,
     crossEntropy,

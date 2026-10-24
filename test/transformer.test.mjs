@@ -144,6 +144,19 @@ test("decoder self-attention is causal and generation is greedy", () => {
   g.steps.forEach((s) => assert.equal(s.next, argmax(s.step.probs)));
 });
 
+test("decoding with a KV cache gives exactly the full pass's answers", () => {
+  const full = TF.generate(sentence, 6);
+  const cached = TF.generateCached(sentence, 6);
+  assert.deepEqual(cached.output, full.output);
+  cached.steps.forEach((st, k) => st.step.probs.forEach((p, w) => close(p, full.steps[k].step.probs[w], 1e-12)));
+  // the self-attention cache grows one row per step; the cross-attention one is the encoder's length throughout
+  const L = cached.cache.layers[0];
+  assert.equal(L.self[0].K.length, cached.steps.length);
+  assert.equal(L.cross[0].K.length, sentence.length);
+  // step k's query reads k + 1 keys (its own included)
+  cached.steps.forEach((st, k) => assert.equal(st.step.layers[0].selfHeads[0].weights[0].length, k + 1));
+});
+
 test("learning-rate schedule peaks at the warmup step", () => {
   const lr = (s) => TF.learningRate(s);
   assert.ok(lr(4000) > lr(3000) && lr(4000) > lr(5000));
@@ -165,6 +178,7 @@ for (const [part, slug, scene, count] of [
   [2, "attention-2-multi-head-and-positions", "part2", 8],
   [3, "attention-3-encoder-block", "part3", 7],
   [4, "attention-4-decoder-and-training", "part4", 9],
+  [5, "attention-5-inference", "part5", 8],
 ]) {
   test(`part ${part} renders its scrolly steps, scripts and series navigation`, async () => {
     const html = await readFile(site(`blog/2026/${slug}/index.html`), "utf8");
@@ -174,12 +188,11 @@ for (const [part, slug, scene, count] of [
     assert.match(html, new RegExp(`data-tf-scene="?${scene}"?`));
     for (const file of ["tf-math.js", "tf-view.js", `${scene}.js`, "tf-scrolly.js"]) assert.match(html, new RegExp(`transformer/${file}`));
     assert.match(html, /class="?tf-series"?/);
-    // every part ends with "why" questions; part 1 also mounts the √d_k figure
+    // every part ends with "why" questions; parts 1 and 5 also mount standalone figures
     assert.match(html, /id="?going-deeper"?/);
-    if (part === 1) {
-      assert.match(html, /data-tf-figure="?dk"?/);
-      assert.match(html, /transformer\/tf-figures\.js/);
-    }
+    const figures = { 1: ["dk"], 5: ["heads", "kvcalc", "masks"] }[part] || [];
+    for (const name of figures) assert.match(html, new RegExp(`data-tf-figure="?${name}"?`));
+    if (figures.length) assert.match(html, /transformer\/tf-figures\.js/);
     // the prose of every step is server-rendered markdown, readable without JavaScript
     assert.doesNotMatch(html, /\*\*[A-Z][^*]+\*\*/);
   });

@@ -2,7 +2,7 @@
   Navigation for the "Attention is all you need" series. Parts that are not published yet are listed without a link.
   Usage: {% include tf-series.liquid %} in a post with `series: attention-is-all-you-need` and `part: N`.
 {% endcomment %}
-{% assign tf_titles = 'Self-attention from scratch|Multi-head attention and positions|One encoder block|The decoder, masking and training'
+{% assign tf_titles = 'Self-attention from scratch|Multi-head attention and positions|One encoder block|The decoder, masking and training|Inference and the KV cache'
   | split: '|'
 %}
 {% assign tf_parts = site.posts | where: 'series', 'attention-is-all-you-need' %}

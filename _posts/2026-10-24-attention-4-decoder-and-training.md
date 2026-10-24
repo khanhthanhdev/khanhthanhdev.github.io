@@ -180,7 +180,7 @@ In real code the mask is usually a large negative number such as $$-10^9$$ rathe
 
 With the mask, the output at position $$i$$ depends only on positions $$0 \dots i$$. Every other part of the decoder works on each position on its own, or looks only backwards. So running the decoder on the whole sentence at once gives each position exactly the same vector as running it on just the words up to that point. In our toy the two agree to the last digit.
 
-That's what makes teacher forcing work: one pass trains all $$n$$ predictions at once. It also explains a trick every chat model uses when generating. Earlier positions never change, so their keys and values can be stored and reused (the **KV cache**). Each new word then costs one new row, rather than a rerun of the whole sentence.
+That's what makes teacher forcing work: one pass trains all $$n$$ predictions at once. It also explains a trick every chat model uses when generating. Earlier positions never change, so their keys and values can be stored and reused (the **KV cache**). Each new word then costs one new row, rather than a rerun of the whole sentence. [Part 5]({% post_url 2026-10-24-attention-5-inference %}) draws it step by step.
 
 ### What label smoothing does to the loss
 
