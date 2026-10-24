@@ -76,23 +76,27 @@
   font-size: 0.8rem;
 }
 
+/* Same footprint as the provenance badge on the static figures, inside the panel corner */
 .ntk-help {
   position: absolute;
-  top: -0.4rem;
-  right: 0;
+  top: var(--sw-gap);
+  right: var(--sw-gap);
   z-index: 2;
-  padding: 0 0.3rem;
-  border: 0;
-  background: none;
-  color: var(--ntk-teal);
+  min-width: 24px;
+  padding: 1px 7px;
+  border: var(--sw-hairline) solid var(--sw-muted);
+  border-radius: var(--sw-radius);
+  background: var(--sw-paper);
+  color: var(--sw-muted);
   font-family: var(--ntk-mono);
-  font-size: 1.35rem;
-  line-height: 1;
+  font-size: 0.8rem;
+  line-height: 1.4;
   cursor: pointer;
 }
 
 .ntk-help[aria-expanded="true"] {
-  text-decoration: underline;
+  border-color: var(--sw-accent);
+  color: var(--sw-accent);
 }
 
 .ntk-help-note {

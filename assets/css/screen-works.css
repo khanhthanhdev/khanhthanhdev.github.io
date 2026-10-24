@@ -156,6 +156,11 @@ html[data-theme="dark"] {
   text-transform: uppercase;
 }
 
+/* Keep a long caption clear of the badge in the corner */
+.sw-badge + .sw-caption {
+  padding-right: 7.5rem;
+}
+
 /* Plain-prose caption under a figure (kept readable, not caps) */
 
 .sw-prose-caption {
@@ -225,20 +230,40 @@ html[data-theme="dark"] {
   clip-path: polygon(0 40%, 70% 40%, 70% 0, 100% 50%, 70% 100%, 70% 60%, 0 60%);
 }
 
-/* Return path of the loop */
+/* Return path of the loop: down from the last stage, back along the bottom,
+   up into the first. Inset by half a stage so both legs meet stage centres
+   (5 stages, 4 × 40px arrow gaps). */
 
 .sw-return {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: var(--sw-gap);
-  color: var(--sw-accent);
+  position: relative;
+  height: 34px;
+  margin: 0 calc((100% - 160px) / 10);
+  border: var(--sw-line) dashed var(--sw-accent);
+  border-top: 0;
+  border-radius: 0 0 var(--sw-radius) var(--sw-radius);
 }
 
+/* Head pointing up into stage 01 */
 .sw-return::before {
   content: "";
-  flex: 1;
-  border-top: var(--sw-line) dashed var(--sw-accent);
+  position: absolute;
+  top: 0;
+  left: -7px;
+  width: 12px;
+  height: 10px;
+  background: var(--sw-accent);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.sw-return > .sw-label {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  padding: 0 10px;
+  background: var(--sw-paper);
+  color: var(--sw-accent);
+  transform: translate(-50%, 50%);
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {
@@ -258,6 +283,24 @@ html[data-theme="dark"] {
     left: 50%;
     margin: 0 0 0 -20px;
     transform: rotate(90deg);
+  }
+  /* Stacked: the loop can't wrap round, so it becomes a labelled rule */
+  .sw-return {
+    height: auto;
+    margin: var(--sw-gap) 0 0;
+    border: 0;
+    border-top: var(--sw-line) dashed var(--sw-accent);
+  }
+  .sw-return::before {
+    display: none;
+  }
+  .sw-return > .sw-label {
+    right: 0;
+    left: auto;
+    bottom: auto;
+    top: 0;
+    transform: translateY(-50%);
+    padding-right: 0;
   }
 }
 
@@ -321,6 +364,17 @@ html[data-theme="dark"] {
 
 .sw-bars.is-3col {
   grid-template-columns: max-content minmax(60px, 1fr) max-content;
+}
+
+/* Four columns that stay four on phones (no optional middle column) */
+.sw-bars.is-4col {
+  grid-template-columns: max-content max-content minmax(40px, 1fr) max-content;
+}
+
+/* Lower-case maths inside a spaced-caps label */
+.sw-label .sw-lc {
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .sw-bar-row {
