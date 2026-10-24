@@ -160,7 +160,10 @@ test("learning-rate schedule peaks at the warmup step", () => {
 
 const site = (path) => new URL(`../_site/${path}`, import.meta.url);
 
-for (const [part, slug, scene] of [[1, "attention-1-self-attention", "part1"]]) {
+for (const [part, slug, scene] of [
+  [1, "attention-1-self-attention", "part1"],
+  [2, "attention-2-multi-head-and-positions", "part2"],
+]) {
   test(`part ${part} renders its scrolly steps, scripts and series navigation`, async () => {
     const html = await readFile(site(`blog/2026/${slug}/index.html`), "utf8");
     const steps = [...html.matchAll(/data-step="?([a-z-]+)"?/g)].map((m) => m[1]);

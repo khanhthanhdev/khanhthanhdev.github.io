@@ -420,13 +420,13 @@
     const api = {
       el: g,
       height: opts.labels.length * gap,
-      set(values, highlight) {
-        const max = opts.max ?? 1;
+      // max sets the full-width value (default opts.max, else 1); opts.format(v) overrides the value label.
+      set(values, highlight, max = opts.max ?? 1) {
         values.forEach((v, i) => {
           const w = clamp(v / max, 0, 1) * width;
           rows[i].bar.setAttribute("width", w.toFixed(1));
           rows[i].value.setAttribute("x", (w + 6).toFixed(1));
-          rows[i].value.textContent = opts.percent ? `${(v * 100).toFixed(v < 0.1 ? 1 : 0)}%` : fmt(v);
+          rows[i].value.textContent = opts.format ? opts.format(v) : opts.percent ? `${(v * 100).toFixed(v < 0.1 ? 1 : 0)}%` : fmt(v);
           rows[i].bar.classList.toggle("is-focus", i === highlight);
         });
       },
