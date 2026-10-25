@@ -365,10 +365,13 @@
       (n.inputs || []).forEach((src) => {
         const a = byId[src].at;
         const b = n.at;
-        const line = s("line", { class: "cv-edge", x1: a[0] + R, y1: a[1], x2: b[0] - R - 1, y2: b[1], "marker-end": "url(#cv-head-fixed)" });
+        // an edge that runs back to the left (a graph wrapped onto a second row) leaves from below instead
+        const back = b[0] < a[0];
+        const ends = back ? [a[0], a[1] + R, b[0], b[1] - R - 1] : [a[0] + R, a[1], b[0] - R - 1, b[1]];
+        const line = s("line", { class: "cv-edge", x1: ends[0], y1: ends[1], x2: ends[2], y2: ends[3], "marker-end": "url(#cv-head-fixed)" });
         g.append(line);
         edgeEls.push({ from: src, to: n.id, line });
-        leaving[src] = leaving[src] || [a[0] + R, a[1], b[0] - R, b[1]];
+        leaving[src] = leaving[src] || ends;
       })
     );
     // the output gets an edge of its own, so its value and gradient have somewhere to go
@@ -396,8 +399,8 @@
       labelLayer.append(fwd, bwd);
       // numbers sit on the edge leaving the node, a little past the node: value above the line, gradient below
       const [x1, y1, x2, y2] = leaving[n.id];
-      const x = x1 + 24;
-      const y = y1 + ((y2 - y1) * (x - x1)) / (x2 - x1 || 1);
+      const x = x2 < x1 ? x1 + 0.3 * (x2 - x1) + 30 : x1 + 24;
+      const y = x2 < x1 ? y1 + 0.3 * (y2 - y1) + 4 : y1 + ((y2 - y1) * (x - x1)) / (x2 - x1 || 1);
       fwd.setAttribute("x", x);
       fwd.setAttribute("y", y - 7);
       bwd.setAttribute("x", x);

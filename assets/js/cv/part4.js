@@ -4,7 +4,7 @@
   "use strict";
 
   const CV = window.CV;
-  const { fmt } = window.TF.view;
+  const { fmt, narrow } = window.TF.view;
   const { scatter, chart } = window.CL.view;
   const { regions, graph } = CV.view;
   const { select } = CV.controls;
@@ -45,6 +45,18 @@
     ["p", "addc", ["e"], [625, 180]],
     ["f", "inv", ["p"], [720, 180]],
   ]);
+  // the same neuron in two rows, for phones
+  const G2_NARROW = {
+    w2: [0, 250],
+    m0: [110, 30],
+    m1: [110, 160],
+    s: [210, 95],
+    d: [310, 200],
+    n: [80, 330],
+    e: [170, 330],
+    p: [260, 330],
+    f: [350, 330],
+  };
   // 2 · (x·y + max(z, w)): one gate of each kind
   const G3 = build([
     ["x", 3, [], [0, 0]],
@@ -62,7 +74,8 @@
 
     /* -------------------------------------------- graphs: values and the order of the backward pass */
 
-    const graphs = [G1, G2, G3].map((nodes) => {
+    const G2n = G2.map((n) => ({ ...n, at: G2_NARROW[n.id] ?? n.at }));
+    const graphs = [G1, G2, G3, G2n].map((nodes) => {
       CV.forward(nodes);
       const visits = CV.backward(nodes);
       const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
@@ -70,8 +83,8 @@
     });
     const views = graphs.map((G, i) => {
       const v = graph(svg, G.nodes, {
-        title: ["f = (x + y) · z", "a sigmoid neuron, gate by gate", "f = 2 · (x·y + max(z, w))"][i],
-        digits: i === 1 ? 3 : 2,
+        title: ["f = (x + y) · z", "a sigmoid neuron, gate by gate", "f = 2 · (x·y + max(z, w))", "a sigmoid neuron, gate by gate"][i],
+        digits: i % 2 ? 3 : 2,
       });
       const xs = G.nodes.map((n) => n.at[0]);
       const ys = G.nodes.map((n) => n.at[1]);
@@ -117,7 +130,7 @@
     plot.box = { x: -4, y: -30, width: 448, height: 474 };
     const lossChart = chart(svg, { title: "loss", width: 240, height: 150, xTitle: "training step" });
     lossChart.box = { x: -40, y: -30, width: 310, height: 216 };
-    const layout = CV.layout(svg, () => ({ g1: views[0], g2: views[1], g3: views[2], plot, lossChart }));
+    const layout = CV.layout(svg, () => ({ g1: views[0], g2: views[1], g3: views[2], g2n: views[3], plot, lossChart }));
     const SIDE = [500, 120];
 
     // The line where hidden unit k switches on, W1[k]·input(p) + b1[k] = 0, clipped to the plot's square.
@@ -172,14 +185,15 @@
       },
 
       neuron(t) {
-        const G = graphs[1];
+        const k2 = narrow.matches ? 3 : 1;
+        const G = graphs[k2];
         const n = G.nodes.length;
         const fwd = Math.min(n, 5 + Math.floor((t / 0.45) * (n - 5)));
         const back = t < 0.5 ? 0 : Math.min(G.visits.length, Math.floor(((t - 0.5) / 0.4) * (G.visits.length + 1)));
         const grads = t < 0.5 ? {} : gradsOf(G, back);
         const focus = t < 0.5 ? (G.nodes[fwd - 1].op === "input" ? null : G.nodes[fwd - 1].id) : back ? G.visits[back - 1].id : "f";
-        views[1].show(valuesOf(G, fwd), grads, focus);
-        layout({ g2: [0, 0] });
+        views[k2].show(valuesOf(G, fwd), grads, focus);
+        layout({ [k2 === 3 ? "g2n" : "g2"]: [0, 0] });
         const b = G.byId;
         strip(
           t < 0.5
