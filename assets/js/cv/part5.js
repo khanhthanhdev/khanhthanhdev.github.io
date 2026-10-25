@@ -1,53 +1,73 @@
-// Part 5 of the computer vision series: convolution. A 3 × 3 filter sliding over the 8 × 8 images, padding and
-// stride, ReLU and max pooling, why a shifted image gives a shifted map, and a tiny trained convnet.
+// Part 5 of the computer vision series: convolution, on the CIFAR-10 photos. A 3 × 3 edge filter sliding over a
+// photo's brightness, padding and stride, ReLU and max pooling, why a moved photo gives a moved map, and a small
+// convnet trained offline (cv-photos.js loads it) set against part 2's linear classifier.
 (function () {
   "use strict";
 
   const CV = window.CV;
-  const { h, s, fmt, matrix, bars, progress } = window.TF.view;
+  const { h, s, fmt, matrix, bars, progress, narrow } = window.TF.view;
+  const { thumb } = CV.view;
   const { button, select, slider } = CV.controls;
   CV.scenes = CV.scenes || {};
 
-  const N = CV.SIDE;
-  const NAMES = Object.keys(CV.FILTERS);
-  const SHIFTS = [0, 1, 2, 3];
+  const N = CV.PHOTOS.side;
+  const CLASSES = CV.PHOTOS.classes;
+  const NAMES = Object.keys(CV.EDGES);
+  const SHIFTS = [0, 2, 4, 8];
+  const U = 8; // screen pixels per photo pixel in the big pictures
   const article = (name) => (/^[aeiou]/.test(name) ? "an" : "a");
 
-  CV.scenes.part5 = function (stage) {
+  // A photo's brightness as a grey picture, and a grid of numbers as one (signed: blue below 0, red above).
+  const greyPhoto = (grid) => ({
+    px: Uint8Array.from(
+      grid.flat().flatMap((v) => [v, v, v]),
+      (v) => Math.round(255 * Math.max(0, Math.min(1, v)))
+    ),
+  });
+  // what the filters read: brightness minus the photo's average, so the zero padding is average grey, not black
+  const meanOf = (grid) => grid.flat().reduce((a, v) => a + v, 0) / grid.flat().length;
+  const centred = (grid, mean = meanOf(grid)) => grid.map((row) => row.map((v) => v - mean));
+  const maxAbs = (grid) => Math.max(1e-6, ...grid.flat().map(Math.abs));
+
+  // A learned first-layer filter (3 × 3 × 3 weights) as a tiny colour picture, stretched to 0 … 255.
+  function filterPhoto(l, k) {
+    const w = Array.from({ length: 27 }, (_, i) => {
+      const [a, d, c] = [Math.floor(i / 9), Math.floor(i / 3) % 3, i % 3];
+      return l.w[((k * l.C + c) * 3 + a) * 3 + d];
+    });
+    const lo = Math.min(...w);
+    const hi = Math.max(...w);
+    return { px: Uint8Array.from(w, (v) => Math.round((255 * (v - lo)) / (hi - lo))) };
+  }
+  // The same for a row of part 2's weights.
+  function templatePhoto(row) {
+    const lo = Math.min(...row);
+    const hi = Math.max(...row);
+    return { px: Uint8Array.from(row, (v) => Math.round((255 * (v - lo)) / (hi - lo))) };
+  }
+
+  CV.scenes.part5 = (stage) =>
+    Promise.all([CV.loadPhotos(), CV.loadLinear(), CV.loadConvNet()]).then(([photos, linear, net]) => scene(stage, photos, linear, net));
+
+  function scene(stage, photos, linear, net) {
     const { svg, toolbar, controls, strip } = stage;
-    const train = CV.split("train");
-    const test = CV.split("test");
+    const { test } = photos;
+    const lin = linear.models[1];
+    const pc = (v) => `${fmt(100 * v, 0)}%`;
+    const convRight = test.filter((p) => CV.argmax(CV.photoNetForward(net, p).scores) === p.label).length / test.length;
+    const linRight = test.filter((p) => CV.argmax(CV.linearScores(lin, linear.input(p))) === p.label).length / test.length;
+    const nParams = (l) => l.w.length + l.b.length;
+    const convParams = net.layers.reduce((a, l) => a + nParams(l), 0) + net.fc.w.length + net.fc.b.length;
+    const linParams = lin.W.length * lin.W[0].length + lin.b.length;
 
-    /* -------------------------------------------- models: the trained convnet, and part 1's and part 2's for comparison */
+    /* -------------------------------------------- inputs: test photo, filter, padding, stride, shift */
 
-    const conv = CV.trainConvNet(train);
-    const convPredict = CV.convNetPredict(conv.net);
-    const linear = CV.trainLinear(
-      train.map((ex) => CV.flat(ex.img)),
-      train.map((ex) => ex.label),
-      4,
-      { steps: 400, lr: 0.2, reg: 0.01 }
-    ).model;
-    const linearPredict = (img) => CV.argmax(CV.linearScores(linear, CV.flat(img)));
-    const pc = (v) => `${Math.round(1000 * v) / 10}%`;
-    const right = (predict, set) => set.filter((ex) => predict(ex.img) === ex.label).length / set.length;
-    // accuracy on the test set moved d pixels right, for each model; computed when first asked for
-    const shifted = {};
-    function shiftedScores(d) {
-      if (shifted[d]) return shifted[d];
-      const set = test.map((ex) => ({ img: CV.shift(ex.img, 0, d), label: ex.label }));
-      shifted[d] = { knn: CV.knnAccuracy(train, set, 3), linear: right(linearPredict, set), conv: right(convPredict, set) };
-      return shifted[d];
-    }
-
-    /* -------------------------------------------- inputs: test image, filter, padding, stride, shift */
-
-    const state = { q: 0, filter: 0, pad: 1, stride: 1, shift: 1 };
+    const state = { q: 25, filter: 0, pad: 1, stride: 1, shift: 1 };
     const qLabel = h("span", { class: "tf-label" });
     const prevQ = button("◀", () => pickQuery(state.q - 1));
     const nextQ = button("▶", () => pickQuery(state.q + 1));
-    prevQ.setAttribute("aria-label", "Previous test image");
-    nextQ.setAttribute("aria-label", "Next test image");
+    prevQ.setAttribute("aria-label", "Previous test photo");
+    nextQ.setAttribute("aria-label", "Next test photo");
     toolbar.append(qLabel, prevQ, nextQ);
     function pickQuery(i) {
       state.q = (i + test.length) % test.length;
@@ -75,97 +95,127 @@
       state.stride,
       refreshWith("stride")
     );
-    const shiftIn = slider("shift right", 0, SHIFTS.length - 1, state.shift, refreshWith("shift"), (v) => `${v} px`);
+    const shiftIn = slider("shift right", 0, SHIFTS.length - 1, state.shift, refreshWith("shift"), (v) => `${SHIFTS[v]} px`);
     controls.append(filterIn.wrap, padIn.wrap, strideIn.wrap, shiftIn.wrap);
 
     /* -------------------------------------------- objects */
 
-    // A window drawn over a matrix: show(i, j, size) outlines size × size cells from (i, j); show(null) hides it.
-    function windowOn(m) {
+    // a title above a picture
+    const titleOf = (t) => {
+      const el = s("text", { class: "tf-mat-title", x: 0, y: -12 });
+      t.el.append(el);
+      return (text) => (el.textContent = text);
+    };
+    // a window drawn over a picture: show(r, c, size) outlines size × size of its pixels from (r, c); show(null) hides it
+    function windowOn(t, unit) {
       const rect = s("rect", { class: "cv-window" });
-      m.el.append(rect);
+      t.el.append(rect);
       return {
-        show(i, j, size = 1) {
-          rect.style.opacity = i == null ? "0" : "1";
-          if (i == null) return;
-          rect.setAttribute("x", j * m.cell);
-          rect.setAttribute("y", i * m.cell);
-          rect.setAttribute("width", size * m.cell);
-          rect.setAttribute("height", size * m.cell);
+        show(r, c, size = 1) {
+          rect.style.opacity = r == null ? "0" : "1";
+          if (r == null) return;
+          rect.setAttribute("x", c * unit);
+          rect.setAttribute("y", r * unit);
+          rect.setAttribute("width", size * unit);
+          rect.setAttribute("height", size * unit);
         },
       };
     }
+    const pictureBox = (size) => ({ x: -6, y: -30, width: size + 12, height: size + 36 });
 
-    const image = matrix(svg, { rows: N, cols: N, cell: 30, kind: "prob", name: "image" });
-    const imageWin = windowOn(image);
-    // the zero padding: a dashed ring of cells around the image
-    const padRing = s("rect", { class: "cv-pad", x: -30, y: -30, width: 300, height: 300 });
+    // the sweep: the photo (with its padding ring), the filter, the pixels under the window, and the output
+    const image = thumb(svg, { size: N * U });
+    const imageTitle = titleOf(image);
+    const imageWin = windowOn(image, U);
+    const padRing = s("rect", { class: "cv-pad", x: -U, y: -U, width: (N + 2) * U, height: (N + 2) * U });
     image.el.prepend(padRing);
-    const filter = matrix(svg, { rows: 3, cols: 3, cell: 30, kind: "signed", range: 2, digits: 0, name: "filter" });
-    const sizes = { "1,1": 8, "0,1": 6, "1,2": 4, "0,2": 3 };
+    image.box = { x: -U - 6, y: -U - 30, width: (N + 2) * U + 12, height: (N + 2) * U + 36 };
+    const filter = matrix(svg, { rows: 3, cols: 3, cell: 30, kind: "signed", range: 1, digits: 0, name: "filter" });
+    const patch = matrix(svg, { rows: 3, cols: 3, cell: 30, kind: "signed", range: 0.6, digits: 2, name: "pixels under it" });
+    filter.box = { x: -6, y: -30, width: 102, height: 126 };
+    patch.box = filter.box;
+    // one output picture per (padding, stride), each drawn at the scale of the photo pixels it steps over
+    const sizes = { "1,1": 32, "0,1": 30, "1,2": 16, "0,2": 15 };
     const outs = {};
     Object.entries(sizes).forEach(([key, n]) => {
-      outs[key] = matrix(svg, { rows: n, cols: n, cell: 30, kind: "signed", range: 3, digits: 1, name: "output" });
-      outs[key].win = windowOn(outs[key]);
-      outs[key].box = { x: -6, y: -30, width: n * 30 + 12, height: n * 30 + 36 };
+      const stride = Number(key.split(",")[1]);
+      const t = thumb(svg, { size: n * U * stride });
+      t.win = windowOn(t, U * stride);
+      t.title = titleOf(t);
+      t.box = pictureBox(n * U * stride);
+      outs[key] = t;
     });
-    image.box = { x: -36, y: -40, width: 312, height: 312 };
-    filter.box = { x: -6, y: -30, width: 102, height: 126 };
 
     // four filters and their maps, small
-    const small = matrix(svg, { rows: N, cols: N, cell: 16, kind: "prob", name: "image", numbers: false });
-    const filters = NAMES.map((name) => matrix(svg, { rows: 3, cols: 3, cell: 18, kind: "signed", range: 2, name, numbers: false }));
-    const maps = NAMES.map(() => matrix(svg, { rows: N, cols: N, cell: 14, kind: "signed", range: 3, name: "after ReLU", numbers: false }));
-    small.box = { x: -4, y: -26, width: 136, height: 162 };
-    filters.forEach((m) => (m.box = { x: -4, y: -26, width: 62, height: 86 }));
-    maps.forEach((m) => (m.box = { x: -4, y: -26, width: 122, height: 146 }));
+    const small = thumb(svg, { size: 128 });
+    const smallTitle = titleOf(small);
+    small.box = pictureBox(128);
+    const filters = NAMES.map((name) => matrix(svg, { rows: 3, cols: 3, cell: 22, kind: "signed", range: 1, digits: 0, name }));
+    const maps = NAMES.map(() => thumb(svg, { size: 128 }));
+    const mapTitles = maps.map(titleOf);
+    filters.forEach((m) => (m.box = { x: -4, y: -26, width: 74, height: 98 }));
+    maps.forEach((t) => (t.box = pictureBox(128)));
 
-    // pooling
-    const relu = matrix(svg, { rows: N, cols: N, cell: 30, kind: "signed", range: 3, digits: 1, name: "after ReLU" });
-    const reluWin = windowOn(relu);
-    const pooled = matrix(svg, { rows: N / 2, cols: N / 2, cell: 30, kind: "signed", range: 3, digits: 1, name: "2 × 2 max pool" });
-    const pooledWin = windowOn(pooled);
-    relu.box = { x: -6, y: -30, width: 252, height: 278 };
-    pooled.box = { x: -6, y: -30, width: 132, height: 158 };
+    // pooling: a map after ReLU, its 2 × 2 max pool, and the block being pooled, as numbers
+    const relu = thumb(svg, { size: N * U });
+    const reluTitle = titleOf(relu);
+    const reluWin = windowOn(relu, U);
+    const pooled = thumb(svg, { size: (N / 2) * 2 * U });
+    const pooledTitle = titleOf(pooled);
+    const pooledWin = windowOn(pooled, 2 * U);
+    const block = matrix(svg, { rows: 2, cols: 2, cell: 40, kind: "signed", range: 1.5, digits: 2, name: "block" });
+    relu.box = pictureBox(N * U);
+    pooled.box = pictureBox(N * U);
+    block.box = { x: -6, y: -30, width: 92, height: 116 };
 
-    // shifting: the original and the moved image, each with its map
-    const pairs = ["original", "moved"].map((name) => ({
-      img: matrix(svg, { rows: N, cols: N, cell: 20, kind: "prob", name, numbers: false }),
-      map: matrix(svg, { rows: N, cols: N, cell: 20, kind: "signed", range: 3, name: "its map", numbers: false }),
-    }));
-    pairs.forEach((p) => {
-      p.img.box = { x: -4, y: -26, width: 168, height: 194 };
-      p.map.box = p.img.box;
+    // shifting: the original and the moved photo, each with its map
+    const pairs = ["original", "moved"].map(() => {
+      const img = thumb(svg, { size: 160 });
+      const map = thumb(svg, { size: 160 });
+      const pair = { img, map, imgTitle: titleOf(img), mapTitle: titleOf(map), peak: windowOn(map, 5) };
+      img.box = pictureBox(160);
+      map.box = pictureBox(160);
+      return pair;
     });
 
-    // the trained net: its filters, their maps on the current image, the pooled features and the scores
-    const learned = conv.net.F.map((_, q) =>
-      matrix(svg, { rows: 3, cols: 3, cell: 18, kind: "signed", range: 2, name: `filter ${q + 1}`, numbers: false })
-    );
-    const learnedMaps = conv.net.F.map(() =>
-      matrix(svg, { rows: N, cols: N, cell: 14, kind: "signed", range: 3, name: "after ReLU", numbers: false })
-    );
-    learned.forEach((m) => (m.box = filters[0].box));
-    learnedMaps.forEach((m) => (m.box = maps[0].box));
-    const featBars = bars(svg, { labels: conv.net.F.map((_, q) => `filter ${q + 1}`), width: 120, gap: 24, title: "max of each map", max: 4 });
-    const scoreBars = bars(svg, { labels: CV.CLASSES, width: 120, gap: 24, title: "scores", max: 8, format: (v) => fmt(v, 1) });
-    featBars.box = { x: -70, y: -34, width: 240, height: 130 };
-    scoreBars.box = featBars.box;
+    // the trained net: its first layer's filters, their maps on the current photo, the second layer's maxima, the scores
+    const [L1, L2] = net.layers;
+    const learned = Array.from({ length: L1.K }, (_, k) => thumb(svg, { size: 40 }).set(filterPhoto(L1, k)));
+    const learnedMaps = Array.from({ length: L1.K }, () => thumb(svg, { size: 80 }));
+    learned.forEach((t) => (t.box = { x: -6, y: -14, width: 52, height: 60 }));
+    learnedMaps.forEach((t) => (t.box = { x: -6, y: -14, width: 92, height: 100 }));
+    const featBars = bars(svg, {
+      labels: Array.from({ length: L2.K }, (_, k) => String(k + 1)),
+      width: 110,
+      gap: 15,
+      title: "layer 2: max of each map",
+      format: (v) => fmt(v, 1),
+    });
+    const scoreBars = bars(svg, { labels: CLASSES, width: 120, gap: 24, title: "scores", max: 6, format: (v) => fmt(v, 1) });
+    featBars.box = { x: -40, y: -34, width: 220, height: 16 * 15 + 50 };
+    scoreBars.box = { x: -70, y: -34, width: 250, height: 130 };
+    const netTitle = s("text", { class: "tf-mat-title", x: 0, y: -24, text: "layer 1: 8 filters, 3 × 3 × 3, and their maps" });
+    learned[0].el.append(netTitle);
 
-    // the linear classifier's templates against the convnet's filters
-    const templates = linear.W.map((row, j) =>
-      matrix(svg, { rows: N, cols: N, cell: 12, kind: "signed", range: 0.8, name: CV.CLASSES[j], numbers: false })
-    );
-    templates.forEach((m) => (m.box = { x: -4, y: -26, width: 108, height: 130 }));
+    // part 2's templates against the convnet's filters
+    const templates = lin.W.map((row, j) => thumb(svg, { size: 96 }).set(templatePhoto(row), { label: j }));
+    const templateTitles = templates.map(titleOf);
+    templates.forEach((t, j) => {
+      t.box = pictureBox(96);
+      templateTitles[j](CLASSES[j]);
+    });
+
     const layout = CV.layout(svg, () => ({
       image,
       filter,
+      patch,
       ...Object.fromEntries(Object.entries(outs).map(([k, m]) => [`out${k}`, m])),
       small,
       ...Object.fromEntries(filters.map((m, q) => [`f${q}`, m])),
       ...Object.fromEntries(maps.map((m, q) => [`m${q}`, m])),
       relu,
       pooled,
+      block,
       ...Object.fromEntries(
         pairs.flatMap((p, k) => [
           [`pi${k}`, p.img],
@@ -179,169 +229,191 @@
       ...Object.fromEntries(templates.map((m, j) => [`t${j}`, m])),
     }));
 
-    // one row per filter: the filter on the left, its map to the right
-    const ROW = (q) => ({ [`f${q}`]: [180, q * 150 + 30], [`m${q}`]: [320, q * 150] });
+    /* -------------------------------------------- the sweep shared by the "filter", "slide" and "size" steps */
 
-    /* -------------------------------------------- the sweep shared by the "slide" and "size" steps */
-
+    // done: the whole output is shown, with the window on its strongest response
     function sweep(t, pad, stride) {
-      const ex = test[state.q];
-      const f = CV.FILTERS[NAMES[state.filter]];
-      const out = CV.conv2d(ex.img, f, { pad, stride });
+      const p = test[state.q];
+      const f = CV.EDGES[NAMES[state.filter]];
+      const g = centred(p.grey);
+      const out = CV.conv2d(g, f, { pad, stride });
       const n = out.length;
       const m = outs[`${pad},${stride}`];
-      image.set(ex.img);
+      image.set(greyPhoto(p.grey));
+      imageTitle(`the photo's brightness, ${N} × ${N}`);
       filter.set(f);
-      m.set(out);
       padRing.style.opacity = pad ? "1" : "0";
-      const k = t == null ? n * n + 1 : progress(t, n * n);
-      m.reveal(k === 0 ? 0 : k);
-      const at = k >= 1 && k <= n * n ? [Math.floor((k - 1) / n), (k - 1) % n] : null;
-      m.win.show(at ? at[0] : null, at && at[1]);
-      imageWin.show(at ? at[0] * stride - pad : null, at && at[1] * stride - pad, 3);
-      layout({ image: [0, 0], filter: [320, 80], [`out${pad},${stride}`]: [470, 0] });
-      return { out, at, ex, f };
+      // row by row: rows above the window are done, the window walks to the strongest response in its row
+      const k = t == null ? n + 1 : progress(t, n);
+      const at =
+        k >= 1 && k <= n ? [k - 1, out[k - 1].reduce((best, v, c, row) => (Math.abs(v) > Math.abs(row[best]) ? c : best), 0)] : argmaxAbs(out);
+      const shown = k >= 1 && k <= n ? out.map((row, r) => (r < k ? row : row.map(() => 0))) : out;
+      m.set(shown, { signed: true, range: 1.5 });
+      m.title(`output, ${n} × ${n}`);
+      m.win.show(at[0], at[1]);
+      const [r0, c0] = [at[0] * stride - pad, at[1] * stride - pad];
+      imageWin.show(r0, c0, 3);
+      patch.set([0, 1, 2].map((a) => [0, 1, 2].map((b) => g[r0 + a]?.[c0 + b] ?? 0)));
+      layout(
+        narrow.matches
+          ? { image: [0, 0], filter: [8, 360], patch: [148, 360], [`out${pad},${stride}`]: [0, 540] }
+          : { image: [0, 0], filter: [320, 40], patch: [320, 200], [`out${pad},${stride}`]: [470, 0] }
+      );
+      return { out, at, p, f, k, n };
     }
 
-    // the sum behind one output cell, written out
-    function sumAt(ex, f, i, j, pad, stride) {
-      const terms = [];
-      for (let a = 0; a < 3; a++)
-        for (let b = 0; b < 3; b++) {
-          const r = i * stride - pad + a;
-          const c = j * stride - pad + b;
-          const v = r < 0 || c < 0 || r >= N || c >= N ? 0 : ex.img[r][c];
-          if (v > 0.05) terms.push(`${fmt(f[a][b], 0)}×${fmt(v, 1)}`);
-        }
-      return terms.length ? terms.join(" + ") : "every pixel under the window is about 0";
+    function argmaxAbs(M) {
+      let best = [0, 0];
+      M.forEach((row, r) => row.forEach((v, c) => Math.abs(v) > Math.abs(M[best[0]][best[1]]) && (best = [r, c])));
+      return best;
     }
-
     function argmax2d(M) {
       let best = [0, 0];
       M.forEach((row, r) => row.forEach((v, c) => v > M[best[0]][best[1]] && (best = [r, c])));
       return best;
     }
+    const where = (v) => (v > 0 ? "dark → light" : "light → dark");
 
     /* -------------------------------------------- render */
 
     const steps = {
       filter() {
-        const { out, ex } = sweep(null, 1, 1);
-        const m = outs["1,1"];
-        const [i, j] = argmax2d(out);
-        m.reveal(Infinity);
-        m.win.show(i, j);
-        imageWin.show(i - 1, j - 1, 3);
-        strip(
-          `the ${NAMES[state.filter]} filter on ${article(CV.CLASSES[ex.label])} ${CV.CLASSES[ex.label]}: strongest response ${fmt(out[i][j], 2)} at row ${i + 1}, column ${j + 1}`
-        );
+        const { out, at, p } = sweep(null, 1, 1);
+        const v = out[at[0]][at[1]];
+        strip(`${NAMES[state.filter]} filter: strongest response ${fmt(v, 2)} (${where(v)}) at row ${at[0] + 1}, column ${at[1] + 1}`);
       },
 
       slide(t) {
-        const { out, at, ex, f } = sweep(t, 1, 1);
+        const { out, at, k, n } = sweep(t, 1, 1);
         strip(
-          at
-            ? `output (${at[0] + 1}, ${at[1] + 1}) = ${sumAt(ex, f, at[0], at[1], 1, 1)} ≈ ${fmt(out[at[0]][at[1]], 1)}`
-            : "8 × 8 outputs, one per position of the window"
+          k >= 1 && k <= n
+            ? `output row ${k}: 32 positions, each the sum of 9 weight × pixel · at column ${at[1] + 1}: ${fmt(out[at[0]][at[1]], 2)}`
+            : "32 × 32 outputs, one per position of the window, all with the same 9 weights"
         );
       },
 
       maps() {
-        const ex = test[state.q];
-        small.set(ex.img);
+        const p = test[state.q];
+        small.set(p);
+        smallTitle("test photo");
         NAMES.forEach((name, q) => {
-          filters[q].set(CV.FILTERS[name]);
-          maps[q].set(CV.relu2d(CV.conv2d(ex.img, CV.FILTERS[name], { pad: 1 })));
+          filters[q].set(CV.EDGES[name]);
+          maps[q].set(CV.relu2d(CV.conv2d(centred(p.grey), CV.EDGES[name], { pad: 1 })), { signed: true, range: 1.5 });
+          mapTitles[q]("after ReLU");
         });
-        layout({ small: [0, 230], ...ROW(0), ...ROW(1), ...ROW(2), ...ROW(3) });
-        const peaks = NAMES.map((name) => Math.max(...CV.conv2d(ex.img, CV.FILTERS[name], { pad: 1 }).flat()));
-        strip(`strongest response per filter: ${NAMES.map((n, q) => `${n} ${fmt(peaks[q], 1)}`).join(" · ")}`);
+        // one row per filter: the filter on the left, its map to the right
+        const row = (q) => ({ [`f${q}`]: [180, q * 170 + 40], [`m${q}`]: [340, q * 170] });
+        // on a phone, two columns, each filter above its map
+        const grid = (q) => ({
+          [`f${q}`]: [(q % 2) * 180, 190 + Math.floor(q / 2) * 290],
+          [`m${q}`]: [(q % 2) * 180, 190 + Math.floor(q / 2) * 290 + 110],
+        });
+        layout(
+          narrow.matches
+            ? { small: [90, 0], ...grid(0), ...grid(1), ...grid(2), ...grid(3) }
+            : { small: [0, 250], ...row(0), ...row(1), ...row(2), ...row(3) }
+        );
+        const sums = NAMES.map(
+          (name) =>
+            CV.relu2d(CV.conv2d(centred(p.grey), CV.EDGES[name], { pad: 1 }))
+              .flat()
+              .filter((v) => v > 0.3).length
+        );
+        strip(`map pixels above 0.3: ${NAMES.map((n, q) => `${n} ${sums[q]}`).join(" · ")}`);
       },
 
       size(t) {
         const { pad, stride } = state;
-        const { out } = sweep(t, pad, stride);
+        const { n } = sweep(t, pad, stride);
         const exact = (N - 3 + 2 * pad) / stride + 1;
         strip(
-          `(W − F + 2P) / S + 1 = (8 − 3 + ${2 * pad}) / ${stride} + 1 = ${fmt(exact, Number.isInteger(exact) ? 0 : 1)}` +
+          `(W − F + 2P) / S + 1 = (32 − 3 + ${2 * pad}) / ${stride} + 1 = ${fmt(exact, Number.isInteger(exact) ? 0 : 1)}` +
             (Number.isInteger(exact)
-              ? `: a ${out.length} × ${out.length} output`
-              : `, rounded down: ${out.length} × ${out.length}, and the ${pad ? "padding's" : "image's"} last row and column are never covered`)
+              ? `: a ${n} × ${n} output`
+              : `, rounded down: ${n} × ${n}, and the ${pad ? "padding's" : "photo's"} last row and column are never covered`)
         );
       },
 
       pool(t) {
-        const ex = test[state.q];
-        const R = CV.relu2d(CV.conv2d(ex.img, CV.FILTERS[NAMES[state.filter]], { pad: 1 }));
+        const p = test[state.q];
+        const R = CV.relu2d(CV.conv2d(centred(p.grey), CV.EDGES[NAMES[state.filter]], { pad: 1 }));
         const P = CV.maxPool(R);
-        relu.set(R);
-        pooled.set(P);
         const n = N / 2;
-        const k = progress(t, n * n);
-        pooled.reveal(k);
-        const at = k >= 1 && k <= n * n ? [Math.floor((k - 1) / n), (k - 1) % n] : null;
-        reluWin.show(at ? 2 * at[0] : null, at && 2 * at[1], 2);
-        pooledWin.show(at ? at[0] : null, at && at[1]);
-        layout({ relu: [0, 0], pooled: [320, 60] });
-        if (!at) return strip("8 × 8 → 4 × 4: a quarter of the numbers, and the strong responses survive");
-        const block = [0, 1].flatMap((a) => [0, 1].map((b) => R[2 * at[0] + a][2 * at[1] + b]));
-        strip(`max(${block.map((v) => fmt(v, 1)).join(", ")}) = ${fmt(P[at[0]][at[1]], 1)}`);
+        const k = progress(t, n);
+        const done = !(k >= 1 && k <= n);
+        // row by row of blocks; the window sits on the strongest block of the current row
+        const at = done ? argmax2d(P) : [k - 1, argmax2d([P[k - 1]])[1]];
+        relu.set(R, { signed: true, range: 1.5 });
+        reluTitle(`${NAMES[state.filter]} map after ReLU, 32 × 32`);
+        pooled.set(done ? P : P.map((row, r) => (r < k ? row : row.map(() => 0))), { signed: true, range: 1.5 });
+        pooledTitle("2 × 2 max pool, 16 × 16");
+        reluWin.show(2 * at[0], 2 * at[1], 2);
+        pooledWin.show(at[0], at[1]);
+        const B = [0, 1].map((a) => [0, 1].map((b) => R[2 * at[0] + a][2 * at[1] + b]));
+        block.set(B);
+        layout(narrow.matches ? { relu: [0, 0], block: [20, 330], pooled: [0, 500] } : { relu: [0, 0], block: [300, 110], pooled: [430, 0] });
+        strip(
+          `max(${B.flat()
+            .map((v) => fmt(v, 2))
+            .join(", ")}) = ${fmt(P[at[0]][at[1]], 2)}` +
+            (done ? " · 32 × 32 → 16 × 16: a quarter of the numbers, and the strong responses survive" : "")
+        );
       },
 
       shift() {
-        const ex = test[state.q];
-        const f = CV.FILTERS[NAMES[ex.label]];
+        const p = test[state.q];
+        const f = CV.EDGES[NAMES[state.filter]];
         const d = SHIFTS[state.shift];
-        const moved = CV.shift(ex.img, 0, d);
-        const peaks = [ex.img, moved].map((img, k) => {
-          const M = CV.conv2d(img, f, { pad: 1 });
-          pairs[k].img.set(img);
-          pairs[k].map.set(CV.relu2d(M));
-          const at = argmax2d(M);
-          pairs[k].map.cellAt(...at);
-          return { at, v: M[at[0]][at[1]] };
+        const moved = CV.shiftPhoto(p, 0, d);
+        // both centred by the original's average, so the only difference is the move
+        const mean = meanOf(p.grey);
+        const [M0, M1] = [p, moved].map((ph) => CV.conv2d(centred(ph.grey, mean), f, { pad: 1 }));
+        // the original's strongest response, away from the edges a move of up to 8 px can disturb
+        const at = argmax2d(M0.map((row, r) => row.map((v, c) => (r > 0 && r < N - 1 && c > 0 && c < N - 1 - SHIFTS.at(-1) ? v : -Infinity))));
+        [M0, M1].forEach((M, k) => {
+          pairs[k].img.set(k ? moved : p);
+          pairs[k].map.set(CV.relu2d(M), { signed: true, range: 1.5 });
+          pairs[k].peak.show(at[0], at[1] + k * d);
         });
-        pairs[1].img.el.querySelector(".tf-mat-name").textContent = `moved ${d} px right`;
-        pairs[0].map.el.querySelector(".tf-mat-name").textContent = `${NAMES[ex.label]} filter`;
-        pairs[1].map.el.querySelector(".tf-mat-name").textContent = `${NAMES[ex.label]} filter`;
-        layout({ pi0: [0, 0], pm0: [200, 0], pi1: [0, 230], pm1: [200, 230] });
-        const sc = shiftedScores(d);
+        pairs[0].imgTitle("original");
+        pairs[1].imgTitle(`moved ${d} px right`);
+        pairs.forEach((pr) => pr.mapTitle(`${NAMES[state.filter]} map`));
+        layout(
+          narrow.matches
+            ? { pi0: [0, 0], pm0: [190, 0], pi1: [0, 220], pm1: [190, 220] }
+            : { pi0: [0, 0], pm0: [200, 0], pi1: [0, 230], pm1: [200, 230] }
+        );
         strip(
-          `peak ${fmt(peaks[0].v, 2)} at column ${peaks[0].at[1] + 1} → ${fmt(peaks[1].v, 2)} at column ${peaks[1].at[1] + 1} · ` +
-            `whole test set moved ${d} px: k-NN ${pc(sc.knn)} · linear ${pc(sc.linear)} · convnet ${pc(sc.conv)}`
+          `ringed: ${fmt(M0[at[0]][at[1]], 2)} at (row ${at[0] + 1}, column ${at[1] + 1}) → ${fmt(M1[at[0]][at[1] + d], 2)} at (row ${at[0] + 1}, column ${at[1] + d + 1}): the same, ${d} columns right`
         );
       },
 
       train() {
-        const ex = test[state.q];
-        const { maps: M, feats, scores } = CV.convNetForward(conv.net, ex.img);
-        conv.net.F.forEach((f, q) => {
-          learned[q].set(f);
-          learnedMaps[q].set(CV.relu2d(M[q]));
-        });
+        const p = test[state.q];
+        const { maps: M, feats, scores } = CV.photoNetForward(net, p);
+        M.forEach((m, k) => learnedMaps[k].set(m, { signed: true, range: maxAbs(m) }));
         featBars.set(feats, CV.argmax(feats));
         const guess = CV.argmax(scores);
         scoreBars.set(scores, guess);
+        const cols = narrow.matches ? 4 : 8;
         layout({
-          ...Object.fromEntries(learned.map((_, q) => [`l${q}`, [q * 150 + 30, 0]])),
-          ...Object.fromEntries(learnedMaps.map((_, q) => [`lm${q}`, [q * 150, 110]])),
-          featBars: [80, 330],
-          scoreBars: [380, 330],
+          ...Object.fromEntries(learned.map((_, k) => [`l${k}`, [(k % cols) * 105 + 25, Math.floor(k / cols) * 170]])),
+          ...Object.fromEntries(learnedMaps.map((_, k) => [`lm${k}`, [(k % cols) * 105, Math.floor(k / cols) * 170 + 56]])),
+          ...(narrow.matches ? { featBars: [40, 380], scoreBars: [260, 380] } : { featBars: [100, 220], scoreBars: [480, 260] }),
         });
         strip(
-          `a ${CV.CLASSES[ex.label]} → ${CV.CLASSES[guess]} ${guess === ex.label ? "✓" : "✗"} · this net gets ${fmt(100 * right(convPredict, test), 0)}% of the 40 test images right`
+          `${article(CLASSES[p.label])} ${CLASSES[p.label]} → ${CLASSES[guess]} ${guess === p.label ? "✓" : "✗"} · this net gets ${pc(convRight)} of the 100 test photos right`
         );
       },
 
       params() {
-        conv.net.F.forEach((f, q) => learned[q].set(f));
-        templates.forEach((m, j) => m.set(CV.unflat(linear.W[j])));
+        const cols = narrow.matches ? 4 : 8;
         layout({
-          ...Object.fromEntries(templates.map((_, j) => [`t${j}`, [j * 140, 0]])),
-          ...Object.fromEntries(learned.map((_, q) => [`l${q}`, [q * 140 + 20, 190]])),
+          ...Object.fromEntries(templates.map((_, j) => [`t${j}`, narrow.matches ? [(j % 2) * 130, Math.floor(j / 2) * 140] : [j * 130, 0]])),
+          ...Object.fromEntries(learned.map((_, k) => [`l${k}`, [(k % cols) * 60, (narrow.matches ? 330 : 190) + Math.floor(k / cols) * 70]])),
         });
         strip(
-          `linear classifier: 4 × 64 weights + 4 biases = 260 parameters, ${fmt(100 * right(linearPredict, test), 1)}% · convnet: 4 × 9 + 4 + 4 × 4 + 4 = 60 parameters, ${fmt(100 * right(convPredict, test), 0)}%`
+          `linear: ${linParams.toLocaleString("en-US")} parameters, ${pc(linRight)} · convnet: ${convParams.toLocaleString("en-US")} parameters, ${pc(convRight)} on the test photos`
         );
       },
     };
@@ -349,21 +421,20 @@
     const usesImage = ["filter", "slide", "maps", "size", "pool", "shift", "train"];
 
     function render(step, t) {
-      filterIn.wrap.hidden = !["filter", "slide", "size", "pool"].includes(step);
+      filterIn.wrap.hidden = !["filter", "slide", "size", "pool", "shift"].includes(step);
       padIn.wrap.hidden = step !== "size";
       strideIn.wrap.hidden = step !== "size";
       shiftIn.wrap.hidden = step !== "shift";
       const pick = usesImage.includes(step);
       [qLabel, prevQ, nextQ].forEach((el) => (el.style.visibility = pick ? "visible" : "hidden"));
-      const ex = test[state.q];
-      qLabel.textContent = `test image ${state.q + 1} of ${test.length} · ${article(CV.CLASSES[ex.label])} ${CV.CLASSES[ex.label]}`;
-      [image, relu, pooled, ...pairs.map((p) => p.map)].forEach((m) => m.clear());
-      [image, ...Object.values(outs)].forEach((m) => m.reveal(Infinity));
-      pooled.reveal(Infinity);
+      const p = test[state.q];
+      qLabel.textContent = `test photo ${state.q + 1} of ${test.length} · ${article(CLASSES[p.label])} ${CLASSES[p.label]}`;
+      netTitle.style.opacity = step === "train" || step === "params" ? "1" : "0";
+      netTitle.textContent = step === "train" ? "layer 1: 8 filters, 3 × 3 × 3, and their maps" : "the convnet's layer 1: 8 filters, 3 × 3 × 3";
       [imageWin, reluWin, pooledWin, ...Object.values(outs).map((m) => m.win)].forEach((w) => w.show(null));
       steps[step](t);
     }
 
     return { render };
-  };
+  }
 })();

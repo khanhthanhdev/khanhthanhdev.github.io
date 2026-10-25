@@ -690,6 +690,87 @@
 
   const convNetPredict = (net) => (img) => argmax(convNetForward(net, img).scores);
 
+  // Hand-made 3 × 3 edge filters for the photos: each one's weights add up to 0, so a flat patch gives 0 and only a
+  // change in brightness, in the filter's direction, gives a response (positive dark → light, negative light → dark).
+  const EDGES = {
+    vertical: [
+      [-1, 0, 1],
+      [-1, 0, 1],
+      [-1, 0, 1],
+    ],
+    horizontal: [
+      [-1, -1, -1],
+      [0, 0, 0],
+      [1, 1, 1],
+    ],
+    "diagonal \\": [
+      [0, 1, 1],
+      [-1, 0, 1],
+      [-1, -1, 0],
+    ],
+    "diagonal /": [
+      [1, 1, 0],
+      [1, 0, -1],
+      [0, -1, -1],
+    ],
+  };
+
+  /* ---------------------------------------------------------------- part 5's convnet on the photos */
+
+  // Trained offline (assets/json/cv/convnet-photos.json): two conv layers of 3 × 3 filters with padding 1, each
+  // followed by ReLU; a 2 × 2 max pool after the first; the largest value of each of the second layer's maps; and a
+  // linear layer to the four scores. Weights are int8 bytes (base64) times one scale per array. bytes(base64) → Int8Array.
+  function photoNet(json, bytes) {
+    const deq = (o) => Float32Array.from(bytes(o.q), (v) => v * o.scale);
+    return {
+      chMean: json.chMean,
+      layers: json.layers.map((l) => ({ K: l.K, C: l.C, w: deq(l.w), b: Float32Array.from(l.b) })),
+      fc: { w: deq(json.fc.w), b: Float32Array.from(json.fc.b) },
+    };
+  }
+
+  // One conv layer on C × H × W numbers (channel by channel), padding 1, stride 1, then ReLU.
+  function convLayer(x, H, W, l) {
+    const { K, C, w, b } = l;
+    const HW = H * W;
+    const y = new Float32Array(K * HW);
+    for (let k = 0; k < K; k++) {
+      y.fill(b[k], k * HW, (k + 1) * HW);
+      for (let c = 0; c < C; c++)
+        for (let a = 0; a < 3; a++)
+          for (let d = 0; d < 3; d++) {
+            const wv = w[((k * C + c) * 3 + a) * 3 + d];
+            for (let i = Math.max(0, 1 - a); i < Math.min(H, H + 1 - a); i++)
+              for (let j = Math.max(0, 1 - d); j < Math.min(W, W + 1 - d); j++) y[k * HW + i * W + j] += wv * x[c * HW + (i + a - 1) * W + j + d - 1];
+          }
+    }
+    return y.map((v) => Math.max(0, v));
+  }
+
+  // The scores, and the steps on the way: the first layer's maps (as grids), and the second layer's maxima.
+  function photoNetForward(net, p) {
+    const side = PHOTOS.side;
+    const x = new Float32Array(3 * side * side);
+    for (let i = 0; i < side * side; i++) for (let c = 0; c < 3; c++) x[c * side * side + i] = p.vec[i * 3 + c] - net.chMean[c];
+    const [l1, l2] = net.layers;
+    const y1 = convLayer(x, side, side, l1);
+    const half = side / 2;
+    const pooled = new Float32Array(l1.K * half * half);
+    for (let k = 0; k < l1.K; k++)
+      for (let i = 0; i < half; i++)
+        for (let j = 0; j < half; j++) {
+          const at = (a, b) => y1[k * side * side + (2 * i + a) * side + 2 * j + b];
+          pooled[k * half * half + i * half + j] = Math.max(at(0, 0), at(0, 1), at(1, 0), at(1, 1));
+        }
+    const y2 = convLayer(pooled, half, half, l2);
+    const feats = Array.from({ length: l2.K }, (_, k) => Math.max(...y2.subarray(k * half * half, (k + 1) * half * half)));
+    const scores = net.fc.b.map((bj, j) => feats.reduce((a, f, k) => a + net.fc.w[j * l2.K + k] * f, bj));
+    const maps = Array.from({ length: l1.K }, (_, k) =>
+      Array.from({ length: side }, (_, r) => Array.from(y1.subarray(k * side * side + r * side, k * side * side + (r + 1) * side)))
+    );
+    return { maps, feats, scores: Array.from(scores) };
+  }
+
   const CV = {
     rng,
     zeros,
@@ -708,6 +789,10 @@
     meanVec,
     centred,
     linearModels,
+    EDGES,
+    photoNet,
+    convLayer,
+    photoNetForward,
     l1,
     l2,
     METRICS,
