@@ -261,4 +261,9 @@
   font-size: 12px;
 }
 
+.cv-prob-bar {
+  fill: var(--cl);
+  transition: width 200ms ease;
+}
+
 /* purgecss end ignore */

@@ -62,6 +62,55 @@
       root.append(h("div", { class: "cl-fig-row tf-controls" }, kIn.wrap, mIn.wrap), svg, caption);
       draw();
     },
+
+    // Part 2: the softmax of our box's four scores, all multiplied by a factor c.
+    softmaxScale(root) {
+      const train = CV.split("train");
+      const X = train.map((ex) => CV.flat(ex.img));
+      const model = CV.trainLinear(
+        X,
+        train.map((ex) => ex.label),
+        4,
+        { steps: 400, lr: 0.2, reg: 0.01 }
+      ).model;
+      const ex = CV.split("test")[35];
+      const scores = CV.linearScores(model, CV.flat(ex.img));
+      const W = 560;
+      const svg = s("svg", {
+        class: "cv-fig-svg",
+        viewBox: `0 0 ${W} 150`,
+        role: "img",
+        "aria-label": "Softmax probabilities of four scaled scores",
+      });
+      const rows = CV.CLASSES.map((c, j) => {
+        const y = 14 + j * 32;
+        const bar = s("rect", { class: `cv-prob-bar ${CV.view.colour(j)}`, x: 120, y, height: 20, width: 0 });
+        const value = s("text", { class: "tf-num", x: 0, y: y + 15 });
+        svg.append(s("text", { x: 0, y: y + 15, text: c }), bar, value);
+        return { bar, value };
+      });
+      const sl = slider(
+        "c",
+        0,
+        40,
+        10,
+        () => draw(),
+        (v) => `× ${fmt(v / 10, 1)}`
+      );
+      const caption = h("figcaption");
+      function draw() {
+        const c = Number(sl.el.value) / 10;
+        const p = CV.softmax(scores.map((v) => c * v));
+        p.forEach((pj, j) => {
+          rows[j].bar.setAttribute("width", (pj * 360).toFixed(1));
+          rows[j].value.setAttribute("x", 126 + pj * 360);
+          rows[j].value.textContent = `${fmt(100 * pj, 1)}%`;
+        });
+        caption.textContent = `scores × ${fmt(c, 1)} = ${scores.map((v) => fmt(c * v)).join(", ")}. Loss for the true class (box): ${fmt(-Math.log(p[ex.label]))}.`;
+      }
+      root.append(h("div", { class: "cl-fig-row tf-controls" }, sl.wrap), svg, caption);
+      draw();
+    },
   };
 
   CV.figures = figures;
