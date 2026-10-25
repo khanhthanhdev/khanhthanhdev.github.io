@@ -139,54 +139,37 @@
   font-size: 18px;
 }
 
-/* one colour per optimiser, so paths and chart lines match */
-.cv-path.cv-o0,
-.cv-path-dot.cv-o0,
-.cl-line.cv-o0,
-.cl-mark.cv-o0 {
-  stroke: var(--tf-ink);
-  fill: var(--tf-ink);
+/* one colour per optimiser, so paths, dots, chart lines and legend match */
+.cv-o0 {
+  --cv-o: var(--tf-ink);
 }
-.cv-path.cv-o1,
-.cv-path-dot.cv-o1,
-.cl-line.cv-o1,
-.cl-mark.cv-o1 {
-  stroke: var(--cl-3);
-  fill: var(--cl-3);
+.cv-o1 {
+  --cv-o: var(--cl-3);
 }
-.cv-path.cv-o2,
-.cv-path-dot.cv-o2,
-.cl-line.cv-o2,
-.cl-mark.cv-o2 {
-  stroke: var(--cl-4);
-  fill: var(--cl-4);
+.cv-o2 {
+  --cv-o: var(--cl-4);
 }
-.cv-path.cv-o3,
-.cv-path-dot.cv-o3,
-.cl-line.cv-o3,
-.cl-mark.cv-o3 {
-  stroke: var(--cl-2);
-  fill: var(--cl-2);
+.cv-o3 {
+  --cv-o: var(--cl-2);
 }
-.cv-path,
-.cl-line.cv-o0,
-.cl-line.cv-o1,
-.cl-line.cv-o2,
-.cl-line.cv-o3 {
+
+.cv-path[class*="cv-o"],
+.cl-line[class*="cv-o"] {
+  stroke: var(--cv-o);
   fill: none;
+}
+
+.cv-path-dot[class*="cv-o"],
+.cl-mark[class*="cv-o"] {
+  fill: var(--cv-o);
 }
 
 .tf-svg .cv-legend {
   font-size: 11px;
 }
-.tf-svg .cv-legend.cv-o1 {
-  fill: var(--cl-3);
-}
-.tf-svg .cv-legend.cv-o2 {
-  fill: var(--cl-4);
-}
-.tf-svg .cv-legend.cv-o3 {
-  fill: var(--cl-2);
+.tf-svg .cv-legend[class*="cv-o"] {
+  fill: var(--cv-o);
+  font-weight: 700;
 }
 
 /* ------------------------------------------------------------ computational graphs */

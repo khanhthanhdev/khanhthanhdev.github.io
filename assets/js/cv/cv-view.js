@@ -226,7 +226,7 @@
       const deep = rgbOf("--tf-accent");
       return paint(N, N, (c, r) => {
         const b = Math.floor(level(values[r * N + c]) * BANDS) / BANDS;
-        return mix(paper, deep, 0.55 * (1 - b));
+        return mix(paper, deep, 0.8 * (1 - b) ** 1.4);
       });
     });
     pic.el.classList.add("is-smooth");
