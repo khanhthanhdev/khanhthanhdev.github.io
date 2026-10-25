@@ -1,4 +1,4 @@
-// The maths for the "Deep learning for computer vision" series: seeded toy images and points, and the models the
+// The maths for the "Deep learning for computer vision" series: the CIFAR-10 photos, seeded toy points, and the models the
 // series builds (nearest neighbours, linear classifiers, small neural networks, convolutions), written so every
 // intermediate step can be drawn. Classic script: it sets window.CV in the browser and module.exports in Node, so
 // the numbers quoted in the posts can be checked from the command line.
@@ -39,67 +39,6 @@
   const zeros = (r, c) => Array.from({ length: r }, () => new Array(c).fill(0));
   const dot = (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0);
   const argmax = (v) => v.reduce((best, x, i) => (x > v[best] ? i : best), 0);
-
-  /* ---------------------------------------------------------------- tiny images */
-
-  // 8 × 8 grey images, ink 1 on paper 0, of four kinds of shape. Each shape lands at a random spot, with random
-  // brightness and a little noise, so no two images are the same. An image is a list of 8 rows of 8 numbers.
-  const SIDE = 8;
-  const CLASSES = ["vertical", "horizontal", "diagonal", "box"];
-
-  function drawShape(kind, rand) {
-    const img = zeros(SIDE, SIDE);
-    const ink = 0.75 + 0.25 * rand.next();
-    const put = (r, c) => {
-      if (r >= 0 && r < SIDE && c >= 0 && c < SIDE) img[r][c] = ink;
-    };
-    if (kind === 0 || kind === 1) {
-      // a bar 2 wide and 5 or 6 long
-      const len = 5 + rand.int(2);
-      const across = rand.int(SIDE - 1);
-      const along = rand.int(SIDE - len + 1);
-      for (let k = 0; k < len; k++) for (let w = 0; w < 2; w++) kind === 0 ? put(along + k, across + w) : put(across + w, along + k);
-    } else if (kind === 2) {
-      // a "\" stroke 2 wide, slid left or right
-      const shift = rand.int(5) - 2;
-      for (let r = 0; r < SIDE; r++) {
-        put(r, r + shift);
-        put(r, r + shift + 1);
-      }
-    } else {
-      // the outline of a square, 4 or 5 on a side
-      const size = 4 + rand.int(2);
-      const r0 = rand.int(SIDE - size + 1);
-      const c0 = rand.int(SIDE - size + 1);
-      for (let k = 0; k < size; k++) {
-        put(r0, c0 + k);
-        put(r0 + size - 1, c0 + k);
-        put(r0 + k, c0);
-        put(r0 + k, c0 + size - 1);
-      }
-    }
-    return img.map((row) => row.map((v) => Math.min(1, Math.max(0, v + 0.08 * rand.normal()))));
-  }
-
-  // A split of `perClass` images of each kind, in the order 0, 1, 2, 3, 0, 1, … The splits use different seeds.
-  function images(perClass, seed) {
-    const rand = rng(seed);
-    const out = [];
-    for (let i = 0; i < perClass; i++)
-      CLASSES.forEach((_, label) => {
-        out.push({ img: drawShape(label, rand), label });
-      });
-    return out;
-  }
-
-  const SPLITS = { train: [16, 11], val: [8, 22], test: [10, 33] };
-  const split = (name) => images(...SPLITS[name]);
-
-  const flat = (img) => img.flat();
-  const unflat = (v, side = SIDE) => Array.from({ length: side }, (_, r) => v.slice(r * side, (r + 1) * side));
-
-  // Moves an image by (dr, dc) pixels, filling the gap with paper.
-  const shift = (img, dr, dc) => img.map((row, r) => row.map((_, c) => img[r - dr]?.[c - dc] ?? 0));
 
   /* ---------------------------------------------------------------- photos */
 
@@ -192,7 +131,7 @@
   }
 
   // A majority vote among the k nearest; a tie goes to the class whose nearest member is closest.
-  function vote(order, k, classes = CLASSES.length) {
+  function vote(order, k, classes = PHOTOS.classes.length) {
     const counts = new Array(classes).fill(0);
     order.slice(0, k).forEach((r) => counts[r.label]++);
     const top = Math.max(...counts);
@@ -583,113 +522,6 @@
     );
   }
 
-  // Hand-made 3 × 3 filters: each lights up on one kind of stroke.
-  const FILTERS = {
-    vertical: [
-      [-1, 2, -1],
-      [-1, 2, -1],
-      [-1, 2, -1],
-    ],
-    horizontal: [
-      [-1, -1, -1],
-      [2, 2, 2],
-      [-1, -1, -1],
-    ],
-    diagonal: [
-      [2, -1, -1],
-      [-1, 2, -1],
-      [-1, -1, 2],
-    ],
-    corner: [
-      [2, 2, 2],
-      [2, -1, -1],
-      [2, -1, -1],
-    ],
-  };
-
-  // A tiny convolutional network: four learned 3 × 3 filters (padding 1), ReLU, a global max over each map, and a
-  // linear layer to four scores. Trained with softmax loss by Adam. The global max is what makes it ignore where
-  // in the image a shape is.
-  function initConvNet(filters, classes, seed) {
-    const rand = rng(seed);
-    return {
-      F: Array.from({ length: filters }, () => zeros(3, 3).map((row) => row.map(() => 0.4 * rand.normal()))),
-      fb: new Array(filters).fill(0),
-      W: zeros(classes, filters).map((row) => row.map(() => 0.5 * rand.normal())),
-      b: new Array(classes).fill(0),
-    };
-  }
-
-  function convNetForward(net, img) {
-    const maps = net.F.map((f, q) => conv2d(img, f, { pad: 1, bias: net.fb[q] }));
-    const pooled = maps.map((M) => {
-      let best = -Infinity;
-      let where = [0, 0];
-      M.forEach((row, r) => row.forEach((v, c) => v > best && ((best = v), (where = [r, c]))));
-      return { value: Math.max(0, best), where, on: best > 0 };
-    });
-    const feats = pooled.map((p) => p.value);
-    const scores = net.W.map((row, j) => dot(row, feats) + net.b[j]);
-    return { maps, pooled, feats, scores };
-  }
-
-  function convNetGrad(net, data, reg) {
-    const g = {
-      F: net.F.map((f) => f.map((r) => r.map(() => 0))),
-      fb: net.fb.map(() => 0),
-      W: net.W.map((r) => r.map(() => 0)),
-      b: net.b.map(() => 0),
-    };
-    let loss = 0;
-    data.forEach(({ img, label }) => {
-      const { pooled, feats, scores } = convNetForward(net, img);
-      const p = softmax(scores);
-      loss -= Math.log(p[label]);
-      const ds = p.map((v, j) => v - (j === label ? 1 : 0));
-      const df = new Array(feats.length).fill(0);
-      ds.forEach((dj, j) => {
-        g.b[j] += dj;
-        feats.forEach((fv, q) => {
-          g.W[j][q] += dj * fv;
-          df[q] += dj * net.W[j][q];
-        });
-      });
-      // the gradient flows only into the winning window of each map, and only if the ReLU was on
-      pooled.forEach((pq, q) => {
-        if (!pq.on) return;
-        const [r, c] = pq.where;
-        g.fb[q] += df[q];
-        for (let a = 0; a < 3; a++)
-          for (let b = 0; b < 3; b++) {
-            const rr = r - 1 + a;
-            const cc = c - 1 + b;
-            if (rr >= 0 && cc >= 0 && rr < SIDE && cc < SIDE) g.F[q][a][b] += df[q] * img[rr][cc];
-          }
-      });
-    });
-    const N = data.length;
-    const scale = (a, key) => a.map((v) => (Array.isArray(v) ? scale(v, key) : v / N));
-    ["F", "fb", "W", "b"].forEach((key) => (g[key] = scale(g[key], key)));
-    net.F.forEach((f, q) => f.forEach((row, a) => row.forEach((v, b) => (g.F[q][a][b] += reg * v))));
-    net.W.forEach((row, j) => row.forEach((v, q) => (g.W[j][q] += reg * v)));
-    return { loss: loss / N, grad: g };
-  }
-
-  function trainConvNet(data, opts = {}) {
-    const { filters = 4, steps = 400, lr = 0.03, reg = 1e-3, seed = 1 } = opts;
-    const net = initConvNet(filters, CLASSES.length, seed);
-    const adam = adamState(net);
-    const history = [];
-    for (let t = 1; t <= steps; t++) {
-      const { loss, grad } = convNetGrad(net, data, reg);
-      history.push(loss);
-      adam.step(net, grad, lr, t);
-    }
-    return { net, history };
-  }
-
-  const convNetPredict = (net) => (img) => argmax(convNetForward(net, img).scores);
-
   // Hand-made 3 × 3 edge filters for the photos: each one's weights add up to 0, so a flat patch gives 0 and only a
   // change in brightness, in the filter's direction, gives a response (positive dark → light, negative light → dark).
   const EDGES = {
@@ -776,12 +608,6 @@
     zeros,
     dot,
     argmax,
-    SIDE,
-    CLASSES,
-    split,
-    flat,
-    unflat,
-    shift,
     PHOTOS,
     photosFrom,
     photo,
@@ -826,10 +652,6 @@
     conv2d,
     relu2d,
     maxPool,
-    FILTERS,
-    convNetForward,
-    trainConvNet,
-    convNetPredict,
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = CV;

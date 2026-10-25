@@ -33,7 +33,7 @@ That's **optimisation**: find the weights that make the loss as small as possibl
 
 ## A landscape you can see
 
-The loss is a function of the weights. Part 2's classifier had 260 weights, so its loss is a surface over a 260-dimensional space, which no one can draw.
+The loss is a function of the weights. Part 2's classifier had 12,292 weights, so its loss is a surface over a 12,292-dimensional space, which no one can draw.
 
 So this part shrinks the classifier until the surface fits on screen: **two weights**, $$w_1$$ and $$w_2$$, and no bias. It looks at 80 points, each with two numbers $$x = (x_1, x_2)$$, in two classes, and gives each point the probability $$p = \sigma(w_1 x_1 + w_2 x_2)$$ of being in class 1, where $$\sigma(z) = 1/(1 + e^{-z})$$. That's the two-class version of part 2's softmax classifier, called **logistic regression**. The loss is the same cross-entropy, averaged over the points, plus a little L2 regularisation.
 
@@ -63,7 +63,7 @@ Click anywhere on the landscape to start from somewhere else; every later step r
 
 On this map it works fine. After 100 tries the best guess has loss 0.468, close to the lowest possible 0.463.
 
-But it can't scale. To land within a small distance of the best point, random guesses need to cover the space, and the number of guesses needed grows exponentially with the number of weights (the curse of dimensionality from [part 1]({% post_url 2026-10-26-cv-1-image-classification %}#the-curse-of-dimensionality)). With 260 weights, never mind millions, random search goes nowhere.
+But it can't scale. To land within a small distance of the best point, random guesses need to cover the space, and the number of guesses needed grows exponentially with the number of weights (the curse of dimensionality from [part 1]({% post_url 2026-10-26-cv-1-image-classification %}#the-curse-of-dimensionality)). With 12,292 weights, never mind millions, random search goes nowhere.
 
 </div>
 
