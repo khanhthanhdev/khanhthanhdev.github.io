@@ -66,7 +66,9 @@ The dashed ring around the image is **zero padding**: one border of zeros, so th
 
 Stacked together, the maps are the layer's output: a block 8 × 8 × 4, which the next layer reads as an image with 4 channels. A real network's first layer has dozens of filters, each spanning all 3 colour channels: a 3 × 3 filter on a colour image has 3 × 3 × 3 = 27 weights.
 
-Try the other test images. Each map lights up for its own kind of stroke, wherever it is in the image.
+Look at the maps for this vertical bar. The vertical map traces the bar, and the horizontal map lights up only at its two ends. But the **corner** map is the brightest of all. Its weights add up to +6, where the other filters' add up to 0, so it fires on any bright patch, not just on corners.
+
+Hand-made filters are crude like that. Comparing their raw responses doesn't classify anything: try the other test images, and the corner map wins on most of them. A network learns its filters, and learns how to weigh them, as we'll see below.
 
 </div>
 
