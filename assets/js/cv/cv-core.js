@@ -101,6 +101,65 @@
   // Moves an image by (dr, dc) pixels, filling the gap with paper.
   const shift = (img, dr, dc) => img.map((row, r) => row.map((_, c) => img[r - dr]?.[c - dc] ?? 0));
 
+  /* ---------------------------------------------------------------- photos */
+
+  // A small subset of CIFAR-10 (Krizhevsky, 2009): 32 × 32 colour photos of four of its ten classes, packed into
+  // one PNG (assets/img/cv/cifar-subset.png), PHOTOS.cols to a row, in the order train, val, test, with the classes
+  // interleaved 0, 1, 2, 3, 0, … A photo is { label, px, vec, grey }: px its 3072 bytes in row-major RGB order,
+  // vec the same as numbers 0 … 1 (the input to k-NN and the linear classifier), grey a 32 × 32 brightness grid.
+  const PHOTOS = {
+    side: 32,
+    cols: 32,
+    classes: ["plane", "car", "frog", "ship"],
+    splits: { train: 80, val: 20, test: 25 }, // per class
+  };
+
+  // rgba: the atlas's pixels (4 bytes each), width: its width in pixels.
+  function photosFrom(rgba, width) {
+    const { side, cols, classes, splits } = PHOTOS;
+    const C = classes.length;
+    let k = 0;
+    const out = {};
+    Object.entries(splits).forEach(([name, per]) => {
+      out[name] = Array.from({ length: per * C }, (_, i) => {
+        const x0 = ((k + i) % cols) * side;
+        const y0 = Math.floor((k + i) / cols) * side;
+        const px = new Uint8Array(side * side * 3);
+        for (let r = 0; r < side; r++)
+          for (let c = 0; c < side; c++) for (let ch = 0; ch < 3; ch++) px[(r * side + c) * 3 + ch] = rgba[((y0 + r) * width + x0 + c) * 4 + ch];
+        return photo(px, i % C);
+      });
+      k += per * C;
+    });
+    return out;
+  }
+
+  function photo(px, label) {
+    const side = PHOTOS.side;
+    const vec = Array.from(px, (v) => v / 255);
+    const grey = Array.from({ length: side }, (_, r) =>
+      Array.from({ length: side }, (_, c) => {
+        const k = (r * side + c) * 3;
+        return 0.299 * vec[k] + 0.587 * vec[k + 1] + 0.114 * vec[k + 2];
+      })
+    );
+    return { label, px, vec, grey };
+  }
+
+  // A photo moved by (dr, dc) pixels, the gap filled with black.
+  function shiftPhoto(p, dr, dc) {
+    const side = PHOTOS.side;
+    const px = new Uint8Array(p.px.length);
+    for (let r = 0; r < side; r++)
+      for (let c = 0; c < side; c++) {
+        const rr = r - dr;
+        const cc = c - dc;
+        if (rr < 0 || cc < 0 || rr >= side || cc >= side) continue;
+        for (let ch = 0; ch < 3; ch++) px[(r * side + c) * 3 + ch] = p.px[(rr * side + cc) * 3 + ch];
+      }
+    return photo(px, p.label);
+  }
+
   /* ---------------------------------------------------------------- nearest neighbours */
 
   const l1 = (a, b) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0);
@@ -622,6 +681,10 @@
     flat,
     unflat,
     shift,
+    PHOTOS,
+    photosFrom,
+    photo,
+    shiftPhoto,
     l1,
     l2,
     METRICS,

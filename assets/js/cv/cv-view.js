@@ -50,11 +50,10 @@
   function painted(attrs, draw) {
     const el = s("image", { preserveAspectRatio: "none", class: "cv-pixels", ...attrs });
     let current = draw;
-    const run = () => {
-      if (!el.isConnected && repaints.size > 200) return repaints.delete(run);
-      el.setAttribute("href", current());
-    };
-    repaints.add(run);
+    const run = () => el.setAttribute("href", current());
+    // on a theme change, a picture that has left the page drops out instead of repainting
+    const onTheme = () => (el.isConnected ? run() : repaints.delete(onTheme));
+    repaints.add(onTheme);
     run();
     return {
       el,
@@ -72,6 +71,15 @@
     const paper = rgbOf("--tf-cell");
     const ink = rgbOf("--tf-prob");
     return paint(img[0].length, img.length, (c, r) => mix(paper, ink, Math.max(0, Math.min(1, img[r][c]))));
+  }
+
+  // A photo ({ px }, row-major RGB bytes) as a picture. Photos keep their colours in both themes.
+  function photoURL(p) {
+    const side = Math.round(Math.sqrt(p.px.length / 3));
+    return paint(side, side, (c, r) => {
+      const k = (r * side + c) * 3;
+      return [p.px[k], p.px[k + 1], p.px[k + 2]];
+    });
   }
 
   // A signed image (a template or a filter): blue below zero, red above, scaled so ±range is full colour.
@@ -100,7 +108,7 @@
       el: g,
       size,
       set(img, { signed = false, range = 1, label = null } = {}) {
-        const draw = () => (signed ? signedURL(img, range) : greyURL(img));
+        const draw = () => (img.px ? photoURL(img) : signed ? signedURL(img, range) : greyURL(img));
         if (!pic) {
           pic = painted({ x: 0, y: 0, width: size, height: size }, draw);
           g.insertBefore(pic.el, tab);
@@ -124,6 +132,7 @@
   }
 
   // A grid of thumbnails, one per example. arrange(order) moves them so order[slot] = example index; they glide.
+  // With opts.slots, only the first that many slots are shown, and every other thumbnail fades out.
   function gallery(parent, examples, opts = {}) {
     const cols = opts.cols ?? 8;
     const size = opts.size ?? 34;
@@ -133,19 +142,22 @@
     const title = s("text", { class: "tf-mat-title", x: 0, y: -16, text: opts.title || "" });
     g.append(title);
     parent.append(g);
-    const thumbs = examples.map((ex) => thumb(g, { size }).set(ex.img, { label: ex.label }));
+    const thumbs = examples.map((ex) => thumb(g, { size }).set(ex.img ?? ex, { label: ex.label }));
     const slot = (k) => [(k % cols) * (size + gapX), Math.floor(k / cols) * (size + gapY)];
-    const rows = Math.ceil(examples.length / cols);
+    const slots = opts.slots ?? examples.length;
+    const rows = Math.ceil(slots / cols);
     const api = {
       el: g,
       thumbs,
       box: { x: -6, y: -32, width: cols * (size + gapX) - gapX + 12, height: rows * (size + gapY) + 30 },
       title: (text) => (title.textContent = text || ""),
       arrange(order = examples.map((_, i) => i)) {
+        const shown = new Set(order.slice(0, slots));
         order.forEach((i, k) => {
-          const [x, y] = slot(k);
+          const [x, y] = slot(Math.min(k, slots - 1));
           thumbs[i].el.style.transform = `translate(${x}px, ${y}px)`;
         });
+        thumbs.forEach((t, i) => t.el.classList.toggle("is-gone", !shown.has(i)));
         return api;
       },
       // fn(i) → { caption, mark } for every thumbnail
@@ -424,5 +436,5 @@
     };
   }
 
-  CV.view = { rgbOf, paint, painted, greyURL, signedURL, thumb, gallery, regions, surface, defs, graph, colour: (j) => `cl-c${j % 8}` };
+  CV.view = { rgbOf, paint, painted, greyURL, photoURL, signedURL, thumb, gallery, regions, surface, defs, graph, colour: (j) => `cl-c${j % 8}` };
 })();

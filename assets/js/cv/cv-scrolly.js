@@ -8,7 +8,7 @@
 //     </div>
 //   </section>
 //
-// A scene (CV.scenes[name]) is a factory: scene(stage) → { render(stepId, t) }. stage has the svg, a toolbar row
+// A scene (CV.scenes[name]) is a factory: scene(stage) → { render(stepId, t) }, or a promise of one. stage has the svg, a toolbar row
 // above it and a controls row under it for the scene's own inputs, strip(text) for the formula line, and
 // note(text). render must be idempotent: it sets the whole figure for a step and a progress t (0 → 1 through the
 // step), and scrolling past a step scrubs t. A scene calls stage.refresh() after its inputs change.
@@ -58,7 +58,22 @@
       },
     };
     window.CV.view.defs(svg);
-    const scene = factory(stage);
+    // A scene that needs data first (the photos) returns a promise of itself; until it settles, nothing renders.
+    let scene = { render() {} };
+    const made = factory(stage);
+    if (made && typeof made.then === "function") {
+      stage.note("loading the photos…");
+      made.then(
+        (ready) => {
+          stage.note("");
+          scene = ready;
+          index = -1;
+          // the first frame appears without the gliding transitions, from wherever the objects were made
+          stage.snap(sync);
+        },
+        () => stage.note("The photos failed to load. The text alongside still explains every step.")
+      );
+    } else scene = made;
 
     stageEl.replaceChildren(
       h("div", { class: "tf-head" }, counter, h("div", { class: "tf-nav" }, prev, next)),

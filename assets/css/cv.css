@@ -51,6 +51,11 @@
   opacity: 1;
 }
 
+.cv-gallery .cv-thumb.is-gone {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .cv-thumb.is-dim {
   opacity: 0.3;
 }
