@@ -1,17 +1,19 @@
-// Part 2 of the computer vision series: linear classifiers, the SVM and softmax losses, and regularisation. One
-// scene; every number is computed by CV (cv-core.js) on the images and points shown.
+// Part 2 of the computer vision series: linear classifiers, the SVM and softmax losses, and regularisation, on the
+// CIFAR-10 photos. One scene; the classifiers were trained offline (cv-photos.js loads them), and every number shown
+// is computed here, by CV (cv-core.js), from them and the photos.
 (function () {
   "use strict";
 
   const CV = window.CV;
-  const { h, s, fmt, matrix, bars, progress } = window.TF.view;
+  const { h, s, fmt, bars, progress, narrow } = window.TF.view;
   const { scatter } = window.CL.view;
-  const { regions, colour } = CV.view;
+  const { regions, colour, thumb } = CV.view;
   const { button, select } = CV.controls;
   CV.scenes = CV.scenes || {};
 
-  const REGS = [0, 0.01, 0.1, 1];
-  const name = (label) => CV.CLASSES[label];
+  const REGS = [0, 0.1, 1, 10];
+  const CLASSES = CV.PHOTOS.classes;
+  const name = (label) => CLASSES[label];
 
   // A small table of text: rows of cells, the first column left-aligned and the rest right-aligned.
   function table(parent, opts) {
@@ -52,23 +54,49 @@
     };
   }
 
-  CV.scenes.part2 = function (stage) {
-    const { svg, toolbar, controls, strip, note } = stage;
-    const train = CV.split("train");
-    const val = CV.split("val");
-    const test = CV.split("test");
-    const X = train.map((ex) => CV.flat(ex.img));
-    const y = train.map((ex) => ex.label);
+  CV.scenes.part2 = (stage) => Promise.all([CV.loadPhotos(), CV.loadLinear()]).then(([photos, linear]) => scene(stage, photos, linear));
 
-    // one model per regularisation strength; λ = 0.01 is the one the steps use
-    const models = REGS.map((reg) => CV.trainLinear(X, y, 4, { steps: 400, lr: 0.2, reg }).model);
-    const acc = (model, set) =>
-      CV.accuracy(
-        (x) => CV.argmax(CV.linearScores(model, x)),
-        set.map((ex) => CV.flat(ex.img)),
-        set.map((ex) => ex.label)
-      );
-    const templatesOf = (model) => model.W.map((row) => CV.unflat(row));
+  // A photo's 3,072 numbers in a row, drawn as one long strip of colours, the first `count` pixels filled in.
+  function ribbon(parent, width) {
+    const g = s("g", { class: "tf-obj" });
+    const title = s("text", { class: "tf-mat-title", x: 0, y: -12 });
+    const frame = s("rect", { class: "cv-thumb-frame", x: -1, y: -1, width: width + 2, height: 26 });
+    g.append(title, frame);
+    parent.append(g);
+    let pic = null;
+    return {
+      el: g,
+      box: { x: -6, y: -30, width: width + 12, height: 62 },
+      title: (text) => (title.textContent = text),
+      set(p, count) {
+        const draw = () => {
+          const paper = CV.view.rgbOf("--tf-cell");
+          return CV.view.paint(p.px.length / 3, 1, (c) => (c < count ? [p.px[3 * c], p.px[3 * c + 1], p.px[3 * c + 2]] : paper));
+        };
+        if (!pic) {
+          pic = CV.view.painted({ x: 0, y: 0, width, height: 24 }, draw);
+          g.insertBefore(pic.el, frame);
+        } else pic.redraw(draw);
+      },
+    };
+  }
+
+  // A row of weights as a picture: its red, green and blue weights each stretched to 0 … 255, as CS231n draws them.
+  function templatePhoto(row) {
+    const lo = Math.min(...row);
+    const hi = Math.max(...row);
+    return { px: Uint8Array.from(row, (v) => Math.round((255 * (v - lo)) / (hi - lo))) };
+  }
+
+  function scene(stage, photos, linear) {
+    const { svg, toolbar, controls, strip, note } = stage;
+    const { train, val, test } = photos;
+    const { models, input } = linear;
+    const SIDE = CV.PHOTOS.side;
+    const PICK = 1; // λ = 0.1, the best on the validation photos
+    const predict = (model, p) => CV.argmax(CV.linearScores(model, input(p)));
+    const acc = (model, set) => set.filter((p) => predict(model, p) === p.label).length / set.length;
+    const perClass = (model, set, j) => set.filter((p) => p.label === j && predict(model, p) === j).length;
 
     // 2-D: three blobs and the spiral, each with a linear classifier trained on it
     const blobs = CV.blobs(1, 30);
@@ -80,12 +108,12 @@
 
     /* -------------------------------------------- inputs */
 
-    const state = { q: 35, reg: 1 };
+    const state = { q: 28, reg: PICK };
     const qLabel = h("span", { class: "tf-label" });
     const prevQ = button("◀", () => pickQuery(state.q - 1));
     const nextQ = button("▶", () => pickQuery(state.q + 1));
-    prevQ.setAttribute("aria-label", "Previous test image");
-    nextQ.setAttribute("aria-label", "Next test image");
+    prevQ.setAttribute("aria-label", "Previous test photo");
+    nextQ.setAttribute("aria-label", "Next test photo");
     toolbar.append(qLabel, prevQ, nextQ);
     const regIn = select(
       "λ",
@@ -105,15 +133,36 @@
 
     /* -------------------------------------------- objects */
 
-    const image = matrix(svg, { rows: 8, cols: 8, cell: 30, kind: "prob", name: "image" });
-    const row = matrix(svg, { rows: 1, cols: 64, cell: 9, kind: "prob", name: "x, the image as one row", numbers: false });
-    const product = matrix(svg, { rows: 8, cols: 8, cell: 30, kind: "signed", range: 0.8, name: "weight × pixel" });
-    const tpl = CV.CLASSES.map((c) => matrix(svg, { rows: 8, cols: 8, cell: 14, kind: "signed", range: 0.8, name: c, numbers: false }));
-    const bigTpl = CV.CLASSES.map((c) => matrix(svg, { rows: 8, cols: 8, cell: 24, kind: "signed", range: 0.8, name: c, numbers: false }));
-    const scoreBars = bars(svg, { labels: CV.CLASSES, width: 150, gap: 26, title: "scores", max: 3, format: (v) => (v == null ? "" : fmt(v)) });
-    const lossTable = table(svg, { widths: [96, 70, 120, 70], rows: 4, title: "" });
+    // captions for the pictures sit above them
+    const titleOf = (t) => {
+      const el = s("text", { class: "tf-mat-title", x: 0, y: -12 });
+      t.el.append(el);
+      return (text) => (el.textContent = text);
+    };
+    const image = thumb(svg, { size: 160 });
+    const imageTitle = titleOf(image);
+    const rowFrame = s("rect", { class: "cv-window" });
+    image.el.append(rowFrame);
+    const frameRow = (r) => {
+      const u = image.size / SIDE;
+      rowFrame.style.opacity = r == null ? "0" : "1";
+      if (r == null) return;
+      rowFrame.setAttribute("x", 0);
+      rowFrame.setAttribute("y", r * u);
+      rowFrame.setAttribute("width", image.size);
+      rowFrame.setAttribute("height", u);
+    };
+    const row = ribbon(svg, 600);
+    const product = thumb(svg, { size: 200 });
+    const productTitle = titleOf(product);
+    const tpl = CLASSES.map(() => thumb(svg, { size: 80 }));
+    const tplTitles = tpl.map(titleOf);
+    const bigTpl = CLASSES.map(() => thumb(svg, { size: 150 }));
+    const bigTitles = bigTpl.map(titleOf);
+    const scoreBars = bars(svg, { labels: CLASSES, width: 150, gap: 26, title: "scores", max: 4, format: (v) => (v == null ? "" : fmt(v)) });
+    const lossTable = table(svg, { widths: [80, 70, 120, 80], rows: 4, title: "" });
     const probBars = bars(svg, {
-      labels: CV.CLASSES,
+      labels: CLASSES,
       width: 150,
       gap: 26,
       title: "probabilities",
@@ -134,74 +183,97 @@
       ...Object.fromEntries(bigTpl.map((m, j) => [`T${j}`, m])),
     });
     const layout = CV.layout(svg, objects);
-    [image, product].forEach((m) => (m.box = { x: -6, y: -30, width: 252, height: 278 }));
-    row.box = { x: -6, y: -30, width: 590, height: 44 };
-    tpl.forEach((m) => (m.box = { x: -4, y: -26, width: 120, height: 142 }));
-    bigTpl.forEach((m) => (m.box = { x: -4, y: -26, width: 200, height: 222 }));
+    image.box = { x: -6, y: -30, width: 172, height: 196 };
+    product.box = { x: -6, y: -30, width: 212, height: 236 };
+    tpl.forEach((t) => (t.box = { x: -6, y: -30, width: 92, height: 116 }));
+    bigTpl.forEach((t) => (t.box = { x: -6, y: -30, width: 162, height: 186 }));
     scoreBars.box = { x: -90, y: -34, width: 300, height: 140 };
     probBars.box = scoreBars.box;
     plot.box = { x: -4, y: -30, width: 448, height: 474 };
 
-    const tplAt = (x0, y0, dy = 150) => Object.fromEntries(tpl.map((_, j) => [`t${j}`, [x0, y0 + j * dy]]));
+    const tplAt = (x0, y0, dy) => Object.fromEntries(tpl.map((_, j) => [`t${j}`, [x0, y0 + j * dy]]));
+    const bigAt = { T0: [0, 0], T1: [190, 0], T2: [0, 220], T3: [190, 220] };
 
-    // the steps use λ = 0.01; the regularisation step uses the reader's choice
-    function useModel(i = 1) {
-      const model = models[i];
-      const T = templatesOf(model);
-      tpl.forEach((m, j) => m.set(T[j]));
-      bigTpl.forEach((m, j) => m.set(T[j]));
-      return model;
+    // the steps use λ = 0.1; the regularisation step uses the reader's choice
+    const pictures = models.map((m) => m.W.map(templatePhoto));
+    let drawn = null;
+    function useModel(i = PICK) {
+      if (drawn !== i)
+        pictures[i].forEach((pic, j) => {
+          tpl[j].set(pic, { label: j });
+          bigTpl[j].set(pic, { label: j });
+          tplTitles[j](CLASSES[j]);
+          bigTitles[j](CLASSES[j]);
+        });
+      drawn = i;
+      return models[i];
     }
 
     /* -------------------------------------------- render */
 
     const steps = {
       flatten(t) {
-        const img = test[state.q].img;
-        image.set(img);
-        row.set([CV.flat(img)]);
-        const k = progress(t, 8);
-        row.reveal(Math.min(64, k * 8));
-        image.row(k >= 1 && k <= 8 ? k - 1 : null);
-        layout({ image: [0, 0], row: [0, 330] });
+        const p = test[state.q];
+        image.set(p, { label: p.label });
+        imageTitle("test photo, 32 × 32");
+        row.title("x: the photo's 1,024 pixels in one row, 3 numbers each");
+        const k = progress(t, SIDE);
+        row.set(p, Math.min(SIDE, k) * SIDE);
+        frameRow(k >= 1 && k <= SIDE ? k - 1 : null);
+        layout(narrow.matches ? { image: [140, 0, { scale: 2 }], row: [0, 440] } : { image: [0, 0], row: [0, 240] });
         strip(
-          k >= 1 && k <= 8
-            ? `row ${k} of the image becomes x${k * 8 - 7} … x${k * 8}`
-            : "64 pixels, read row by row, make one list x of 64 numbers. Where a pixel sat is now only its position in the list."
+          k >= 1 && k <= SIDE
+            ? `row ${k} of the photo: 32 pixels × 3 colours become x${fmt((k - 1) * 96 + 1, 0)} … x${fmt(k * 96, 0)}`
+            : "1,024 pixels, read row by row, 3 numbers each: one list x of 3,072 numbers. Where a pixel sat is now only its position in the list."
         );
       },
 
       scores(t) {
         const model = useModel();
-        const img = test[state.q].img;
-        const x = CV.flat(img);
+        const p = test[state.q];
+        const x = input(p);
         const sc = CV.linearScores(model, x);
         const j = Math.min(3, Math.floor(t * 4.4));
-        image.set(img);
-        product.set(img.map((r, a) => r.map((v, b) => v * model.W[j][a * 8 + b])));
-        product.reveal();
-        // negative scores get no bar, only their number
+        image.set(p, { label: p.label });
+        imageTitle("test photo");
+        // each pixel's three weight × value terms, added up, so the picture shows where the score comes from
+        const terms = Array.from({ length: SIDE }, (_, r) =>
+          Array.from({ length: SIDE }, (_, c) => [0, 1, 2].reduce((a, ch) => a + model.W[j][(r * SIDE + c) * 3 + ch] * x[(r * SIDE + c) * 3 + ch], 0))
+        );
+        // a few pixels dominate; scaling to the 98th percentile keeps the rest visible
+        const mags = terms
+          .flat()
+          .map(Math.abs)
+          .sort((a, b) => a - b);
+        const range = mags[Math.floor(0.98 * mags.length)];
+        product.set(terms, { signed: true, range });
+        productTitle(`weight × pixel, ${name(j)}`);
         scoreBars.set(
           sc.map((v, i) => (i <= j ? v : null)),
           j
         );
-        tpl.forEach((m, i) => m.focusRows(i === j ? null : [-1]));
-        layout({ ...tplAt(0, 0, 140), image: [160, 0], product: [440, 0], scoreBars: [530, 330] });
-        const top = x
-          .map((v, i) => [v * model.W[j][i], i])
-          .sort((a, b) => Math.abs(b[0]) - Math.abs(a[0]))
-          .slice(0, 2);
-        strip(
-          `score(${name(j)}) = Σ weight × pixel + bias = ${fmt(sc[j] - model.b[j])} + (${fmt(model.b[j])}) = ${fmt(sc[j])}` +
-            `   ·   biggest terms: ${top.map(([v]) => fmt(v)).join(", ")}`
+        tpl.forEach((m, i) => m.mark(i === j ? null : "dim"));
+        // on a phone the templates make a row on top, and the scores go underneath
+        layout(
+          narrow.matches
+            ? {
+                ...Object.fromEntries(tpl.map((_, i) => [`t${i}`, [i * 112, 0]])),
+                image: [0, 170, { scale: 1.25 }],
+                product: [234, 170],
+                scoreBars: [120, 460],
+              }
+            : { ...tplAt(0, 0, 116), image: [140, 110], product: [350, 90], scoreBars: [680, 130] }
         );
+        const sum = terms.flat();
+        const up = sum.filter((v) => v > 0).reduce((a, b) => a + b, 0);
+        const down = sum.filter((v) => v < 0).reduce((a, b) => a + b, 0);
+        strip(`score(${name(j)}) = Σ weight × pixel + bias = ${fmt(up)} (red) ${fmt(down)} (blue) + ${fmt(model.b[j])} = ${fmt(sc[j])}`);
       },
 
       templates() {
         useModel();
-        tpl.forEach((m) => m.focusRows(null));
-        layout({ T0: [0, 0], T1: [230, 0], T2: [0, 250], T3: [230, 250] });
-        strip(`red: ink here raises the score · blue: ink here lowers it. Test accuracy ${fmt(100 * acc(models[1], test), 1)}%; k-NN got 80%.`);
+        layout(bigAt);
+        strip(`the weights, drawn as photos · test accuracy ${fmt(100 * acc(models[PICK], test), 0)}%; k-NN got 53%`);
       },
 
       geometry() {
@@ -215,69 +287,74 @@
       },
 
       svm(t) {
-        const model = models[1];
-        const ex = test[state.q];
-        const sc = CV.linearScores(model, CV.flat(ex.img));
-        const hg = CV.hinge(sc, ex.label);
+        const model = models[PICK];
+        const p = test[state.q];
+        const sc = CV.linearScores(model, input(p));
+        const hg = CV.hinge(sc, p.label);
         const shown = Math.min(4, Math.floor(t * 5.5));
-        lossTable.title(`multiclass SVM loss · true class: ${name(ex.label)}`);
+        lossTable.title(`multiclass SVM loss · true class: ${name(p.label)}`);
         lossTable.set(
           [
             ["class", "score", "s − s_true + 1", "term"],
             ...sc.map((v, j) => [
               name(j),
               fmt(v),
-              j === ex.label ? "(true class)" : j < shown || shown >= 4 ? fmt(v - sc[ex.label] + 1) : "",
-              j === ex.label ? "" : j < shown || shown >= 4 ? fmt(hg.terms[j]) : "",
+              j === p.label ? "(true class)" : j < shown || shown >= 4 ? fmt(v - sc[p.label] + 1) : "",
+              j === p.label ? "" : j < shown || shown >= 4 ? fmt(hg.terms[j]) : "",
             ]),
           ],
-          ex.label + 1,
+          p.label + 1,
           (j) => colour(j)
         );
-        image.set(ex.img);
-        layout({ image: [0, 0], lossTable: [300, 60] });
+        image.set(p, { label: p.label });
+        imageTitle("test photo");
+        layout(narrow.matches ? { image: [90, 0], lossTable: [0, 250] } : { image: [0, 30], lossTable: [230, 60] });
         strip(
           `loss = ${hg.terms
-            .map((v, j) => (j === ex.label ? null : fmt(v)))
+            .map((v, j) => (j === p.label ? null : fmt(v)))
             .filter(Boolean)
             .join(" + ")} = ${fmt(hg.loss)}${hg.loss === 0 ? ": every wrong class is beaten by at least 1, so nothing to fix" : ""}`
         );
       },
 
       softmax(t) {
-        const model = models[1];
-        const ex = test[state.q];
-        const sc = CV.linearScores(model, CV.flat(ex.img));
+        const model = models[PICK];
+        const p = test[state.q];
+        const sc = CV.linearScores(model, input(p));
         const e = sc.map(Math.exp);
         const z = e.reduce((a, b) => a + b, 0);
-        const p = e.map((v) => v / z);
+        const prob = e.map((v) => v / z);
         const stage_ = t < 0.33 ? 0 : t < 0.66 ? 1 : 2;
-        lossTable.title(`softmax · true class: ${name(ex.label)}`);
+        lossTable.title(`softmax · true class: ${name(p.label)}`);
         lossTable.set(
           [
             ["class", "score", "e^score", "probability"],
-            ...sc.map((v, j) => [name(j), fmt(v), stage_ >= 1 ? fmt(e[j]) : "", stage_ >= 2 ? fmt(p[j], 3) : ""]),
+            ...sc.map((v, j) => [name(j), fmt(v), stage_ >= 1 ? fmt(e[j]) : "", stage_ >= 2 ? fmt(prob[j], 3) : ""]),
           ],
-          ex.label + 1,
+          p.label + 1,
           (j) => colour(j)
         );
-        probBars.set(stage_ >= 2 ? p : p.map(() => null), ex.label);
-        image.set(ex.img);
-        layout({ image: [0, 0], lossTable: [300, 0], probBars: [400, 200] });
+        probBars.set(stage_ >= 2 ? prob : prob.map(() => null), p.label);
+        image.set(p, { label: p.label });
+        imageTitle("test photo");
+        layout(
+          narrow.matches
+            ? { image: [90, 0], lossTable: [0, 250], probBars: [100, 430] }
+            : { image: [0, 30], lossTable: [230, 0], probBars: [330, 200] }
+        );
         strip(
           stage_ < 1
             ? "scores can be any number. Exponentiate, so they are all positive…"
             : stage_ < 2
               ? `…then divide by their sum, ${fmt(z)}, so they add up to 1.`
-              : `loss = −log p(${name(ex.label)}) = −log ${fmt(p[ex.label], 3)} = ${fmt(-Math.log(p[ex.label]))}`
+              : `loss = −log p(${name(p.label)}) = −log ${fmt(prob[p.label], 3)} = ${fmt(-Math.log(prob[p.label]))}`
         );
       },
 
       reg() {
         const model = useModel(state.reg);
-        tpl.forEach((m) => m.focusRows(null));
+        layout(bigAt);
         const norm = Math.sqrt(model.W.flat().reduce((a, v) => a + v * v, 0));
-        layout({ T0: [0, 0], T1: [230, 0], T2: [0, 250], T3: [230, 250] });
         strip(
           `λ = ${REGS[state.reg]}: ‖W‖ = ${fmt(norm)} · training accuracy ${fmt(100 * acc(model, train), 0)}%, validation ${fmt(100 * acc(model, val), 0)}%`
         );
@@ -298,14 +375,15 @@
       regIn.wrap.hidden = step !== "reg";
       const pick = usesImage.includes(step);
       [qLabel, prevQ, nextQ].forEach((el) => (el.style.visibility = pick ? "visible" : "hidden"));
-      const ex = test[state.q];
-      const pred = CV.argmax(CV.linearScores(models[1], CV.flat(ex.img)));
-      qLabel.textContent = `test image ${state.q + 1} of ${test.length} · a ${name(ex.label)}`;
-      note(pick ? `the classifier says: ${name(pred)} ${pred === ex.label ? "✓" : "✗"}` : "");
-      if (step !== "flatten") image.row(null);
+      const p = test[state.q];
+      const pred = predict(models[PICK], p);
+      qLabel.textContent = `test photo ${state.q + 1} of ${test.length} · a ${name(p.label)}`;
+      note(pick ? `the classifier says: ${name(pred)} ${pred === p.label ? "✓" : "✗"}` : "");
+      if (step !== "flatten") frameRow(null);
+      if (step !== "scores") tpl.forEach((m) => m.mark(null));
       steps[step](t);
     }
 
     return { render };
-  };
+  }
 })();

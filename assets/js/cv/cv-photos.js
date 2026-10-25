@@ -1,5 +1,6 @@
-// Loads the series' CIFAR-10 subset: one PNG atlas, decoded through a canvas into the photos CV.photosFrom builds.
-// CV.loadPhotos() returns the same promise every time, so several figures on a page share one download.
+// Loads the series' CIFAR-10 subset: one PNG atlas, decoded through a canvas into the photos CV.photosFrom builds,
+// and part 2's linear classifiers, trained offline on it. Each loader returns the same promise every time, so several
+// figures on a page share one download.
 (function () {
   "use strict";
 
@@ -24,5 +25,17 @@
       img.src = ATLAS;
     });
     return loading;
+  };
+
+  // { models, mean, input }: models one per λ (CV.linearModels), input(photo) the vec they read.
+  let linear = null;
+  CV.loadLinear = function () {
+    if (linear) return linear;
+    const bytes = (b64) => Int8Array.from(atob(b64), (c) => (c.charCodeAt(0) << 24) >> 24);
+    linear = Promise.all([CV.loadPhotos(), fetch("/assets/json/cv/linear-photos.json").then((r) => r.json())]).then(([photos, json]) => {
+      const mean = CV.meanVec(photos.train);
+      return { models: CV.linearModels(json, bytes), mean, input: (p) => CV.centred(p, mean) };
+    });
+    return linear;
   };
 })();

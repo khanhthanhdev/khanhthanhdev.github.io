@@ -160,6 +160,26 @@
     return photo(px, p.label);
   }
 
+  // The average of some photos' vecs, and a photo's vec with that average taken away: the linear classifier's input,
+  // as in CS231n, which subtracts the mean training image before anything else.
+  function meanVec(photos) {
+    const mean = new Array(photos[0].vec.length).fill(0);
+    photos.forEach((p) => p.vec.forEach((v, i) => (mean[i] += v / photos.length)));
+    return mean;
+  }
+  const centred = (p, mean) => p.vec.map((v, i) => v - mean[i]);
+
+  // Part 2's classifiers, trained offline (assets/json/cv/linear-photos.json): one per λ, each W stored as int8
+  // bytes (base64) times one scale. bytes(base64) → Int8Array.
+  function linearModels(json, bytes) {
+    return json.models.map((m) => {
+      const q = bytes(m.W);
+      const d = q.length / m.b.length;
+      const W = m.b.map((_, j) => Array.from(q.subarray(j * d, (j + 1) * d), (v) => v * m.scale));
+      return { reg: m.reg, W, b: m.b };
+    });
+  }
+
   /* ---------------------------------------------------------------- nearest neighbours */
 
   const l1 = (a, b) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0);
@@ -685,6 +705,9 @@
     photosFrom,
     photo,
     shiftPhoto,
+    meanVec,
+    centred,
+    linearModels,
     l1,
     l2,
     METRICS,
