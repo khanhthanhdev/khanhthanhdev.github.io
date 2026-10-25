@@ -48,6 +48,15 @@
     return poly;
   }
 
+  // The axes of a covariance [[a, b], [b, c]]: its eigenvalues give the squared radii, its first eigenvector the
+  // angle of the long axis.
+  function ellipse(S) {
+    const [a, b, c] = [S[0][0], S[0][1], S[1][1]];
+    const mid = (a + c) / 2;
+    const half = Math.sqrt(((a - c) / 2) ** 2 + b * b);
+    return { rx: Math.sqrt(Math.max(mid + half, 1e-9)), ry: Math.sqrt(Math.max(mid - half, 1e-9)), angle: 0.5 * Math.atan2(2 * b, a - c) };
+  }
+
   /* ---------------------------------------------------------------- scatter plot */
 
   function scatter(parent, opts = {}) {
@@ -58,8 +67,9 @@
     const pointLayer = s("g", { class: "cl-points" });
     const extraLayer = s("g", { class: "cl-extra" });
     const centreLayer = s("g", { class: "cl-centres" });
+    const ellipseLayer = s("g", { class: "cl-ellipses" });
     const title = s("text", { class: "tf-mat-title", x: 0, y: -12, text: opts.title || "" });
-    g.append(frame, cellLayer, linkLayer, pointLayer, extraLayer, centreLayer, title);
+    g.append(frame, cellLayer, ellipseLayer, linkLayer, pointLayer, extraLayer, centreLayer, title);
     parent.append(g);
 
     let dots = [];
@@ -85,17 +95,23 @@
 
       // labels[i] is a cluster index, or null/−1 for "not assigned yet". upTo colours only the first upTo points.
       colour(labels, upTo = Infinity) {
-        dots.forEach((d, i) => d.setAttribute("class", `cl-pt ${colour(labels && i < upTo ? labels[i] : null)}`));
+        // swap only the colour class, so the emphasis set by style() survives
+        dots.forEach((d, i) => {
+          const keep = [...d.classList].filter((c) => !c.startsWith("cl-c") && c !== "cl-none");
+          d.setAttribute("class", `${keep.join(" ")} ${colour(labels && i < upTo ? labels[i] : null)}`);
+        });
         return api;
       },
 
-      // Per-point emphasis: a radius (or null for the default) and whether to dim it.
+      // Per-point emphasis: a radius, an opacity, and whether to dim, ring or hollow it (noise).
       style(fn) {
         dots.forEach((d, i) => {
-          const { r = 5, dim = false, ring = false } = fn ? fn(i) || {} : {};
+          const { r = 5, dim = false, ring = false, noise = false, alpha = null } = fn ? fn(i) || {} : {};
           d.setAttribute("r", r);
+          d.style.opacity = alpha == null ? "" : String(alpha);
           d.classList.toggle("is-dim", dim);
           d.classList.toggle("is-ring", ring);
+          d.classList.toggle("is-noise", noise);
         });
         return api;
       },
@@ -141,6 +157,30 @@
           el.setAttribute("points", poly.map((p) => p.map((v) => v.toFixed(1)).join(",")).join(" "));
           el.style.opacity = "1";
         });
+        return api;
+      },
+
+      // Gaussian components as ellipses at 1 and 2 standard deviations: [{ mean, cov }, …], or [] to hide them.
+      ellipses(list) {
+        const nodes = [];
+        list.forEach(({ mean, cov }, j) => {
+          const e = ellipse(cov);
+          const [x, y] = px(mean);
+          // y points down on screen, so the angle flips
+          const transform = `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${((-e.angle * 180) / Math.PI).toFixed(1)})`;
+          [1, 2].forEach((r) =>
+            nodes.push(
+              s("ellipse", {
+                class: `cl-ellipse ${colour(j)}${r === 1 ? " is-inner" : ""}`,
+                rx: (r * e.rx * U).toFixed(1),
+                ry: (r * e.ry * U).toFixed(1),
+                transform,
+              })
+            )
+          );
+          nodes.push(s("circle", { class: `cl-mean ${colour(j)}`, r: 4, cx: x.toFixed(1), cy: y.toFixed(1) }));
+        });
+        ellipseLayer.replaceChildren(...nodes);
         return api;
       },
 
@@ -224,5 +264,69 @@
     };
   }
 
-  CL.view = { SIZE, px, colour, voronoiCell, scatter, chart };
+  /* ---------------------------------------------------------------- dendrogram */
+
+  // The merge tree drawn upside down: leaves along the bottom, each merge a ⊓ joining its two children at the
+  // height of the merge. set(tree) draws it; show(count, labels, cutHeight) reveals the first `count` merges,
+  // colours the merges inside each cut cluster, and draws the cut line.
+  function dendrogram(parent, opts = {}) {
+    const W = opts.width ?? 300;
+    const H = opts.height ?? 300;
+    const g = s("g", { class: "cl-tree tf-obj" }, s("rect", { x: -40, y: -30, width: W + 50, height: H + 50, fill: "none" }));
+    const title = s("text", { class: "tf-mat-title", x: 0, y: -14, text: opts.title || "dendrogram" });
+    const body = s("g");
+    const cut = s("line", { class: "cl-cut", x1: -6, x2: W + 6 });
+    const axis = s("g");
+    g.append(title, axis, body, cut);
+    parent.append(g);
+    let tree = null;
+    let paths = [];
+    let Y = () => 0;
+    let top = 1;
+    return {
+      el: g,
+      title: (text) => (title.textContent = text),
+      set(next) {
+        tree = next;
+        const { n, merges, order } = tree;
+        top = merges.length ? merges[merges.length - 1].height : 1;
+        Y = (v) => H - (v / top) * (H - 8);
+        const pos = new Map();
+        order.forEach((leaf, i) => pos.set(leaf, [n === 1 ? W / 2 : (i * W) / (n - 1), H]));
+        paths = merges.map((m) => {
+          const [xa, ya] = pos.get(m.a);
+          const [xb, yb] = pos.get(m.b);
+          const y = Y(m.height);
+          pos.set(m.id, [(xa + xb) / 2, y]);
+          return s("path", { d: `M ${xa.toFixed(1)} ${ya.toFixed(1)} V ${y.toFixed(1)} H ${xb.toFixed(1)} V ${yb.toFixed(1)}` });
+        });
+        body.replaceChildren(...paths);
+        axis.replaceChildren(
+          s("line", { class: "tf-stroke-muted", x1: -6, y1: 0, x2: -6, y2: H }),
+          s("text", { class: "tf-small", x: -10, y: Y(top) + 4, "text-anchor": "end", text: fmt(top, top >= 10 ? 0 : 1) }),
+          s("text", { class: "tf-small", x: -10, y: H + 4, "text-anchor": "end", text: "0" }),
+          s("text", { class: "tf-small", x: W / 2, y: H + 18, "text-anchor": "middle", text: `${n} points` })
+        );
+      },
+      // count: merges shown; labels: a cluster per point (colours whole subtrees); cutHeight: where to draw the cut
+      show(count, labels = null, cutHeight = null, focus = null) {
+        if (!tree) return;
+        paths.forEach((p, m) => {
+          const merge = tree.merges[m];
+          p.style.opacity = m < count ? "1" : "0";
+          const inside = labels && cutHeight != null && merge.height <= cutHeight + 1e-9;
+          p.setAttribute("class", `${inside ? `is-on ${colour(labels[merge.members[0]])}` : ""}${m === focus ? " is-on cl-none is-focus" : ""}`);
+        });
+        if (cutHeight == null) cut.style.opacity = "0";
+        else {
+          const y = Y(cutHeight).toFixed(1);
+          cut.setAttribute("y1", y);
+          cut.setAttribute("y2", y);
+          cut.style.opacity = "1";
+        }
+      },
+    };
+  }
+
+  CL.view = { SIZE, px, colour, voronoiCell, ellipse, scatter, chart, dendrogram };
 })();

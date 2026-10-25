@@ -78,6 +78,13 @@ html[data-theme="dark"] {
   outline-offset: 1px;
 }
 
+/* Greek letters keep their case: an uppercased ε reads as E. */
+.tf-controls label.cl-nocaps {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+}
+
 /* ------------------------------------------------------------ scatter plot */
 
 .cl-frame {
@@ -172,9 +179,21 @@ html[data-theme="dark"] {
   pointer-events: none;
 }
 
+.cl-ellipse.is-inner {
+  fill-opacity: 0.1;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.cl-mean {
+  fill: var(--cl);
+  stroke: var(--tf-paper);
+  stroke-width: 1.5;
+}
+
 .cl-ring-eps {
   fill: var(--tf-accent);
-  fill-opacity: 0.06;
+  fill-opacity: 0.025;
   stroke: var(--tf-accent);
   stroke-width: 1.2;
   pointer-events: none;
@@ -232,6 +251,11 @@ html[data-theme="dark"] {
 .cl-tree path.is-on {
   stroke: var(--cl, var(--tf-ink));
   stroke-width: 2;
+}
+
+.cl-tree path.is-focus {
+  stroke: var(--tf-accent);
+  stroke-width: 2.5;
 }
 
 .cl-cut {
