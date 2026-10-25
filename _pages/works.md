@@ -67,23 +67,7 @@ display_categories: [work]
       Interactive explainers and technical notes on how AI systems work under the hood.
     </p>
 
-    <ul class="post-list">
-      {% for post in site.posts %}
-        <li>
-          {% if post.redirect == blank %}
-            <a class="post-title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
-          {% elsif post.redirect contains '://' %}
-            <a class="post-title" href="{{ post.redirect }}" target="_blank" rel="noopener">{{ post.title }}</a>
-          {% else %}
-            <a class="post-title" href="{{ post.redirect | relative_url }}">{{ post.title }}</a>
-          {% endif %}
-          <p>{{ post.description }}</p>
-          <p class="post-meta">{{ post.date | date: '%B %d, %Y' }}</p>
-        </li>
-      {% else %}
-        <li>No posts yet.</li>
-      {% endfor %}
-    </ul>
+    {% include writing_list.liquid %}
 
   </section>
 

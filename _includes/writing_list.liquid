@@ -1,0 +1,55 @@
+{% comment %}
+  Writing list for the works page: posts that share a `series` front-matter key
+  are listed once, with their parts nested underneath; other posts get one line.
+{% endcomment %}
+{% assign series_groups = site.posts | where_exp: 'p', 'p.series' | group_by: 'series' %}
+{% assign single_posts = site.posts | where_exp: 'p', 'p.series == nil' %}
+
+{% if site.posts.size == 0 %}
+  <p class="text-muted">No posts yet.</p>
+{% else %}
+  <ul class="writing-list">
+    {% for group in series_groups %}
+      {% assign parts = group.items | sort: 'part' %}
+      {% assign first_part = parts | first %}
+      {% assign newest = group.items | sort: 'date' | last %}
+      {% if first_part.series_title %}
+        {% assign series_name = first_part.series_title %}
+      {% else %}
+        {% assign series_name = first_part.title | split: ', part' | first %}
+      {% endif %}
+      {% include writing_url.liquid post=first_part %}
+      <li class="writing-item">
+        <a href="{{ writing_url }}"
+          ><strong>{{ series_name }}</strong></a
+        >
+        ({{ newest.date | date: '%Y' }}, {{ parts.size }}-part series) &mdash;
+        {{ first_part.series_description | default: first_part.description }}
+        <ol class="writing-parts">
+          {% for p in parts %}
+            {% include writing_url.liquid post=p %}
+            <li>
+              <a href="{{ writing_url }}">{{ p.title | split: ': ' | last }}</a>
+              <span class="writing-desc">&mdash; {{ p.description }}</span>
+            </li>
+          {% endfor %}
+        </ol>
+      </li>
+    {% endfor %}
+
+    {% for post in single_posts %}
+      {% include writing_url.liquid post=post %}
+      <li class="writing-item">
+        <a
+          href="{{ writing_url }}"
+          {% if post.redirect contains '://' %}
+            target="_blank" rel="noopener"
+          {% endif %}
+        >
+          <strong>{{ post.title }}</strong></a
+        >
+        ({{ post.date | date: '%Y' }}) &mdash; {{ post.description }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

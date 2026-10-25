@@ -1,0 +1,8 @@
+{% comment %} Sets `writing_url` to where a post link should point, honouring `redirect`. {% endcomment %}
+{% if include.post.redirect == blank %}
+  {% assign writing_url = include.post.url | relative_url %}
+{% elsif include.post.redirect contains '://' %}
+  {% assign writing_url = include.post.redirect %}
+{% else %}
+  {% assign writing_url = include.post.redirect | relative_url %}
+{% endif %}

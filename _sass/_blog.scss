@@ -134,3 +134,50 @@
     }
   }
 }
+
+/*******************************************************************************
+ * Writing list on the works page, styled like the project list above it
+ ******************************************************************************/
+
+.writing-list {
+  margin-top: 2rem;
+  padding-left: 1.5rem;
+
+  .writing-item {
+    margin-bottom: 1rem;
+  }
+
+  a {
+    color: var(--global-text-color);
+
+    &:hover {
+      color: var(--global-theme-color);
+      text-decoration: none;
+    }
+  }
+
+  .writing-parts {
+    margin-top: 0.4rem;
+    padding-left: 1.25rem;
+
+    li {
+      margin-bottom: 0.2rem;
+    }
+
+    li::marker {
+      color: var(--global-text-color-light);
+    }
+
+    a {
+      color: var(--global-theme-color);
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .writing-desc {
+    color: var(--global-text-color-light);
+  }
+}
