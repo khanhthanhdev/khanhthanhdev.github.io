@@ -327,6 +327,21 @@
           "marker",
           { id: "cv-head", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" },
           s("path", { class: "cv-head", d: "M 0 0 L 10 5 L 0 10 z" })
+        ),
+        // the same head at a fixed size, for edges whose stroke width changes when highlighted
+        s(
+          "marker",
+          {
+            id: "cv-head-fixed",
+            viewBox: "0 0 10 10",
+            refX: 9,
+            refY: 5,
+            markerWidth: 9,
+            markerHeight: 9,
+            markerUnits: "userSpaceOnUse",
+            orient: "auto",
+          },
+          s("path", { class: "cv-head", d: "M 0 0 L 10 5 L 0 10 z" })
         )
       )
     );
@@ -335,8 +350,9 @@
   /* ---------------------------------------------------------------- computational graphs */
 
   // A graph laid out left to right. nodes: [{ id, label, at: [x, y] }] (CV.forward/backward fill value and grad);
-  // edges are read from node.inputs. show(values, grads, focus) writes the numbers: values[id] above each edge
+  // edges are read from node.inputs. show(values, grads, focus) writes the numbers: values[id] above the edge
   // leaving a node (green, forward) and grads[id] under it (red, backward). Missing entries are left blank.
+  // opts.digits sets the decimals; whole numbers are always written without them.
   function graph(parent, nodes, opts = {}) {
     const g = s("g", { class: "cv-graph tf-obj" });
     const title = s("text", { class: "tf-mat-title", x: 0, y: -24, text: opts.title || "" });
@@ -344,20 +360,26 @@
     const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
     const R = 20;
     const edgeEls = [];
+    const leaving = {};
     nodes.forEach((n) =>
       (n.inputs || []).forEach((src) => {
         const a = byId[src].at;
         const b = n.at;
-        const line = s("line", { class: "cv-edge", x1: a[0] + R, y1: a[1], x2: b[0] - R - 2, y2: b[1], "marker-end": "url(#cv-head)" });
+        const line = s("line", { class: "cv-edge", x1: a[0] + R, y1: a[1], x2: b[0] - R - 1, y2: b[1], "marker-end": "url(#cv-head-fixed)" });
         g.append(line);
         edgeEls.push({ from: src, to: n.id, line });
+        leaving[src] = leaving[src] || [a[0] + R, a[1], b[0] - R, b[1]];
       })
     );
     // the output gets an edge of its own, so its value and gradient have somewhere to go
     const outNode = nodes[nodes.length - 1];
     const tail = s("line", { class: "cv-edge", x1: outNode.at[0] + R, y1: outNode.at[1], x2: outNode.at[0] + R + 50, y2: outNode.at[1] });
     g.append(tail);
+    leaving[outNode.id] = [outNode.at[0] + R, outNode.at[1], outNode.at[0] + R + 50, outNode.at[1]];
     const labelEls = {};
+    const nodeLayer = s("g");
+    const labelLayer = s("g");
+    g.append(nodeLayer, labelLayer);
     nodes.forEach((n) => {
       const input = n.op === "input";
       const node = s(
@@ -370,15 +392,19 @@
       );
       const fwd = s("text", { class: "cv-fwd", "text-anchor": "middle" });
       const bwd = s("text", { class: "cv-bwd", "text-anchor": "middle" });
-      g.append(node, fwd, bwd);
-      // numbers sit on the edge leaving the node, a little past the node
-      const x = n.at[0] + (input ? 26 : R + 26);
+      nodeLayer.append(node);
+      labelLayer.append(fwd, bwd);
+      // numbers sit on the edge leaving the node, a little past the node: value above the line, gradient below
+      const [x1, y1, x2, y2] = leaving[n.id];
+      const x = x1 + 24;
+      const y = y1 + ((y2 - y1) * (x - x1)) / (x2 - x1 || 1);
       fwd.setAttribute("x", x);
-      fwd.setAttribute("y", n.at[1] - 7);
+      fwd.setAttribute("y", y - 7);
       bwd.setAttribute("x", x);
-      bwd.setAttribute("y", n.at[1] + 17);
+      bwd.setAttribute("y", y + 16);
       labelEls[n.id] = { node, fwd, bwd };
     });
+    const num = (v) => (Math.abs(v - Math.round(v)) < 1e-9 ? fmt(v, 0) : fmt(v, opts.digits ?? 2));
     parent.append(g);
     return {
       el: g,
@@ -386,8 +412,8 @@
       show(values = {}, grads = {}, focus = null) {
         nodes.forEach((n) => {
           const L = labelEls[n.id];
-          L.fwd.textContent = values[n.id] == null ? "" : fmt(values[n.id]);
-          L.bwd.textContent = grads[n.id] == null ? "" : fmt(grads[n.id]);
+          L.fwd.textContent = values[n.id] == null ? "" : num(values[n.id]);
+          L.bwd.textContent = grads[n.id] == null ? "" : num(grads[n.id]);
           L.node.classList.toggle("is-focus", focus === n.id);
         });
         edgeEls.forEach((e) => e.line.classList.toggle("is-focus", focus === e.to || focus === e.from));

@@ -339,6 +339,7 @@
     addc: { f: (a) => a + 1, df: () => [1] },
     inv: { f: (a) => 1 / a, df: (a) => [-1 / (a * a)] },
     sigmoid: { f: sigmoid, df: (a) => [sigmoid(a) * (1 - sigmoid(a))] },
+    double: { f: (a) => 2 * a, df: () => [2] },
   };
 
   function forward(graph) {

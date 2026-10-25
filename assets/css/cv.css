@@ -211,6 +211,19 @@
   stroke-width: 2.2;
 }
 
+.tf-svg .cv-graph .tf-mat-title {
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
+.tf-svg .cv-fwd,
+.tf-svg .cv-bwd {
+  paint-order: stroke;
+  stroke: var(--tf-paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
 .tf-svg .cv-fwd {
   fill: var(--cl-2);
   font-family: var(--tf-mono);
