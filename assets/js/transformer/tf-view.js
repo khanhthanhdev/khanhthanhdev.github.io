@@ -402,60 +402,157 @@
   /* ---------------------------------------------------------------- block diagram */
 
   // The paper's Figure 1 style: boxes stacked bottom to top, data flowing up, residual paths around each sublayer.
-  // rows are listed bottom first: { id, label, kind: "sub" | "norm", skip: id of the sublayer a norm adds back }.
+  // All row lists are bottom first. opts.rows are the repeated layers, inside the "× N" frame; opts.foot (below
+  // the frame: embedding, ⊕ positions) and opts.head (above it: linear, softmax) sit outside, as in the paper.
+  // A row is { id, label, kind, skip, note, fork }:
+  //   kind "attn" | "ffn" | "norm" | "embed" | "out" | "pe" picks the size and the tint (the paper's colours);
+  //   skip is the id of the sublayer a norm adds back; note is a second, smaller line in the box;
+  //   fork "qkv" splits the arrow below into Q, K and V; fork "q" sends only Q up, for cross-attention.
   // opts.side = { id, label } draws an extra input arriving from the left (cross-attention's encoder output).
+  // opts.shape labels the input and output arrows with the matrix shape; opts.repeatSide puts "× N" on the left.
+  // The api's anchors give the input and output points and opts.side's entry point, in the group's coordinates.
   function block(parent, opts) {
     const width = opts.width ?? 200;
-    const heights = { sub: 42, norm: 28 };
+    const heights = { attn: 42, ffn: 42, sub: 42, norm: 28, embed: 34, out: 30, pe: 20 };
     const gap = 24;
     const g = s("g", { class: "tf-block" });
     const boxes = {};
-    let y = 0;
-    const order = opts.rows.slice().reverse(); // draw top-down, so y grows downwards
-    const top = s("text", { class: "tf-caps", x: width / 2, y: -30, "text-anchor": "middle", text: opts.output ?? "output" });
-    g.append(top, arrow(width / 2, y - 22, width / 2, y));
-    order.forEach((row, k) => {
-      const hgt = heights[row.kind];
-      const rect = s("rect", { class: `tf-box tf-box-${row.kind}`, x: 0, y, width, height: hgt, rx: 4 });
-      const label = s("text", { class: "tf-block-label", x: width / 2, y: y + hgt / 2 + 4, "text-anchor": "middle", text: row.label });
-      boxes[row.id] = { rect, label, x: 0, y, width, height: hgt };
-      g.append(rect, label);
-      y += hgt;
-      if (k < order.length - 1) g.append(arrow(width / 2, y + gap, width / 2, y));
-      y += gap;
-    });
-    const bottom = y - gap;
-    g.append(
-      arrow(width / 2, bottom + 30, width / 2, bottom),
-      s("text", { class: "tf-caps", x: width / 2, y: bottom + 46, "text-anchor": "middle", text: opts.input ?? "input" })
-    );
+    const cx = width / 2;
+    const foot = opts.foot ?? [];
+    const head = opts.head ?? [];
+    // every row top-down, each tagged with the zone it lives in
+    const order = [
+      ...head
+        .slice()
+        .reverse()
+        .map((r) => ({ ...r, zone: "head" })),
+      ...opts.rows
+        .slice()
+        .reverse()
+        .map((r) => ({ ...r, zone: "rows" })),
+      ...foot
+        .slice()
+        .reverse()
+        .map((r) => ({ ...r, zone: "foot" })),
+    ];
+    // the gap below a row: room for a Q/K/V fork, and room for the frame where a zone ends
+    const gapBelow = (k) => {
+      const row = order[k];
+      const next = order[k + 1];
+      let gp = gap;
+      if (row.fork) gp += 16;
+      if (next && next.zone !== row.zone) gp += 14;
+      return gp;
+    };
 
-    // residual: leave the line just below the sublayer, run up the right side, enter the norm box from the right
+    // where a residual path leaves the line below a sublayer: under the fork, if there is one
+    const tap = (fork) => (fork ? 28 : 12);
+
+    let y = 0;
+    const pos = [];
+    order.forEach((row, k) => {
+      const hgt = heights[row.kind] ?? 42;
+      pos.push({ y, hgt });
+      y += hgt + (k < order.length - 1 ? gapBelow(k) : 0);
+    });
+    const bottom = y;
+    const outLabel = opts.output ?? "output";
+    const topArrow = s("g");
+    g.append(topArrow);
+    if (outLabel) g.append(s("text", { class: "tf-caps", x: cx, y: -30, "text-anchor": "middle", text: outLabel }));
+    topArrow.append(arrow(cx, -22, cx, 0));
+
+    order.forEach((row, k) => {
+      const { y: ry, hgt } = pos[k];
+      if (row.kind === "pe") {
+        // ⊕: the positions are added to the embeddings
+        const r = hgt / 2;
+        const circle = s("circle", { class: "tf-box tf-box-pe", cx, cy: ry + r, r });
+        const plus = s("path", { class: "tf-stroke-ink", d: `M ${cx - r + 5} ${ry + r} H ${cx + r - 5} M ${cx} ${ry + 5} V ${ry + hgt - 5}` });
+        const left = row.labelSide !== "right";
+        const wx = left ? cx - r - 34 : cx + r + 10;
+        const wave = s("path", { class: "tf-wave", d: sineIcon(wx, ry + r, 24, 6) });
+        const label = s("text", {
+          class: "tf-small",
+          x: left ? wx - 6 : wx + 30,
+          y: ry + r + 3.5,
+          "text-anchor": left ? "end" : "start",
+          text: row.label ?? "positional encoding",
+        });
+        boxes[row.id] = { rect: circle, label, x: cx - r, y: ry, width: hgt, height: hgt };
+        g.append(circle, plus, wave, label);
+      } else {
+        const rect = s("rect", { class: `tf-box tf-box-${row.kind}`, x: 0, y: ry, width, height: hgt, rx: 4 });
+        const dy = row.note ? -4 : 4;
+        const label = s("text", { class: "tf-block-label", x: cx, y: ry + hgt / 2 + dy, "text-anchor": "middle", text: row.label });
+        boxes[row.id] = { rect, label, x: 0, y: ry, width, height: hgt, fork: row.fork };
+        g.append(rect, label);
+        if (row.note) g.append(s("text", { class: "tf-small tf-block-note", x: cx, y: ry + hgt / 2 + 11, "text-anchor": "middle", text: row.note }));
+      }
+      // the arrow from the row below into this one, forked for attention
+      const yIn = ry + hgt;
+      const yBelow = k < order.length - 1 ? pos[k + 1].y : bottom + 30;
+      if (!row.fork) {
+        g.append(arrow(cx, yBelow, cx, yIn));
+      } else {
+        const yFork = yIn + 17;
+        const xs = row.fork === "q" ? [cx + 50] : [cx - 50, cx, cx + 50];
+        const names = row.fork === "q" ? ["Q"] : ["V", "K", "Q"];
+        g.append(s("line", { class: "tf-stroke-muted", x1: cx, y1: yBelow, x2: cx, y2: yFork }));
+        if (row.fork === "q" || xs.length > 1) {
+          g.append(s("line", { class: "tf-stroke-muted", x1: Math.min(cx, ...xs), y1: yFork, x2: Math.max(cx, ...xs), y2: yFork }));
+        }
+        xs.forEach((x, i) => {
+          g.append(arrow(x, yFork, x, yIn));
+          g.append(s("text", { class: `tf-small tf-fork-${names[i].toLowerCase()}`, x: x + 5, y: yFork - 4, text: names[i] }));
+        });
+      }
+    });
+    g.append(s("text", { class: "tf-caps", x: cx, y: bottom + 46, "text-anchor": "middle", text: opts.input ?? "input" }));
+    if (opts.shape) {
+      g.append(
+        s("text", { class: "tf-small tf-shape", x: cx + 6, y: bottom + 20, text: opts.shape }),
+        s("text", { class: "tf-small tf-shape", x: cx + 6, y: -10, text: opts.shapeOut ?? opts.shape })
+      );
+    }
+
+    // residual: leave the line just below the sublayer (under any fork), run up the right side, enter the norm box
     opts.rows.forEach((row) => {
       if (!row.skip) return;
       const sub = boxes[row.skip];
       const norm = boxes[row.id];
-      const yFrom = sub.y + sub.height + gap / 2;
+      const yFrom = sub.y + sub.height + tap(boxes[row.skip].fork);
       const yTo = norm.y + norm.height / 2;
       const xr = width + 18;
       g.append(
-        s("path", { class: "tf-residual", d: `M ${width / 2} ${yFrom} H ${xr} V ${yTo} H ${width + 7}` }),
+        s("path", { class: "tf-residual", d: `M ${cx} ${yFrom} H ${xr} V ${yTo} H ${width + 7}` }),
         s("path", { class: "tf-arrow", d: `M ${width + 7} ${yTo - 4} L ${width} ${yTo} L ${width + 7} ${yTo + 4} Z` })
       );
     });
+    const anchors = { in: { x: cx, y: bottom + 30 }, out: { x: cx, y: -22 } };
     if (opts.side) {
       const b = boxes[opts.side.id];
       const yIn = b.y + b.height / 2;
+      anchors.side = { x: -70, y: yIn };
       g.append(
         s("path", { class: "tf-residual tf-side", d: `M -70 ${yIn} H -7` }),
-        s("path", { class: "tf-arrow", d: `M -7 ${yIn - 4} L 0 ${yIn} L -7 ${yIn + 4} Z` }),
+        s("path", { class: "tf-arrow tf-arrow-side", d: `M -7 ${yIn - 4} L 0 ${yIn} L -7 ${yIn + 4} Z` }),
         s("text", { class: "tf-small", x: -38, y: yIn - 8, "text-anchor": "middle", text: opts.side.label })
       );
     }
     if (opts.repeat) {
-      const frame = s("rect", { class: "tf-block-frame", x: -14, y: -10, width: width + 46, height: bottom + 20, rx: 8 });
-      g.prepend(frame);
-      g.append(s("text", { class: "tf-op", x: width + 44, y: bottom / 2 + 8, text: opts.repeat }));
+      const inside = order.map((r, k) => ({ r, k })).filter(({ r }) => r.zone === "rows");
+      const first = inside[0];
+      const last = inside[inside.length - 1];
+      const y0 = pos[first.k].y - 10;
+      const y1 = pos[last.k].y + pos[last.k].hgt + tap(last.r.fork) + 7;
+      g.prepend(s("rect", { class: "tf-block-frame", x: -14, y: y0, width: width + 46, height: y1 - y0, rx: 8 }));
+      const yMid = (y0 + y1) / 2 + 8;
+      g.append(
+        opts.repeatSide === "left"
+          ? s("text", { class: "tf-op", x: -22, y: yMid, "text-anchor": "end", text: opts.repeat })
+          : s("text", { class: "tf-op", x: width + 44, y: yMid, text: opts.repeat })
+      );
     }
     if (opts.title) g.append(s("text", { class: "tf-mat-title", x: 0, y: -52, text: opts.title }));
 
@@ -472,6 +569,8 @@
     const api = {
       el: g,
       boxes,
+      anchors,
+      height: bottom,
       // Lights up the given box ids (an id, a list, or null for none).
       set(ids) {
         const on = ids == null ? [] : [].concat(ids);
@@ -482,6 +581,13 @@
     };
     hide(g);
     return api;
+  }
+
+  // One full period of a sine wave, `w` wide and `a` high, starting at (x, y): the positional-encoding icon.
+  function sineIcon(x, y, w, a) {
+    const pts = [];
+    for (let i = 0; i <= 24; i++) pts.push(`${(x + (i / 24) * w).toFixed(1)} ${(y - a * Math.sin((i / 24) * 2 * Math.PI)).toFixed(1)}`);
+    return `M ${pts.join(" L ")}`;
   }
 
   /* ---------------------------------------------------------------- bars */

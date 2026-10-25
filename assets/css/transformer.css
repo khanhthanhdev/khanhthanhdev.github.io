@@ -670,8 +670,64 @@ html[data-theme="dark"] {
     opacity 450ms ease;
 }
 
+/* The paper's Figure 1 tints, kept light: attention, feed-forward, Add & Norm, embeddings, output layers. */
+.tf-box-attn {
+  fill: color-mix(in srgb, var(--tf-v) 14%, var(--tf-paper));
+}
+
+.tf-box-ffn {
+  fill: color-mix(in srgb, var(--tf-enc) 10%, var(--tf-paper));
+}
+
 .tf-box-norm {
+  fill: color-mix(in srgb, var(--tf-marker) 28%, var(--tf-paper));
+}
+
+.tf-box-embed {
+  fill: color-mix(in srgb, var(--tf-pos) 10%, var(--tf-paper));
+}
+
+.tf-box-out {
+  fill: color-mix(in srgb, var(--tf-k) 14%, var(--tf-paper));
+}
+
+.tf-box-op {
+  fill: var(--tf-cell);
+}
+
+.tf-box-pe {
   fill: var(--tf-paper);
+}
+
+.tf-stroke-ink {
+  fill: none;
+  stroke: var(--tf-ink);
+  stroke-width: 1.25;
+}
+
+.tf-svg .tf-block-note {
+  font-family: var(--tf-mono);
+  font-size: 9.5px;
+}
+
+.tf-svg .tf-shape {
+  font-family: var(--tf-mono);
+  font-size: 9.5px;
+}
+
+.tf-svg .tf-fork-q {
+  fill: var(--tf-q);
+  font-weight: 600;
+}
+
+.tf-svg .tf-fork-k {
+  fill: var(--tf-k);
+  font-weight: 600;
+}
+
+.tf-svg .tf-fork-v {
+  fill: var(--tf-v);
+  font-weight: 600;
 }
 
 .tf-svg .tf-block-label {
@@ -710,6 +766,13 @@ html[data-theme="dark"] {
   stroke: var(--tf-grid);
   stroke-width: 1;
   stroke-dasharray: 4 3;
+}
+
+/* Long derivations scroll sideways on phones instead of widening the page. */
+.post-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
 }
 
 /* ------------------------------------------------------------ series navigation */
@@ -785,7 +848,8 @@ html[data-theme="dark"] {
   text-align: right;
 }
 
-.tf-table th:first-child {
+.tf-table th:first-child,
+.tf-table td:first-child {
   text-align: left;
 }
 
@@ -875,6 +939,20 @@ html[data-theme="dark"] {
 .tf-figure-note {
   margin: 8px 0;
   font-size: 0.9rem;
+}
+
+.tf-svg.tf-flow {
+  display: block;
+  max-width: 520px;
+  margin: 8px auto 12px;
+}
+
+.tf-svg .tf-flow-note {
+  fill: var(--tf-ink);
+}
+
+.tf-box-back {
+  stroke: var(--tf-muted);
 }
 
 .tf-figure-note.tf-num {

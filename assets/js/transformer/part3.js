@@ -38,13 +38,18 @@
         L,
         diagram: V.block(svg, {
           rows: [
-            { id: "attn", label: "Multi-head attention", kind: "sub" },
+            { id: "attn", label: "Multi-head attention", kind: "attn", fork: "qkv", note: `${TF.config.heads} heads · d_k = ${TF.config.dK}` },
             { id: "norm1", label: "Add & Norm", kind: "norm", skip: "attn" },
-            { id: "ffn", label: "Feed forward", kind: "sub" },
+            { id: "ffn", label: "Feed forward", kind: "ffn", note: `${D} → ${FF} → ${D}` },
             { id: "norm2", label: "Add & Norm", kind: "norm", skip: "ffn" },
           ],
-          input: "X + PE",
+          foot: [
+            { id: "embed", label: "Input embedding", kind: "embed" },
+            { id: "pe", kind: "pe" },
+          ],
+          input: "words",
           output: "to the next block",
+          shape: `${n} × ${D}`,
           repeat: "× N",
         }),
         // residual

@@ -64,29 +64,45 @@
         // overview
         enc: V.block(svg, {
           rows: [
-            { id: "attn", label: "Self-attention", kind: "sub" },
+            { id: "attn", label: "Self-attention", kind: "attn", fork: "qkv" },
             { id: "norm1", label: "Add & Norm", kind: "norm", skip: "attn" },
-            { id: "ffn", label: "Feed forward", kind: "sub" },
+            { id: "ffn", label: "Feed forward", kind: "ffn" },
             { id: "norm2", label: "Add & Norm", kind: "norm", skip: "ffn" },
           ],
+          foot: [
+            { id: "embed", label: "Input embedding", kind: "embed" },
+            { id: "pe", kind: "pe" },
+          ],
           title: "Encoder",
-          input: "source + PE",
-          output: "to the decoder",
-          repeat: "× N",
+          input: "source words",
+          output: "",
+          shape: `${n} × ${D}`,
+          repeat: "N ×",
+          repeatSide: "left",
         }),
         decB: V.block(svg, {
           rows: [
-            { id: "self", label: "Masked self-attention", kind: "sub" },
+            { id: "self", label: "Masked self-attention", kind: "attn", fork: "qkv" },
             { id: "norm1", label: "Add & Norm", kind: "norm", skip: "self" },
-            { id: "cross", label: "Cross-attention", kind: "sub" },
+            { id: "cross", label: "Cross-attention", kind: "attn", fork: "q" },
             { id: "norm2", label: "Add & Norm", kind: "norm", skip: "cross" },
-            { id: "ffn", label: "Feed forward", kind: "sub" },
+            { id: "ffn", label: "Feed forward", kind: "ffn" },
             { id: "norm3", label: "Add & Norm", kind: "norm", skip: "ffn" },
+          ],
+          foot: [
+            { id: "embed", label: "Output embedding", kind: "embed" },
+            { id: "pe", kind: "pe", labelSide: "right" },
+          ],
+          head: [
+            { id: "linear", label: "Linear (· Eᵀ)", kind: "out" },
+            { id: "softmax", label: "Softmax", kind: "out" },
           ],
           side: { id: "cross", label: "K, V" },
           title: "Decoder",
-          input: "output so far + PE",
-          output: "linear → softmax → next word",
+          input: "outputs, shifted right",
+          output: "next-word probabilities",
+          shape: `${n} × ${D}`,
+          shapeOut: `${n} × ${TF.vocab.length}`,
           repeat: "× N",
         }),
         link: memoryLink(),
@@ -263,14 +279,17 @@
     // On phones only one stack fits at a readable size: `only` picks it ("enc" or "dec"); the decoder's own
     // "K, V" arrow stands in for the link.
     function overview(encOn, decOn, only) {
-      const yD = TOP + 70;
-      const yE = yD + 330 - 212; // decoder stack is 330 tall, encoder 212
       const xE = 40;
       const xD = 460;
+      const yD = TOP + 90;
+      const yE = yD + o.decB.height - o.enc.height; // bottoms aligned
       if (V.narrow.matches) layout(only === "enc" ? { enc: [xE, yE] } : { decB: [xD, yD] });
       else layout({ enc: [xE, yE], decB: [xD, yD], link: [0, 0] });
-      const yCross = yD + o.decB.boxes.cross.y + o.decB.boxes.cross.height / 2;
-      o.link.set(`M ${xE + 100} ${yE - 40} V ${yD - 40} H ${xD - 120} V ${yCross} H ${xD - 70}`);
+      // the encoder's output leaves its top, crosses over and enters cross-attention from the left, as in Figure 1
+      const out = o.enc.anchors.out;
+      const side = o.decB.anchors.side;
+      const xTurn = xD + side.x - 30;
+      o.link.set(`M ${xE + out.x} ${yE + out.y} V ${yE + out.y - 14} H ${xTurn} V ${yD + side.y} H ${xD + side.x}`);
       o.enc.set(encOn);
       o.decB.set(decOn);
     }
@@ -278,7 +297,7 @@
     const steps = {
       overview(t) {
         const parts = [
-          [["attn", "norm1", "ffn", "norm2"], null, "The encoder from part 3 reads the whole source sentence once."],
+          [["embed", "pe", "attn", "norm1", "ffn", "norm2"], null, "The encoder from part 3 reads the whole source sentence once."],
           [null, "self", "The decoder's first sublayer is self-attention with a mask: a word can't look at later words."],
           [null, "cross", "The second is cross-attention: queries from the decoder, keys and values from the encoder."],
           [null, "ffn", "Then the same feed-forward network as the encoder, each with Add & Norm around it."],
@@ -392,7 +411,7 @@
       },
 
       recap() {
-        overview(["attn", "norm1", "ffn", "norm2"], ["self", "norm1", "cross", "norm2", "ffn", "norm3"], "dec");
+        overview(null, null, "dec");
         strip("The whole Transformer: the paper's Figure 1, built from the pieces of this series.");
       },
     };

@@ -51,7 +51,208 @@
     };
   }
 
+  // A labelled box for the Figure 2 diagrams. kind picks the tint (see transformer.css); dashed marks it optional.
+  function flowBox(x, y, w, hgt, label, kind = "op", dashed = false) {
+    return [
+      s("rect", { class: `tf-box tf-box-${kind}${dashed ? " tf-box-target" : ""}`, x, y, width: w, height: hgt, rx: 4 }),
+      s("text", { class: "tf-block-label", x: x + w / 2, y: y + hgt / 2 + 4, "text-anchor": "middle", text: label }),
+    ];
+  }
+
+  // An arrow along a path of points, with the head at the last one (which must come from straight below or from
+  // the side).
+  function flowArrow(points) {
+    const [x2, y2] = points[points.length - 1];
+    const [x1, y1] = points[points.length - 2];
+    const d = `M ${points.map((p) => p.join(" ")).join(" L ")}`;
+    const head =
+      y1 === y2
+        ? `M ${x2 + (x1 < x2 ? -7 : 7)} ${y2 - 4} L ${x2} ${y2} L ${x2 + (x1 < x2 ? -7 : 7)} ${y2 + 4} Z`
+        : `M ${x2 - 4} ${y2 + 7} L ${x2} ${y2} L ${x2 + 4} ${y2 + 7} Z`;
+    return [s("path", { class: "tf-stroke-muted", d }), s("path", { class: "tf-arrow", d: head })];
+  }
+
   const figures = {
+    // The paper's Figure 2 (left): scaled dot-product attention as a flow chart, bottom to top, with the shape of
+    // every matrix on its arrow and the matching piece of equation (1) beside each box.
+    sdpa(root) {
+      const X = 40; // boxes run from X to X + W
+      const W = 150;
+      const H = 28;
+      const cx = X + W / 2;
+      const ys = { mm2: 20, soft: 82, mask: 144, scale: 206, mm1: 268 };
+      const yIn = 350;
+      const xq = cx - 40;
+      const xk = cx + 20;
+      const xv = X + W + 40;
+      const svg = s("svg", {
+        class: "tf-svg tf-hist tf-flow",
+        viewBox: "-30 -20 470 400",
+        role: "img",
+        "aria-label": "Scaled dot-product attention: MatMul of Q and K, scale, optional mask, softmax, MatMul with V",
+      });
+      const note = (y, text) => s("text", { class: "tf-small tf-flow-note", x: xv + 22, y: y + H / 2 + 4, text });
+      const shape = (x, y, text) => s("text", { class: "tf-small tf-shape", x: x - 6, y, "text-anchor": "end", text });
+      svg.append(
+        // inputs
+        s("text", { class: "tf-block-label tf-fork-q", x: xq, y: yIn + 14, "text-anchor": "middle", text: "Q" }),
+        s("text", { class: "tf-block-label tf-fork-k", x: xk, y: yIn + 14, "text-anchor": "middle", text: "K" }),
+        s("text", { class: "tf-block-label tf-fork-v", x: xv, y: yIn + 14, "text-anchor": "middle", text: "V" }),
+        ...flowArrow([
+          [xq, yIn],
+          [xq, ys.mm1 + H],
+        ]),
+        ...flowArrow([
+          [xk, yIn],
+          [xk, ys.mm1 + H],
+        ]),
+        shape(xq, yIn - 18, "n × d_k"),
+        s("text", { class: "tf-small tf-shape", x: xv + 6, y: yIn - 18, text: "n × d_v" }),
+        // V runs up the right and joins the last MatMul from below
+        ...flowArrow([
+          [xv, yIn],
+          [xv, ys.mm2 + H + 16],
+          [cx + 40, ys.mm2 + H + 16],
+          [cx + 40, ys.mm2 + H],
+        ]),
+        // the main line, box to box
+        ...flowArrow([
+          [cx, ys.mm1],
+          [cx, ys.scale + H],
+        ]),
+        ...flowArrow([
+          [cx, ys.scale],
+          [cx, ys.mask + H],
+        ]),
+        ...flowArrow([
+          [cx, ys.mask],
+          [cx, ys.soft + H],
+        ]),
+        ...flowArrow([
+          [cx, ys.soft],
+          [cx, ys.mm2 + H],
+        ]),
+        ...flowArrow([
+          [cx, ys.mm2],
+          [cx, ys.mm2 - 22],
+        ]),
+        shape(cx, ys.mm1 - 12, "n × n"),
+        shape(cx, ys.scale - 12, "n × n"),
+        shape(cx, ys.mask - 12, "n × n"),
+        shape(cx, ys.soft - 12, "n × n, rows sum to 1"),
+        shape(cx, ys.mm2 - 8, "n × d_v"),
+        ...flowBox(X, ys.mm1, W, H, "MatMul"),
+        ...flowBox(X, ys.scale, W, H, "Scale"),
+        ...flowBox(X, ys.mask, W, H, "Mask (opt.)", "op", true),
+        ...flowBox(X, ys.soft, W, H, "SoftMax", "out"),
+        ...flowBox(X, ys.mm2, W, H, "MatMul"),
+        note(ys.mm1, "S = Q Kᵀ: every query · every key"),
+        note(ys.scale, "S / √d_k: spread back to about 1"),
+        note(ys.mask, "+ M: −∞ on future words (part 4)"),
+        note(ys.soft, "P = softmax(S), row by row"),
+        note(ys.mm2, "P V: weighted mix of values")
+      );
+      root.replaceChildren(
+        svg,
+        h("figcaption", {
+          text: "The paper's Figure 2 (left), redrawn. Data flows upwards. In this post n = 6 words and d_k = d_v = 4; the paper's base model has d_k = d_v = 64. The only n × n matrices are the scores and the weights: that square is where attention's n² cost lives.",
+        })
+      );
+    },
+
+    // The paper's Figure 2 (right): h heads, each a smaller copy of scaled dot-product attention, then Concat and
+    // W_O. The slider changes h with d_model fixed at 512, so the per-head size and the stacks change but the
+    // weight count doesn't.
+    mha(root) {
+      const D = 512;
+      const hs = [1, 2, 4, 8, 16];
+      const slider = h("input", { type: "range", min: 0, max: hs.length - 1, step: 1, value: 3, id: "tf-mha-fig" });
+      const out = h("output", { for: "tf-mha-fig" });
+      const svg = s("svg", {
+        class: "tf-svg tf-hist tf-flow",
+        viewBox: "-30 -40 510 420",
+        role: "img",
+        "aria-label": "Multi-head attention: linear projections of V, K and Q, h attention heads, concat, linear",
+      });
+      const body = s("g");
+      svg.append(body);
+      const note = h("p", { class: "tf-figure-note tf-num" });
+      root.replaceChildren(
+        h("div", { class: "tf-controls" }, h("label", { for: "tf-mha-fig", text: "heads h" }), slider, out),
+        svg,
+        note,
+        h("figcaption", {
+          text: "The paper's Figure 2 (right), redrawn. Each stacked box is h copies with their own weights. More heads means more, smaller questions; d_model and the total number of weights stay fixed.",
+        })
+      );
+      // h copies of a box, offset up and to the right, back ones first
+      function stack(x, y, w, hgt, label, kind, n) {
+        const depth = Math.min(n, 8) - 1;
+        const parts = [];
+        for (let k = depth; k >= 1; k--)
+          parts.push(s("rect", { class: `tf-box tf-box-${kind} tf-box-back`, x: x + 4 * k, y: y - 4 * k, width: w, height: hgt, rx: 4 }));
+        return [...parts, ...flowBox(x, y, w, hgt, label, kind)];
+      }
+      function render() {
+        const nh = hs[Number(slider.value)];
+        const dk = D / nh;
+        const yIn = 360;
+        const yLin = 280;
+        const yAtt = 170;
+        const yCat = 70;
+        const yOut = 0;
+        const xs = [60, 200, 340]; // V, K, Q columns
+        const shape = (x, y, text) => s("text", { class: "tf-small tf-shape", x: x + 6, y, text });
+        const att = { x: 60, w: 360 };
+        const cat = { x: 150, w: 160 };
+        const cxa = att.x + att.w / 2;
+        body.replaceChildren(
+          ...["V", "K", "Q"].map((name, i) =>
+            s("text", { class: `tf-block-label tf-fork-${name.toLowerCase()}`, x: xs[i] + 40, y: yIn + 14, "text-anchor": "middle", text: name })
+          ),
+          ...xs.flatMap((x) =>
+            flowArrow([
+              [x + 40, yIn],
+              [x + 40, yLin + 30],
+            ])
+          ),
+          shape(xs[2] + 40, yIn - 14, `n × ${D}`),
+          ...xs.flatMap((x) =>
+            flowArrow([
+              [x + 40, yLin],
+              [x + 40, yAtt + 40],
+            ])
+          ),
+          shape(xs[2] + 40, yAtt + 64, `n × ${dk}`),
+          ...flowArrow([
+            [cxa, yAtt],
+            [cxa, yCat + 30],
+          ]),
+          shape(cxa, yAtt - 40, `${nh} × (n × ${dk})`),
+          ...flowArrow([
+            [cxa, yCat],
+            [cxa, yOut + 30],
+          ]),
+          shape(cxa, yCat - 16, `n × ${D}`),
+          ...flowArrow([
+            [cxa, yOut],
+            [cxa, yOut - 24],
+          ]),
+          shape(cxa, yOut - 12, `n × ${D}`),
+          ...xs.flatMap((x, i) => stack(x, yLin, 80, 30, `Linear W_${"VKQ"[i]}`, "ffn", nh)),
+          ...stack(att.x, yAtt, att.w, 40, "Scaled dot-product attention", "attn", nh),
+          ...flowBox(cat.x, yCat, cat.w, 30, "Concat", "op"),
+          ...flowBox(cat.x, yOut, cat.w, 30, "Linear W_O", "ffn"),
+          s("text", { class: "tf-op", x: att.x + att.w + 40, y: yAtt + 28, text: `h = ${nh}` })
+        );
+        out.textContent = `${nh} × d_k = ${dk}`;
+        const per = 3 * D * dk;
+        note.textContent = `Weights: ${nh} heads × 3 × ${D} × ${dk} = ${(nh * per).toLocaleString("en")} for Q, K, V, plus ${(D * D).toLocaleString("en")} for W_O: ${(4 * D * D).toLocaleString("en")} = 4 · ${D}², whatever h is.`;
+      }
+      slider.addEventListener("input", render);
+      render();
+    },
+
     // Why divide by √d_k: dot products of random unit-variance vectors spread out like √d_k, and a softmax over
     // widely spread scores goes one-hot, which leaves almost no gradient.
     dk(root) {
