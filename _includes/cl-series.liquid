@@ -1,0 +1,26 @@
+{% comment %}
+  Navigation for the "Clustering from scratch" series. Parts that are not published yet are listed without a link.
+  Usage: {% include cl-series.liquid %} in a post with `series: clustering-from-scratch` and `part: N`.
+{% endcomment %}
+{% assign cl_titles = 'k-means|Hierarchical clustering|DBSCAN and density|Gaussian mixtures and EM' | split: '|' %}
+{% assign cl_parts = site.posts | where: 'series', 'clustering-from-scratch' %}
+<nav class="tf-series" aria-label="Series: Clustering from scratch">
+  <span class="tf-label">Series · Clustering from scratch</span>
+  {% for title in cl_titles %}
+    {% assign n = forloop.index %}
+    {% assign cl_post = cl_parts | where: 'part', n | first %}
+    {% if cl_post == null %}
+      <span
+        ><b>{{ n }}</b>{{ title }} · soon</span
+      >
+    {% elsif cl_post.url == page.url %}
+      <span aria-current="page"
+        ><b>{{ n }}</b>{{ title -}}
+      </span>
+    {% else %}
+      <a href="{{ cl_post.url | relative_url }}"
+        ><b>{{ n }}</b>{{ title -}}
+      </a>
+    {% endif %}
+  {% endfor %}
+</nav>

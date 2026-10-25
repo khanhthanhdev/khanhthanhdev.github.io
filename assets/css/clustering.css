@@ -1,0 +1,272 @@
+/* Scatter plots for the "Clustering from scratch" series. The stage, steps, controls and series navigation come
+   from transformer.css; this file only adds the cluster palette, points, centres, cells and the small charts. */
+
+/* Classes are created from JS, so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+:root {
+  --cl-0: #1f55ff;
+  --cl-1: #e7000b;
+  --cl-2: #1e9e57;
+  --cl-3: #d9730d;
+  --cl-4: #9810fa;
+  --cl-5: #0891b2;
+  --cl-6: #c026d3;
+  --cl-7: #65a30d;
+  --cl-none: #a1a1aa;
+}
+
+html[data-theme="dark"] {
+  --cl-0: #6b8cff;
+  --cl-1: #ff5a5f;
+  --cl-2: #3fcf7f;
+  --cl-3: #f0a04b;
+  --cl-4: #b86bff;
+  --cl-5: #22d3ee;
+  --cl-6: #e879f9;
+  --cl-7: #a3e635;
+  --cl-none: #71717a;
+}
+
+.cl-c0 {
+  --cl: var(--cl-0);
+}
+.cl-c1 {
+  --cl: var(--cl-1);
+}
+.cl-c2 {
+  --cl: var(--cl-2);
+}
+.cl-c3 {
+  --cl: var(--cl-3);
+}
+.cl-c4 {
+  --cl: var(--cl-4);
+}
+.cl-c5 {
+  --cl: var(--cl-5);
+}
+.cl-c6 {
+  --cl: var(--cl-6);
+}
+.cl-c7 {
+  --cl: var(--cl-7);
+}
+.cl-none {
+  --cl: var(--cl-none);
+}
+
+/* ------------------------------------------------------------ stage chrome */
+
+.cl-data {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cl-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--tf-grid);
+  border-radius: 5px;
+  background: var(--tf-cell);
+  color: var(--tf-ink);
+  font: inherit;
+}
+
+.cl-select:focus-visible {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------ scatter plot */
+
+.cl-frame {
+  fill: var(--tf-paper);
+  stroke: var(--tf-grid);
+  cursor: crosshair;
+}
+
+.cl-pt {
+  fill: var(--cl);
+  stroke: var(--tf-paper);
+  stroke-width: 1.2;
+  pointer-events: none;
+  transition:
+    fill 300ms ease,
+    r 300ms ease,
+    opacity 300ms ease;
+}
+
+.cl-pt.is-dim {
+  filter: none;
+  opacity: 0.35;
+}
+
+.cl-pt.is-ring {
+  stroke: var(--tf-ink);
+  stroke-width: 2;
+}
+
+.cl-pt.is-noise {
+  fill: var(--tf-paper);
+  stroke: var(--cl-none);
+  stroke-width: 1.5;
+}
+
+.cl-cell {
+  fill: var(--cl);
+  fill-opacity: 0.1;
+  stroke: var(--cl);
+  stroke-opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+
+.cl-centre {
+  pointer-events: none;
+  transition:
+    transform var(--tf-travel) var(--tf-ease),
+    opacity 300ms ease;
+}
+
+.cl-centre-halo {
+  fill: var(--tf-paper);
+  stroke: var(--tf-ink);
+  stroke-width: 2;
+}
+
+.cl-centre-dot {
+  fill: var(--cl);
+}
+
+.cl-link {
+  stroke: var(--tf-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+.cl-link.is-best {
+  stroke: var(--tf-ink);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+
+.cl-link.is-trail {
+  stroke: var(--tf-ink);
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+}
+
+.cl-ghost {
+  fill: none;
+  stroke: var(--tf-muted);
+  stroke-dasharray: 3 3;
+}
+
+.cl-ellipse {
+  fill: var(--cl);
+  fill-opacity: 0.08;
+  stroke: var(--cl);
+  stroke-width: 1.6;
+  pointer-events: none;
+}
+
+.cl-ring-eps {
+  fill: var(--tf-accent);
+  fill-opacity: 0.06;
+  stroke: var(--tf-accent);
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ charts */
+
+.cl-line {
+  fill: none;
+  stroke: var(--tf-ink);
+  stroke-width: 1.6;
+}
+
+.cl-line.cl-ref {
+  stroke: var(--tf-accent);
+  stroke-dasharray: 4 3;
+}
+
+.cl-mark {
+  fill: var(--tf-ink);
+}
+
+.cl-mark.cl-ref {
+  display: none;
+}
+
+.cl-mark.is-focus {
+  fill: var(--tf-accent);
+}
+
+.tf-svg text.is-focus {
+  fill: var(--tf-accent);
+  font-weight: 700;
+}
+
+.tf-svg .cl-line-label {
+  fill: var(--tf-accent);
+}
+
+.cl-bar-0 {
+  fill: var(--tf-muted);
+}
+
+.cl-bar-1 {
+  fill: var(--tf-accent);
+}
+
+/* dendrograms */
+.cl-tree path {
+  fill: none;
+  stroke: var(--tf-muted);
+  stroke-width: 1.3;
+}
+
+.cl-tree path.is-on {
+  stroke: var(--cl, var(--tf-ink));
+  stroke-width: 2;
+}
+
+.cl-cut {
+  stroke: var(--tf-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+}
+
+/* figures in the "Going deeper" sections */
+.cl-fig-svg {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.cl-fig-svg text {
+  fill: var(--tf-ink);
+  font-family: var(--tf-font);
+  font-size: 12px;
+}
+
+.cl-fig-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+}
+
+.cl-fig-row input[type="range"] {
+  width: 160px;
+  accent-color: var(--tf-accent);
+}
+
+/* purgecss end ignore */
