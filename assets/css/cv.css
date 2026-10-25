@@ -1,0 +1,264 @@
+/* Pictures, regions, loss surfaces and graphs for the "Deep learning for computer vision" series. The stage, steps
+   and controls come from transformer.css, the class palette and charts from clustering.css. */
+
+/* Classes are created from JS, so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+.cv-toolbar:empty {
+  display: none;
+}
+
+.cv-pixels {
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.cv-pixels.is-smooth {
+  image-rendering: auto;
+  pointer-events: auto;
+}
+
+/* ------------------------------------------------------------ thumbnails */
+
+.cv-thumb {
+  transition:
+    transform var(--tf-travel) var(--tf-ease),
+    opacity 300ms ease;
+}
+
+.cv-thumb-frame {
+  fill: none;
+  stroke: var(--tf-grid);
+}
+
+.cv-thumb-tab {
+  fill: var(--cl);
+}
+
+.cv-thumb-tab.is-off {
+  display: none;
+}
+
+.cv-thumb-ring {
+  fill: none;
+  stroke: var(--tf-accent);
+  stroke-width: 2.5;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.cv-thumb.is-ring .cv-thumb-ring {
+  opacity: 1;
+}
+
+.cv-thumb.is-dim {
+  opacity: 0.3;
+}
+
+.tf-svg .cv-thumb-caption {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tf-svg .cv-tag {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--cl, var(--tf-ink));
+}
+
+/* a window drawn over a matrix: a filter's current position, a pooling block */
+.cv-window {
+  fill: none;
+  stroke: var(--tf-accent);
+  stroke-width: 3;
+  pointer-events: none;
+  transition:
+    x 200ms ease,
+    y 200ms ease,
+    opacity 200ms ease;
+}
+
+/* ------------------------------------------------------------ loss surface */
+
+.cv-surface-edge {
+  fill: none;
+  stroke: var(--tf-grid);
+  pointer-events: none;
+}
+
+.tf-svg .cv-axis-name {
+  font-style: italic;
+  font-size: 13px;
+}
+
+.cv-path {
+  fill: none;
+  stroke: var(--tf-ink);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.cv-path-dot {
+  fill: var(--tf-ink);
+}
+
+.cv-try {
+  fill: var(--tf-muted);
+  opacity: 0.7;
+}
+
+.cv-try.is-best {
+  fill: var(--tf-ink);
+  opacity: 1;
+}
+
+.cv-marker {
+  fill: var(--tf-paper);
+  stroke: var(--tf-ink);
+  stroke-width: 2.5;
+}
+
+.cv-arrow {
+  stroke: var(--tf-ink);
+  stroke-width: 2.5;
+}
+
+.cv-arrow.is-num {
+  stroke: var(--cl-3);
+  stroke-dasharray: 4 3;
+}
+
+.cv-head {
+  fill: var(--tf-ink);
+}
+
+.tf-svg .cv-star {
+  fill: var(--tf-marker);
+  stroke: var(--tf-ink);
+  stroke-width: 0.8;
+  font-size: 18px;
+}
+
+/* one colour per optimiser, so paths and chart lines match */
+.cv-path.cv-o0,
+.cv-path-dot.cv-o0,
+.cl-line.cv-o0,
+.cl-mark.cv-o0 {
+  stroke: var(--tf-ink);
+  fill: var(--tf-ink);
+}
+.cv-path.cv-o1,
+.cv-path-dot.cv-o1,
+.cl-line.cv-o1,
+.cl-mark.cv-o1 {
+  stroke: var(--cl-3);
+  fill: var(--cl-3);
+}
+.cv-path.cv-o2,
+.cv-path-dot.cv-o2,
+.cl-line.cv-o2,
+.cl-mark.cv-o2 {
+  stroke: var(--cl-4);
+  fill: var(--cl-4);
+}
+.cv-path.cv-o3,
+.cv-path-dot.cv-o3,
+.cl-line.cv-o3,
+.cl-mark.cv-o3 {
+  stroke: var(--cl-2);
+  fill: var(--cl-2);
+}
+.cv-path,
+.cl-line.cv-o0,
+.cl-line.cv-o1,
+.cl-line.cv-o2,
+.cl-line.cv-o3 {
+  fill: none;
+}
+
+.tf-svg .cv-legend {
+  font-size: 11px;
+}
+.tf-svg .cv-legend.cv-o1 {
+  fill: var(--cl-3);
+}
+.tf-svg .cv-legend.cv-o2 {
+  fill: var(--cl-4);
+}
+.tf-svg .cv-legend.cv-o3 {
+  fill: var(--cl-2);
+}
+
+/* ------------------------------------------------------------ computational graphs */
+
+.cv-node circle {
+  fill: var(--tf-cell);
+  stroke: var(--tf-ink);
+  stroke-width: 1.5;
+  transition: stroke 200ms ease;
+}
+
+.cv-node.is-focus circle {
+  stroke: var(--tf-accent);
+  stroke-width: 3;
+}
+
+.tf-svg .cv-node-op {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.tf-svg .cv-node-name {
+  font-style: italic;
+  font-size: 14px;
+}
+
+.tf-svg .cv-node.is-focus .cv-node-name {
+  fill: var(--tf-accent);
+  font-weight: 700;
+}
+
+.cv-edge {
+  stroke: var(--tf-muted);
+  stroke-width: 1.4;
+}
+
+.cv-edge.is-focus {
+  stroke: var(--tf-accent);
+  stroke-width: 2.2;
+}
+
+.tf-svg .cv-fwd {
+  fill: var(--cl-2);
+  font-family: var(--tf-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tf-svg .cv-bwd {
+  fill: var(--cl-1);
+  font-family: var(--tf-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------ figures in "Going deeper" */
+
+.cv-fig-svg,
+.tf-svg.cv-fig-svg {
+  position: relative;
+  inset: auto;
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.cv-fig-svg text {
+  fill: var(--tf-ink);
+  font-family: var(--tf-font);
+  font-size: 12px;
+}
+
+/* purgecss end ignore */
