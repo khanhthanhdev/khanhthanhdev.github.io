@@ -97,12 +97,14 @@
       const values = marks.map(([fr, i]) => (i <= f ? fr.ll : null));
       const lo = Math.min(...marks.map(([fr]) => fr.ll));
       const hi = Math.max(...marks.map(([fr]) => fr.ll));
-      // plot the rise above the lowest value, so the curve uses the whole chart
+      // start the axis just below the lowest value, so the curve uses the whole chart
+      const pad = 0.05 * (hi - lo || 1);
       o.llChart.set(
-        [{ values: values.map((v) => (v == null ? null : v - lo + 0.02 * (hi - lo))), cls: "cl-ink" }],
+        [{ values, cls: "cl-ink" }],
         values.filter((v) => v != null).length - 1,
         marks.map((_, i) => (i === 0 ? "s" : String(i))),
-        hi - lo + 0.02 * (hi - lo)
+        hi,
+        lo - pad
       );
     }
 
@@ -206,7 +208,7 @@
         soft(run.resp);
         o.plot.centres([]).cells(null).links([]).title(`k = ${k}`);
         const lo = Math.min(...o.bics);
-        o.bicChart.set([{ values: o.bics.map((v) => v - lo + 10), cls: "cl-ink" }], k - 1, null, Math.max(...o.bics) - lo + 10);
+        o.bicChart.set([{ values: o.bics, cls: "cl-ink" }], k - 1, null, Math.max(...o.bics), lo - 0.05 * (Math.max(...o.bics) - lo || 1));
         strip(`k = ${k}: log-likelihood ${fmt(run.ll)}, BIC ${fmt(o.bics[k - 1])}. Lowest BIC at k = ${o.bics.indexOf(lo) + 1}.`);
       },
 

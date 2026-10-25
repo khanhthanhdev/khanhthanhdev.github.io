@@ -213,7 +213,7 @@
   /* ---------------------------------------------------------------- line chart */
 
   // A small chart of one or two series against 1…n. set(series, highlight) redraws it; each series is
-  // { values, cls, label }. yMax fixes the top of the axis (default: the largest value).
+  // { values, cls, label }. yMax and yMin fix the ends of the axis (default: the largest value, and 0).
   function chart(parent, opts) {
     const W = opts.width ?? 260;
     const H = opts.height ?? 150;
@@ -230,11 +230,11 @@
     return {
       el: g,
       title: (text) => (title.textContent = text),
-      set(series, highlight = null, xLabels = null, yMax = null) {
+      set(series, highlight = null, xLabels = null, yMax = null, yMin = 0) {
         const n = Math.max(...series.map((sr) => sr.values.length));
         const top = yMax ?? Math.max(1e-9, ...series.flatMap((sr) => sr.values.filter((v) => v != null)));
         const X = (i) => (n === 1 ? W / 2 : (i * W) / (n - 1));
-        const Y = (v) => H - clamp(v / top, 0, 1) * (H - 6);
+        const Y = (v) => H - clamp((v - yMin) / (top - yMin), 0, 1) * (H - 6);
         const nodes = [];
         series.forEach((sr) => {
           const pts = sr.values.map((v, i) => (v == null ? null : [X(i), Y(v)])).filter(Boolean);
@@ -256,8 +256,10 @@
           if (n > 12 && i % 2) return;
           nodes.push(s("text", { class: `tf-small${i === highlight ? " is-focus" : ""}`, x: X(i), y: H + 16, "text-anchor": "middle", text }));
         });
-        nodes.push(s("text", { class: "tf-small", x: -6, y: 10, "text-anchor": "end", text: fmt(top, top >= 100 ? 0 : 1) }));
-        nodes.push(s("text", { class: "tf-small", x: -6, y: H + 4, "text-anchor": "end", text: "0" }));
+        nodes.push(s("text", { class: "tf-small", x: -6, y: 10, "text-anchor": "end", text: fmt(top, Math.abs(top) >= 100 ? 0 : 1) }));
+        nodes.push(
+          s("text", { class: "tf-small", x: -6, y: H + 4, "text-anchor": "end", text: yMin ? fmt(yMin, Math.abs(yMin) >= 100 ? 0 : 1) : "0" })
+        );
         if (opts.xTitle) nodes.push(s("text", { class: "tf-small", x: W / 2, y: H + 34, "text-anchor": "middle", text: opts.xTitle }));
         body.replaceChildren(...nodes);
       },
