@@ -155,7 +155,9 @@
           return;
         }
         place(el, at[0], at[1], at[2]);
-        boxes.push(boxOf(el, at[0], at[1]));
+        const k = (at[2] && at[2].scale) || 1;
+        const b = obj.box;
+        boxes.push(b ? { x: at[0] + b.x * k, y: at[1] + b.y * k, width: b.width * k, height: b.height * k } : boxOf(el, at[0], at[1], k));
       });
       fitView(svg, boxes, 24);
     };

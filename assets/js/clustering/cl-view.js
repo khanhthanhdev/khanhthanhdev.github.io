@@ -59,6 +59,8 @@
 
   /* ---------------------------------------------------------------- scatter plot */
 
+  let clipCount = 0;
+
   function scatter(parent, opts = {}) {
     const g = s("g", { class: "cl-plot tf-obj" });
     const frame = s("rect", { class: "cl-frame", x: 0, y: 0, width: SIZE, height: SIZE });
@@ -69,7 +71,12 @@
     const centreLayer = s("g", { class: "cl-centres" });
     const ellipseLayer = s("g", { class: "cl-ellipses" });
     const title = s("text", { class: "tf-mat-title", x: 0, y: -12, text: opts.title || "" });
-    g.append(frame, cellLayer, ellipseLayer, linkLayer, pointLayer, extraLayer, centreLayer, title);
+    // ellipses and ε-rings can reach far past the data: clip them to the frame
+    const clipId = `cl-clip-${++clipCount}`;
+    const clipPath = s("clipPath", { id: clipId }, s("rect", { x: 0, y: 0, width: SIZE, height: SIZE }));
+    ellipseLayer.setAttribute("clip-path", `url(#${clipId})`);
+    extraLayer.setAttribute("clip-path", `url(#${clipId})`);
+    g.append(clipPath, frame, cellLayer, ellipseLayer, linkLayer, pointLayer, extraLayer, centreLayer, title);
     parent.append(g);
 
     let dots = [];
@@ -78,6 +85,8 @@
 
     const api = {
       el: g,
+      // the frame plus its title; getBBox would also count the clipped-away overflow
+      box: { x: -4, y: -30, width: SIZE + 8, height: SIZE + 34 },
       SIZE,
       px,
       title: (text) => (title.textContent = text || ""),
