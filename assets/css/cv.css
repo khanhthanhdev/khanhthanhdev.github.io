@@ -78,6 +78,14 @@
     opacity 200ms ease;
 }
 
+/* the zero padding around an image */
+.cv-pad {
+  fill: none;
+  stroke: var(--tf-muted);
+  stroke-dasharray: 4 4;
+  transition: opacity 200ms ease;
+}
+
 /* ------------------------------------------------------------ loss surface */
 
 .cv-surface-edge {
