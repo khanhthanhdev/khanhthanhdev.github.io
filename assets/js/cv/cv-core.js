@@ -603,6 +603,117 @@
     return { maps, feats, scores: Array.from(scores) };
   }
 
+  /* ---------------------------------------------------------------- part 6's deeper convnet, and looking inside it */
+
+  // Trained offline (assets/json/cv/deep-photos.json) on 20,000 CIFAR-10 photos of the four classes: three conv layers
+  // of 3 × 3 filters with padding 1, each followed by ReLU; a 2 × 2 max pool after the first two; the average of each
+  // of the last layer's maps (a global average pool); and a linear layer to the four scores. Same weight format as photoNet.
+  const deepNet = photoNet;
+
+  // A photo as the network reads it: channel by channel (C × H × W), each channel minus its training mean.
+  function deepInput(net, p) {
+    const HW = PHOTOS.side * PHOTOS.side;
+    const x = new Float32Array(3 * HW);
+    for (let i = 0; i < HW; i++) for (let c = 0; c < 3; c++) x[c * HW + i] = p.vec[i * 3 + c] - net.chMean[c];
+    return x;
+  }
+
+  // 2 × 2 max pool on K × H × W numbers; arg holds where each kept value came from, for the backward pass.
+  function pool2(y, K, H, W) {
+    const h = H / 2;
+    const w = W / 2;
+    const out = new Float32Array(K * h * w);
+    const arg = new Int32Array(K * h * w);
+    for (let k = 0; k < K; k++)
+      for (let i = 0; i < h; i++)
+        for (let j = 0; j < w; j++) {
+          let best = -Infinity;
+          let at = 0;
+          for (let a = 0; a < 2; a++)
+            for (let b = 0; b < 2; b++) {
+              const q = k * H * W + (2 * i + a) * W + 2 * j + b;
+              if (y[q] > best) [best, at] = [y[q], q];
+            }
+          out[k * h * w + i * w + j] = best;
+          arg[k * h * w + i * w + j] = at;
+        }
+    return { out, arg };
+  }
+
+  // x (from deepInput) → { acts, feats, scores }. acts[n] = { y, H, W, K, arg }: layer n's maps after ReLU (before
+  // pooling) and the pool's choices. feats: the last layer's map averages.
+  function deepForward(net, x) {
+    let H = PHOTOS.side;
+    let a = x;
+    const acts = net.layers.map((l, n) => {
+      const y = convLayer(a, H, H, l);
+      const act = { y, H, W: H, K: l.K };
+      if (n < net.layers.length - 1) {
+        const p = pool2(y, l.K, H, H);
+        act.arg = p.arg;
+        a = p.out;
+        H /= 2;
+      }
+      return act;
+    });
+    const last = acts.at(-1);
+    const HW = last.H * last.W;
+    const feats = Array.from({ length: last.K }, (_, k) => last.y.subarray(k * HW, (k + 1) * HW).reduce((s, v) => s + v, 0) / HW);
+    const scores = net.fc.b.map((bj, j) => feats.reduce((s, f, k) => s + net.fc.w[j * last.K + k] * f, bj));
+    return { acts, feats, scores: Array.from(scores) };
+  }
+
+  // The class activation map for class j (Zhou et al. 2016): the last layer's maps, weighted by class j's weights and
+  // summed, as an H × W grid. Because the network averages each map, class j's score is exactly the grid's average plus b_j.
+  function deepCam(net, fwd, j) {
+    const { y, H, W, K } = fwd.acts.at(-1);
+    return Array.from({ length: H }, (_, i) =>
+      Array.from({ length: W }, (_, c) => {
+        let s = 0;
+        for (let k = 0; k < K; k++) s += net.fc.w[j * K + k] * y[k * H * W + i * W + c];
+        return s;
+      })
+    );
+  }
+
+  // The gradient of class j's score with respect to every input number (C × H × W), by backpropagation through the
+  // linear layer, the average, each ReLU, pool and conv: part 4's chain rule, one layer at a time. j can also be one
+  // number per class, for the gradient of that weighted sum of the scores (a loss's, say).
+  function deepGrad(net, fwd, j) {
+    const { acts } = fwd;
+    let n = acts.length - 1;
+    const last = acts[n];
+    const HW = last.H * last.W;
+    const per = typeof j === "number" ? net.fc.b.map((_, i) => (i === j ? 1 : 0)) : j;
+    let dy = new Float32Array(last.K * HW);
+    for (let k = 0; k < last.K; k++) {
+      const wk = per.reduce((a, c, i) => a + c * net.fc.w[i * last.K + k], 0);
+      dy.fill(wk / HW, k * HW, (k + 1) * HW);
+    }
+    for (; n >= 0; n--) {
+      const { y, H, W } = acts[n];
+      const l = net.layers[n];
+      const hw = H * W;
+      // ReLU passes the gradient only where its output was positive
+      for (let q = 0; q < dy.length; q++) if (y[q] <= 0) dy[q] = 0;
+      const dx = new Float32Array(l.C * hw);
+      for (let k = 0; k < l.K; k++)
+        for (let c = 0; c < l.C; c++)
+          for (let a = 0; a < 3; a++)
+            for (let d = 0; d < 3; d++) {
+              const wv = l.w[((k * l.C + c) * 3 + a) * 3 + d];
+              for (let i = Math.max(0, 1 - a); i < Math.min(H, H + 1 - a); i++)
+                for (let q = Math.max(0, 1 - d); q < Math.min(W, W + 1 - d); q++)
+                  dx[c * hw + (i + a - 1) * W + q + d - 1] += wv * dy[k * hw + i * W + q];
+            }
+      if (n === 0) return dx;
+      // back through the pool below: each kept value's gradient goes to the one position it came from
+      const below = acts[n - 1];
+      dy = new Float32Array(below.K * below.H * below.W);
+      below.arg.forEach((at, q) => (dy[at] += dx[q]));
+    }
+  }
+
   const CV = {
     rng,
     zeros,
@@ -619,6 +730,11 @@
     photoNet,
     convLayer,
     photoNetForward,
+    deepNet,
+    deepInput,
+    deepForward,
+    deepCam,
+    deepGrad,
     l1,
     l2,
     METRICS,

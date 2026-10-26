@@ -157,7 +157,9 @@ That gives $$K$$ feature maps, each $$\frac{W - F + 2P}{S} + 1$$ wide, with $$K(
 
 Our network has two conv layers and 24 filters, for four classes of tiny photos. Real photos need far more: AlexNet in 2012 had 5 conv layers and 60 million parameters, and newer networks go hundreds of layers deep.
 
-Stacking many layers raises its own problems: gradients that vanish on the way back, and networks that train worse as they get deeper. Part 6 walks through the architectures that solved them, from AlexNet and VGG to ResNet's skip connections.
+Stacking many layers raises its own problems: gradients that vanish on the way back, and networks that train worse as they get deeper. Part 7 walks through the architectures that solved them, from AlexNet and VGG to ResNet's skip connections.
+
+First, [part 6]({% post_url 2026-10-26-cv-6-visualising-and-understanding %}) trains a somewhat bigger network on more photos and looks inside it: which parts of a photo it uses, and how easily it's fooled.
 
 ## Going deeper
 
@@ -167,7 +169,7 @@ On large photos and datasets, the first layer's filters learn edges at various a
 
 ### Receptive fields grow
 
-One 3 × 3 conv sees 3 × 3 pixels. Two stacked see 5 × 5, three see 7 × 7. Three 3 × 3 layers cover the same area as one 7 × 7 layer, with fewer weights ($$3 \times 9 C^2 = 27C^2$$ against $$49C^2$$) and two extra ReLUs in between. That's the argument behind VGG's all-3 × 3 design in part 6.
+One 3 × 3 conv sees 3 × 3 pixels. Two stacked see 5 × 5, three see 7 × 7. Three 3 × 3 layers cover the same area as one 7 × 7 layer, with fewer weights ($$3 \times 9 C^2 = 27C^2$$ against $$49C^2$$) and two extra ReLUs in between. That's the argument behind VGG's all-3 × 3 design in part 7.
 
 ### Equivariance, invariance, and their limits
 
