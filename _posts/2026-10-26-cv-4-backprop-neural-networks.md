@@ -158,9 +158,9 @@ Each step costs about as much as the forward pass, whatever the number of weight
 
 ## What's still missing
 
-The network here takes 2 numbers. An image is thousands of pixels, and a fully connected hidden layer gives every unit one weight per pixel. For a 200 × 200 colour image that's 120,000 weights **per unit**, and none of them knows that neighbouring pixels belong together, or that a cat on the left is the same as a cat on the right.
+The network here takes 2 numbers. An image is thousands of pixels, and a fully connected hidden layer gives every unit one weight per pixel. For a 200 × 200 colour image that's 120,000 weights **per unit**, and none of them knows that neighbouring pixels belong together, or that an edge on the left is the same kind of thing as an edge on the right.
 
-Part 5 fixes both with **convolutional layers**: small filters, shared across the whole image.
+Part 5 builds both into the layer with **convolutional layers**: small filters, each looking at a few neighbouring pixels, and each shared across the whole image.
 
 ## Going deeper
 

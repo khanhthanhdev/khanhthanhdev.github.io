@@ -95,7 +95,15 @@
     const SIDE = CV.PHOTOS.side;
     const PICK = 1; // λ = 0.1, the best on the validation photos
     const predict = (model, p) => CV.argmax(CV.linearScores(model, input(p)));
-    const acc = (model, set) => set.filter((p) => predict(model, p) === p.label).length / set.length;
+    // accuracy of a model on a set, worked out once: it doesn't change as the reader scrolls
+    const accs = new Map();
+    const acc = (model, set) => {
+      const key = `${models.indexOf(model)} ${set === train ? "train" : set === val ? "val" : "test"}`;
+      if (!accs.has(key)) accs.set(key, set.filter((p) => predict(model, p) === p.label).length / set.length);
+      return accs.get(key);
+    };
+    // a percentage, with a decimal only when it isn't whole
+    const pc = (v) => `${fmt(100 * v, Number.isInteger(Math.round(1000 * v) / 10) ? 0 : 1)}%`;
     const perClass = (model, set, j) => set.filter((p) => p.label === j && predict(model, p) === j).length;
 
     // 2-D: three blobs and the spiral, each with a linear classifier trained on it
@@ -273,7 +281,7 @@
       templates() {
         useModel();
         layout(bigAt);
-        strip(`the weights, drawn as photos · test accuracy ${fmt(100 * acc(models[PICK], test), 0)}%; k-NN got 53%`);
+        strip(`the weights, drawn as photos · test accuracy ${pc(acc(models[PICK], test))}; k-NN got 53%`);
       },
 
       geometry() {
@@ -356,7 +364,7 @@
         layout(bigAt);
         const norm = Math.sqrt(model.W.flat().reduce((a, v) => a + v * v, 0));
         strip(
-          `λ = ${REGS[state.reg]}: ‖W‖ = ${fmt(norm)} · training accuracy ${fmt(100 * acc(model, train), 0)}%, validation ${fmt(100 * acc(model, val), 0)}%`
+          `λ = ${REGS[state.reg]}: ‖W‖ = ${fmt(norm)} · training accuracy ${fmt(100 * acc(model, train), 0)}%, validation ${pc(acc(model, val))}`
         );
       },
 

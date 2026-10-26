@@ -123,14 +123,14 @@ The top row shows its first layer's filters as tiny colour pictures, with their 
 
 </div>
 
-<div class="tf-step" data-step="params" data-title="Fewer weights, better results." markdown="1">
+<div class="tf-step" data-step="params" data-title="An eighth of the weights, and as good." markdown="1">
 **Compare it to part 2's linear classifier**, top. That model needs a full 32 × 32 colour template per class: 12,292 parameters, and 67% of the test photos right.
 
 The convnet, bottom, has 1,460 parameters, an eighth as many: 224 in the first layer, 1,168 in the second, and 68 in the linear layer. It gets 65%.
 
 On 100 test photos those two numbers are too close to separate: one photo is one percentage point. On all 4,000 CIFAR-10 test photos of these four classes, the same two models get 59.7% (linear) and 67.5% (convnet). And with more training data the gap grows: trained on 1,000 photos per class instead of 80, the same convnet design reaches 76.9% on those 4,000 photos, and a linear classifier 64.8%.
 
-Fewer parameters and better results, because the layer's design matches what photos are like: **local** patterns that can appear **anywhere**. That built-in assumption is called an **inductive bias**.
+An eighth of the parameters, the same accuracy here and better with more data, because the layer's design matches what photos are like: **local** patterns that can appear **anywhere**. That built-in assumption is called an **inductive bias**.
 
 </div>
 

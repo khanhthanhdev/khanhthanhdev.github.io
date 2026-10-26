@@ -51,7 +51,7 @@ Part 3 will add the third piece, **optimisation**: how to find the template valu
 <div class="tf-step" data-step="flatten" data-title="Unroll the image into a list." markdown="1">
 **A linear classifier sees an image as one long list of numbers.** Read the photo's 32 rows one after another, three numbers (red, green, blue) per pixel, and the 32 × 32 grid becomes a list $$x$$ of 3,072 numbers. The strip in the figure is that list, drawn as colours.
 
-That throws away the fact that some pixels are neighbours. The classifier will only know that number 1,000 and number 1,003 are different inputs. We'll come back to this; it's what part 5 fixes.
+That throws away the fact that some pixels are neighbours. The classifier will only know that number 1,000 and number 1,003 are different inputs. We'll come back to this; part 5 builds it back in.
 
 The test photo here is a plane on a runway that this classifier gets wrong. That makes it a good one to learn from. Use ◀ ▶ above to switch photos.
 

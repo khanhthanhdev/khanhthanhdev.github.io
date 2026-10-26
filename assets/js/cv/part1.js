@@ -120,12 +120,22 @@
     const editTitles = edits.map(titleOf);
 
     // the validation curve does not depend on the reader's inputs, so it is computed once
-    const curves = ["L1", "L2"].map((m) => Array.from({ length: KMAX }, (_, i) => 100 * CV.knnAccuracy(train, val, i + 1, m)));
+    // each validation photo is ranked once per distance, and every k votes from that one ranking
+    const curves = ["L1", "L2"].map((m) => {
+      const ranks = val.map((p) => CV.ranked(train, p.vec, m));
+      return Array.from({ length: KMAX }, (_, i) => (100 * val.filter((p, n) => CV.vote(ranks[n], i + 1).label === p.label).length) / val.length);
+    });
 
     // 12 of each class first, grouped by class, then the rest
     const byLabel = Array.from({ length: C }, (_, j) => train.map((_, i) => i).filter((i) => train[i].label === j));
     const classOrder = [...byLabel.flatMap((list) => list.slice(0, SHOW)), ...byLabel.flatMap((list) => list.slice(SHOW))];
-    const order = (p, metric = state.metric) => CV.ranked(train, p.vec, metric);
+    // a photo's training photos, nearest first: worked out once per photo and distance, not on every frame
+    const orders = new Map();
+    const order = (p, metric = state.metric) => {
+      if (!orders.has(p)) orders.set(p, {});
+      const memo = orders.get(p);
+      return (memo[metric] ??= CV.ranked(train, p.vec, metric));
+    };
 
     // the edits behind the last step: moved, darkened and covered copies, each about as far from the original
     const base = test[FOOLED];
@@ -260,7 +270,7 @@
         );
         layout({ valChart: [0, 0] });
         const kb = best(curves[0]) + 1;
-        const testAcc = 100 * CV.knnAccuracy(train, test, kb, "L1");
+        const testAcc = (100 * test.filter((p) => CV.vote(order(p, "L1"), kb).label === p.label).length) / test.length;
         strip(
           n < KMAX
             ? `k = ${n}: ${fmt(curves[0][n - 1], 0)}% (L1), ${fmt(curves[1][n - 1], 0)}% (L2) of the ${val.length} validation photos right`

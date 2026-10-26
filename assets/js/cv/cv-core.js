@@ -127,7 +127,7 @@
 
   // Every training example sorted by its distance to x (a flat vector), nearest first.
   function ranked(train, x, metric = "L1") {
-    return train.map((ex, i) => ({ i, label: ex.label, d: METRICS[metric](ex.vec ?? flat(ex.img), x) })).sort((a, b) => a.d - b.d || a.i - b.i);
+    return train.map((ex, i) => ({ i, label: ex.label, d: METRICS[metric](ex.vec, x) })).sort((a, b) => a.d - b.d || a.i - b.i);
   }
 
   // A majority vote among the k nearest; a tie goes to the class whose nearest member is closest.
@@ -140,7 +140,7 @@
   }
 
   function knnAccuracy(train, test, k, metric = "L1") {
-    const right = test.filter((ex) => vote(ranked(train, ex.vec ?? flat(ex.img), metric), k).label === ex.label).length;
+    const right = test.filter((ex) => vote(ranked(train, ex.vec, metric), k).label === ex.label).length;
     return right / test.length;
   }
 
