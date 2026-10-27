@@ -1319,6 +1319,34 @@
   // Stereo: depth from disparity, and how depth error grows with depth for a given disparity error.
   const stereoDepth = (f, b, d) => (f * b) / d;
   const stereoError = (f, b, z, dd) => (z * z * dd) / (f * b);
+  // One row of a stereo pair, `n` pixels, of a surface at disparity `d`: "texture" (a printed, patterned surface),
+  // "blank" (a plain wall) or "dots" (a plain wall lit by a projector's random dots). Each camera adds its own noise.
+  // Returns the two rows and, for a window of `win` pixels around `at`, the matching cost (mean absolute difference)
+  // of every candidate disparity from 0 to `maxD`.
+  function stereoRow(kind, { n = 200, d = 14, at = 100, win = 15, maxD = 40, noise = 0.02, seed = 9 } = {}) {
+    const r = rng(seed);
+    const surf = new Array(n + d).fill(0.5);
+    if (kind === "texture") {
+      let v = 0.5;
+      for (let i = 0; i < surf.length; i++) surf[i] = v = clamp(v * 0.7 + 0.3 * r.next() + r.gauss(0, 0.05), 0, 1);
+    }
+    if (kind === "dots") for (let i = 0; i < surf.length; i++) if (r.next() < 0.2) surf[i] = 0.95;
+    // the left camera sees surface point i + d at pixel i; the right one sees it at pixel i
+    const left = Array.from({ length: n }, (_, i) => surf[i + d] + r.gauss(0, noise));
+    const right = Array.from({ length: n }, (_, i) => surf[i] + r.gauss(0, noise));
+    const cost = [];
+    const h = Math.floor(win / 2);
+    for (let k = 0; k <= maxD; k++) {
+      let c = 0;
+      for (let i = at - h; i <= at + h; i++) c += Math.abs(left[i] - right[i + k]);
+      cost.push(c / win);
+    }
+    let best = 0;
+    cost.forEach((c, k) => c < cost[best] && (best = k));
+    // how clear the winner is: the lowest cost more than 2 disparities away, over the best cost
+    const rival = Math.min(...cost.filter((_, k) => Math.abs(k - best) > 2));
+    return { left, right, cost, best, ratio: rival / Math.max(1e-9, cost[best]) };
+  }
 
   /* ---------------------------------------------------------------- networks (ROS 2 QoS) */
 
@@ -1444,6 +1472,7 @@
     cloud,
     stereoDepth,
     stereoError,
+    stereoRow,
     qos,
     frameQueue,
     stopping,
