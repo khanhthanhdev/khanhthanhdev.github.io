@@ -276,7 +276,11 @@
           for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) out.push(Math.abs(v) < 1e-12 ? 0 : v);
           return out;
         };
-        const digits = (step) => (step >= 1 ? 0 : step >= 0.1 ? 1 : step >= 0.01 ? 2 : 3);
+        // enough decimals to tell ticks apart: 0.25 needs two, 0.5 one, 5 none
+        const digits = (step) => {
+          for (let d = 0; d < 4; d++) if (Math.abs(step * 10 ** d - Math.round(step * 10 ** d)) < 1e-6) return d;
+          return 4;
+        };
         const yt = ticks(yMin, yMax, o.yTicks ?? 4);
         const xt = ticks(xMin, xMax, o.xTicks ?? 5);
         const yd = digits(yt[1] - yt[0] || 1);

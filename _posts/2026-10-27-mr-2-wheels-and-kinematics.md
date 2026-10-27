@@ -151,9 +151,9 @@ Equal speeds put the ICR at infinity (straight ahead); opposite speeds put it at
 
 ### The speeds the wheels allow
 
-Each wheel has a top speed. Our motors turn the wheel at about 18 rad/s with no load, so $$|v_l|, |v_r| \le 0.63$$ m/s. In terms of the body:
+Each wheel has a top speed. Our motors turn the wheel at about 18 rad/s with no load, so $$\lvert v_l\rvert, \lvert v_r\rvert \le 0.63$$ m/s. In terms of the body:
 
-$$|v| + \frac{L}{2}\,|\omega| \le v_{\max}.$$
+$$\lvert v\rvert + \frac{L}{2}\,\lvert\omega\rvert \le v_{\max}.$$
 
 That's a diamond in the $$(v, \omega)$$ plane: the robot can go straight at 0.63 m/s, spin at $$2 \times 0.63 / 0.22 = 5.7$$ rad/s, or anything in between, but not both at full speed. If a planner asks for more, the controller has to scale both down together, keeping the ratio, or the robot will follow a different curve from the one planned.
 
