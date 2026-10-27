@@ -403,8 +403,24 @@
   // A DC gear motor and wheel as a first-order system: τ dω/dt = K·u − ω − load, with u the PWM duty in [−1, 1],
   // K the no-load speed at full duty (rad/s at the wheel) and τ the time constant. A PID controller (or none) sets u
   // every dt to reach `target` rad/s; at `loadAt` seconds a load (a ramp, a carpet) slows the wheel by `load` rad/s.
+  // During `stall` ([from, to] seconds) the wheel is held still, as if jammed against a doorstep. antiWindup stops the
+  // integral growing while the output is saturated.
   const MOTOR = { K: 18, tau: 0.12 };
-  function pidRun({ kp = 0, ki = 0, kd = 0, open = false, target = 10, seconds = 2, dt = 0.01, load = 4, loadAt = 1, noise = 0, seed = 2 } = {}) {
+  function pidRun({
+    kp = 0,
+    ki = 0,
+    kd = 0,
+    open = false,
+    target = 10,
+    seconds = 2,
+    dt = 0.01,
+    load = 4,
+    loadAt = 1,
+    noise = 0,
+    seed = 2,
+    stall = null,
+    antiWindup = true,
+  } = {}) {
     const r = rng(seed);
     let w = 0;
     let integral = 0;
@@ -427,13 +443,14 @@
         const tryI = integral + err * dt;
         u = kp * err + ki * tryI + kd * deriv;
         // anti-windup: only integrate while the output isn't saturated
-        if (u > -1 && u < 1) integral = tryI;
+        if (!antiWindup || (u > -1 && u < 1)) integral = tryI;
         u = clamp(kp * err + ki * integral + kd * deriv, -1, 1);
       }
       prevErr = err;
       prevMeas = meas;
       const L = time >= loadAt ? load : 0;
       for (let k = 0; k < sub; k++) w += ((MOTOR.K * u - w - L) / MOTOR.tau) * (dt / sub);
+      if (stall && time >= stall[0] && time < stall[1]) w = 0;
       t.push(time + dt);
       speed.push(w);
       duty.push(u);
