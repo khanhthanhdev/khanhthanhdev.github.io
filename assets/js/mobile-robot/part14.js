@@ -82,10 +82,20 @@
     /* ---------------------------------------------- drawing */
 
     // unknown cells are left clear, free ones tinted, occupied ones dark, by how sure the map is
+    // the colours, read again whenever the theme changes, since the map repaints itself then
+    let pal = null;
+    let palTheme;
+    function palette() {
+      const theme = document.documentElement.getAttribute("data-theme");
+      if (theme !== palTheme) {
+        palTheme = theme;
+        pal = { ink: rgbOf("--mr-ink"), free: mix(rgbOf("--mr-floor"), rgbOf("--mr-a"), 0.12) };
+      }
+      return pal;
+    }
     function paintMap(g) {
-      const ink = rgbOf("--mr-ink");
-      const free = mix(rgbOf("--mr-floor"), rgbOf("--mr-a"), 0.12);
       R.painted("map", g.W, g.H, (c, r) => {
+        const { ink, free } = palette();
         const p = MR.occProb(g.L[r * g.W + c]);
         if (p > 0.5) return [...ink, Math.round(255 * Math.min(1, (p - 0.5) * 2.5))];
         if (p < 0.5) return [...free, Math.round(255 * Math.min(1, (0.5 - p) * 4))];

@@ -113,12 +113,20 @@
     /* ---------------------------------------------- drawing */
 
     // lethal cells dark, the inflated band shading from orange to clear as cost falls
+    // the colours, read again whenever the theme changes, since the map repaints itself then
+    let pal = null;
+    let palTheme;
+    function palette() {
+      const theme = document.documentElement.getAttribute("data-theme");
+      if (theme !== palTheme) {
+        palTheme = theme;
+        pal = { ink: rgbOf("--mr-ink"), hot: rgbOf("--mr-d"), seen: rgbOf("--mr-a"), floor: rgbOf("--mr-floor") };
+      }
+      return pal;
+    }
     function paintCost(c, cells = null) {
-      const ink = rgbOf("--mr-ink");
-      const hot = rgbOf("--mr-d");
-      const seen = rgbOf("--mr-a");
-      const floor = rgbOf("--mr-floor");
       R.painted("map", c.W, c.H, (x, y) => {
+        const { ink, hot, seen, floor } = palette();
         const k = y * c.W + x;
         const v = c.cost[k];
         if (v >= 1) return [...ink, 200];
