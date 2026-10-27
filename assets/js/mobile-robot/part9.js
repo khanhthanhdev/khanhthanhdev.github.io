@@ -182,9 +182,9 @@
         R.set(
           "a",
           R.path(c.d.truth, "is-a"),
-          R.path(c.d.odom, "is-c is-dash"),
-          R.path(est, state.line ? "is-d" : "is-b"),
-          R.dot(E, state.line ? "is-d" : "is-b", 4)
+          R.path(c.d.odom, "is-d is-dash"),
+          R.path(est, state.line ? "is-c" : "is-b"),
+          R.dot(E, state.line ? "is-c" : "is-b", 4)
         );
         R.set("robot", R.robot(T, "is-a", 0.36));
         roomOnly();
