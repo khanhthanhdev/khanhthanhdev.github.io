@@ -1281,6 +1281,32 @@
     return lat;
   }
 
+  // Camera frames arriving at `fps` for a node that takes `proc` seconds (± procSd) per frame. Frames wait in a queue
+  // of `depth` (the oldest is dropped when it's full; Infinity keeps everything). Returns, for each frame, the time
+  // from capture to the end of its processing, or null if it was dropped.
+  function frameQueue({ fps = 30, proc = 0.04, procSd = 0.005, depth = Infinity, seconds = 10, seed = 12 } = {}) {
+    const r = rng(seed);
+    const n = Math.round(fps * seconds);
+    const out = new Array(n).fill(null);
+    const queue = [];
+    let free = 0; // when the node finishes its current frame
+    let next = 0; // next frame to arrive
+    // events in time order: whenever the node is free, it takes the oldest waiting frame
+    while (next < n || queue.length) {
+      const arrive = next < n ? next / fps : Infinity;
+      if (queue.length && free <= arrive) {
+        const k = queue.shift();
+        const start = Math.max(free, k / fps);
+        free = start + Math.max(0.001, proc + r.gauss(0, procSd));
+        out[k] = free - k / fps;
+      } else {
+        queue.push(next++);
+        if (queue.length > depth) queue.shift();
+      }
+    }
+    return out;
+  }
+
   // Distance a robot covers before it can stop: blind travel during the latency, then braking.
   const stopping = (v, latency, decel) => v * latency + (v * v) / (2 * decel);
 
@@ -1354,6 +1380,7 @@
     stereoDepth,
     stereoError,
     qos,
+    frameQueue,
     stopping,
   };
 
