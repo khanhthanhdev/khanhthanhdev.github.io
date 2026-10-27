@@ -150,8 +150,8 @@ Test under load, at low speed (where the encoder gives few counts per cycle) and
 
 ## What's still missing
 
-- **The loop has to run every 10 ms, without fail, while counting thousands of encoder edges a second.** Part 6 does that on an ESP32.
-- **A wheel speed is not a robot speed.** The `/cmd_vel` twist of part 2 is turned into two wheel targets, each with its own PID loop. ROS 2's `ros2_control` organises exactly this (part 10).
+- **The loop has to run every 10 ms, without fail, while counting thousands of encoder edges a second.** [Part 6]({% post_url 2026-10-27-mr-6-the-microcontroller-esp32 %}) does that on an ESP32.
+- **A wheel speed is not a robot speed.** The `/cmd_vel` twist of part 2 is turned into two wheel targets, each with its own PID loop. ROS 2's `ros2_control` organises exactly this ([part 10]({% post_url 2026-10-27-mr-10-ros2 %})).
 
 ## Going deeper
 

@@ -132,8 +132,8 @@ Only the car can't turn on the spot. Skid steer uses the same formulas as the di
 
 ## What's still missing
 
-- **We assumed the wheels turn at the speeds we asked for.** A motor doesn't. Part 5 closes the loop with a PID controller.
-- **We assumed the software knows how far each wheel has turned.** It has to measure that, with encoders, and turning wheel turns into a pose is **odometry**, part 4. First, part 3 asks what a sensor is in the first place.
+- **We assumed the wheels turn at the speeds we asked for.** A motor doesn't. [Part 5]({% post_url 2026-10-27-mr-5-motors-and-pid %}) closes the loop with a PID controller.
+- **We assumed the software knows how far each wheel has turned.** It has to measure that, with encoders, and turning wheel turns into a pose is **odometry**, [part 4]({% post_url 2026-10-27-mr-4-encoders-and-odometry %}). First, [part 3]({% post_url 2026-10-27-mr-3-what-a-sensor-is %}) asks what a sensor is in the first place.
 
 ## Going deeper
 

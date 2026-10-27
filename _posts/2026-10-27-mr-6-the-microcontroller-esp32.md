@@ -137,8 +137,8 @@ The last line in the loop is a **watchdog**: if the computer crashes or a cable 
 
 ## What's still missing
 
-- **The computer side.** Which board, how fast it needs to be, and how its delays turn into stopping distance: part 7.
-- **The ROS 2 side** of micro-ROS, topics and QoS: part 10.
+- **The computer side.** Which board, how fast it needs to be, and how its delays turn into stopping distance: [part 7]({% post_url 2026-10-27-mr-7-the-onboard-computer %}).
+- **The ROS 2 side** of micro-ROS, topics and QoS: [part 10]({% post_url 2026-10-27-mr-10-ros2 %}).
 
 ## Going deeper
 

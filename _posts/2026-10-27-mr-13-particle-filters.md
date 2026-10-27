@@ -99,8 +99,8 @@ A Kalman filter is cheap and smooth, and good at tracking a robot that knows rou
 
 ## What's still missing
 
-- **The map.** Everything here assumed a map of the room. Building one, while localising in it at the same time, is SLAM: part 14.
-- **Going somewhere.** Knowing where it is, the robot can now plan a route: part 15.
+- **The map.** Everything here assumed a map of the room. Building one, while localising in it at the same time, is SLAM: [part 14]({% post_url 2026-10-27-mr-14-slam %}).
+- **Going somewhere.** Knowing where it is, the robot can now plan a route: [part 15]({% post_url 2026-10-27-mr-15-path-planning-and-navigation %}).
 
 ## Going deeper
 

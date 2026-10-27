@@ -134,9 +134,9 @@ Two details matter on real hardware. Encoder counters are often 16- or 32-bit, s
 
 ## What's still missing
 
-- **The counts have to be read without missing any.** At top speed each of our encoders produces nearly 4,000 edges a second, and finer encoders produce hundreds of thousands. Part 6 shows how an ESP32 counts them all in hardware.
-- **Odometry drifts, and always will.** Parts 12 to 14 combine it with sensors that see the world.
-- **We commanded wheel speeds and got them.** Real motors need a controller to hit a speed. That's part 5.
+- **The counts have to be read without missing any.** At top speed each of our encoders produces nearly 4,000 edges a second, and finer encoders produce hundreds of thousands. [Part 6]({% post_url 2026-10-27-mr-6-the-microcontroller-esp32 %}) shows how an ESP32 counts them all in hardware.
+- **Odometry drifts, and always will.** [Parts 12]({% post_url 2026-10-27-mr-12-kalman-filters %}) to 14 combine it with sensors that see the world.
+- **We commanded wheel speeds and got them.** Real motors need a controller to hit a speed. That's [part 5]({% post_url 2026-10-27-mr-5-motors-and-pid %}).
 
 ## Going deeper
 

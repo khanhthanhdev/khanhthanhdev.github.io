@@ -109,8 +109,8 @@ Indoors, the "measurement in the room" is usually the lidar against a map, which
 
 ## What's still missing
 
-- **Many possibilities at once.** A Kalman filter holds one guess and its ellipse. If the robot doesn't know where it is at all, or two places look the same, one ellipse can't describe that. Particle filters can: part 13.
-- **No map to measure against.** The beacons here were at known places. Building the map while localising is SLAM, part 14.
+- **Many possibilities at once.** A Kalman filter holds one guess and its ellipse. If the robot doesn't know where it is at all, or two places look the same, one ellipse can't describe that. Particle filters can: [part 13]({% post_url 2026-10-27-mr-13-particle-filters %}).
+- **No map to measure against.** The beacons here were at known places. Building the map while localising is SLAM, [part 14]({% post_url 2026-10-27-mr-14-slam %}).
 
 ## Going deeper
 

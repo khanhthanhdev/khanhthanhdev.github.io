@@ -147,8 +147,8 @@ Part 6 shows how an ESP32 reads several of these at once without dropping any.
 
 ## What's still missing
 
-- **We measured with a sensor pointed at a wall.** Part 4 builds a sensor the robot can count on everywhere: the wheel encoder, and turns its counts into a pose.
-- **We met drift twice.** Integrating a rate sensor (gyro, accelerometer, and next time, wheel encoders) always drifts. The cure, combining it with a sensor that sees the world, is part 12.
+- **We measured with a sensor pointed at a wall.** [Part 4]({% post_url 2026-10-27-mr-4-encoders-and-odometry %}) builds a sensor the robot can count on everywhere: the wheel encoder, and turns its counts into a pose.
+- **We met drift twice.** Integrating a rate sensor (gyro, accelerometer, and next time, wheel encoders) always drifts. The cure, combining it with a sensor that sees the world, is [part 12]({% post_url 2026-10-27-mr-12-kalman-filters %}).
 
 ## Going deeper
 

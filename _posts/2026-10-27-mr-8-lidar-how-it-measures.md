@@ -113,8 +113,8 @@ For a small indoor robot, a 2-D time-of-flight lidar is the usual choice: it cos
 
 ## What's still missing
 
-- **The scan is a list of numbers.** Turning it into points, lines and a motion estimate is part 9.
-- **One slice isn't enough** to see a table top or a step down. Part 11's depth cameras see in 3-D.
+- **The scan is a list of numbers.** Turning it into points, lines and a motion estimate is [part 9]({% post_url 2026-10-27-mr-9-lidar-processing-a-scan %}).
+- **One slice isn't enough** to see a table top or a step down. [Part 11]({% post_url 2026-10-27-mr-11-depth-cameras %})'s depth cameras see in 3-D.
 
 ## Going deeper
 

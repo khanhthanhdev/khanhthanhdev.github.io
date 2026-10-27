@@ -108,8 +108,8 @@ Two warnings about the numbers. **TOPS** are peak operations per second, at low 
 
 ## What's still missing
 
-- **The sensors that need all this compute.** The lidar comes next, in parts 8 and 9, and the depth camera in part 11.
-- **How the nodes talk**, and what a queue depth is: part 10.
+- **The sensors that need all this compute.** The lidar comes next, in parts [8]({% post_url 2026-10-27-mr-8-lidar-how-it-measures %}) and [9]({% post_url 2026-10-27-mr-9-lidar-processing-a-scan %}), and the depth camera in [part 11]({% post_url 2026-10-27-mr-11-depth-cameras %}).
+- **How the nodes talk**, and what a queue depth is: [part 10]({% post_url 2026-10-27-mr-10-ros2 %}).
 
 ## Going deeper
 

@@ -142,7 +142,7 @@ Two operations on poses come up in every later part:
 ## What's still missing
 
 - **We assumed the robot knows its pose.** It doesn't. Every later part is, one way or another, about estimating it.
-- **We moved the robot by decree.** A real robot moves by turning its wheels. Part 2 works out exactly how two wheel speeds become a motion of the whole robot.
+- **We moved the robot by decree.** A real robot moves by turning its wheels. [Part 2]({% post_url 2026-10-27-mr-2-wheels-and-kinematics %}) works out exactly how two wheel speeds become a motion of the whole robot.
 
 ## Going deeper
 

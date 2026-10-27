@@ -106,8 +106,8 @@ Three things make ICP work in practice:
 
 ## What's still missing
 
-- **The software framework.** Drivers, scans, transforms and odometry all pass through ROS 2, which is part 10.
-- **Lidar odometry drifts too.** Fusing it with the wheels and an IMU is part 12; recognising places to correct it, part 14.
+- **The software framework.** Drivers, scans, transforms and odometry all pass through ROS 2, which is [part 10]({% post_url 2026-10-27-mr-10-ros2 %}).
+- **Lidar odometry drifts too.** Fusing it with the wheels and an IMU is [part 12]({% post_url 2026-10-27-mr-12-kalman-filters %}); recognising places to correct it, [part 14]({% post_url 2026-10-27-mr-14-slam %}).
 
 ## Going deeper
 

@@ -110,8 +110,8 @@ RealSense was spun out of Intel as its own company in 2025. Most have an IMU and
 
 ## What's still missing
 
-- **Fusing everything.** The robot now has wheels, an IMU, a lidar and a depth camera, each with its own errors. Combining them is part 12.
-- **Using the points.** How obstacles from both sensors go into one costmap is part 15.
+- **Fusing everything.** The robot now has wheels, an IMU, a lidar and a depth camera, each with its own errors. Combining them is [part 12]({% post_url 2026-10-27-mr-12-kalman-filters %}).
+- **Using the points.** How obstacles from both sensors go into one costmap is [part 15]({% post_url 2026-10-27-mr-15-path-planning-and-navigation %}).
 
 ## Going deeper
 
