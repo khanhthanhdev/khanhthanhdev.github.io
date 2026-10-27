@@ -1,0 +1,28 @@
+{% comment %}
+  Navigation for the "Mobile robots from scratch" series. Parts that are not published yet are listed without a link.
+  Usage: {% include mr-series.liquid %} in a post with `series: mobile-robots-from-scratch` and `part: N`.
+{% endcomment %}
+{% assign mr_titles = 'What a mobile robot is|Wheels and kinematics|What a sensor is|Encoders and odometry|Motors and PID control|The microcontroller: ESP32|The onboard computer: Raspberry Pi and Jetson|Lidar: how it measures|Lidar: processing a scan|ROS 2|Depth cameras|Sensor fusion with Kalman filters|Localisation with particle filters|SLAM|Path planning and navigation'
+  | split: '|'
+%}
+{% assign mr_parts = site.posts | where: 'series', 'mobile-robots-from-scratch' %}
+<nav class="tf-series" aria-label="Series: Mobile robots from scratch">
+  <span class="tf-label">Series · Mobile robots from scratch</span>
+  {% for title in mr_titles %}
+    {% assign n = forloop.index %}
+    {% assign mr_post = mr_parts | where: 'part', n | first %}
+    {% if mr_post == null %}
+      <span
+        ><b>{{ n }}</b>{{ title }} · soon</span
+      >
+    {% elsif mr_post.url == page.url %}
+      <span aria-current="page"
+        ><b>{{ n }}</b>{{ title -}}
+      </span>
+    {% else %}
+      <a href="{{ mr_post.url | relative_url }}"
+        ><b>{{ n }}</b>{{ title -}}
+      </a>
+    {% endif %}
+  {% endfor %}
+</nav>
