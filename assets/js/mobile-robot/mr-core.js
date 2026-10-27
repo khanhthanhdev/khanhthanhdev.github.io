@@ -306,6 +306,24 @@
     return { trueCount, read, lost: Math.max(0, trueCount - read), cpu: (opts.pollCost ?? 0.5e-6) / period };
   }
 
+  // A control loop on a microcontroller, cycle by cycle. With "delay" it does its work, then sleeps a fixed `period`,
+  // so every cycle lasts period + work; with "until" it sleeps until the next multiple of `period`. Every
+  // `spikeEvery` cycles another task (Wi-Fi, say) holds the CPU when the loop should wake, delaying it by `spike` s.
+  // Returns each cycle's start time and length.
+  function loopTiming({ cycles = 200, period = 0.01, work = 0.0013, workSd = 0.0003, mode = "until", spike = 0, spikeEvery = 25, seed = 4 } = {}) {
+    const r = rng(seed);
+    const starts = [];
+    let wake = 0;
+    for (let i = 0; i < cycles; i++) {
+      const start = wake + (spike && i % spikeEvery === spikeEvery - 1 ? spike : 0);
+      starts.push(start);
+      const busy = Math.max(0, work + r.gauss(0, workSd));
+      wake = mode === "delay" ? start + busy + period : Math.max((i + 1) * period, start + busy);
+    }
+    const lengths = starts.slice(1).map((v, i) => v - starts[i]);
+    return { starts: starts.slice(0, -1), lengths };
+  }
+
   /* ---------------------------------------------------------------- sensors and noise */
 
   // n readings of a range sensor looking at a wall `truth` metres away, with a fixed bias and Gaussian noise.
@@ -1295,6 +1313,7 @@
     quadrature,
     decode,
     readEncoder,
+    loopTiming,
     readings,
     gyro,
     sonar,
