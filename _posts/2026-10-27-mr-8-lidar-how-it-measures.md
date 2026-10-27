@@ -27,7 +27,7 @@ js:
 
 Every robot so far has known only how its wheels turned. To find out where it really is, and what's in its way, it needs to measure the room. The sensor most mobile robots use for that is a **lidar** (light detection and ranging): it measures the distance to whatever a laser beam hits, hundreds or thousands of times a second, in every direction.
 
-This part is about how one distance is measured, and how many of them become a scan. Part 9 is about what the robot does with the scan.
+This part is about how one distance is measured, and how many of them become a scan. [Part 9]({% post_url 2026-10-27-mr-9-lidar-processing-a-scan %}) is about what the robot does with the scan.
 
 ## Measuring with light, step by step
 

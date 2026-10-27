@@ -139,6 +139,9 @@ html[data-theme="dark"] {
   stroke-width: 1.4;
 }
 
+.mr-line.is-thick {
+  stroke-width: 3.5;
+}
 .mr-line.is-dash {
   stroke-dasharray: 4 3;
 }

@@ -940,7 +940,10 @@
   // Point-to-point ICP in 2-D: finds the rigid motion [x, y, θ] that moves the points `src` onto `dst`. Each round
   // pairs every source point with its nearest destination point, drops pairs further apart than `reject`, and solves
   // for the best rotation and translation in closed form. Returns the motion, and the history of the mean error.
-  function icp(src, dst, { guess = [0, 0, 0], iters = 30, reject = 0.5 } = {}) {
+  // With `line`, it measures each pair's error along the destination surface's normal instead (point-to-line ICP),
+  // so two scans that sampled the same wall at different points still agree.
+  function icp(src, dst, { guess = [0, 0, 0], iters = 30, reject = 0.5, line = false } = {}) {
+    if (line) return icpLine(src, dst, { guess, iters, reject });
     let T = guess.slice();
     const errs = [];
     const history = [T.slice()];
@@ -984,6 +987,68 @@
       T = compose(step, T);
       history.push(T.slice());
       if (Math.abs(dth) < 1e-6 && Math.hypot(step[0], step[1]) < 1e-6) break;
+    }
+    return { T, errs, history };
+  }
+
+  // dst must be in scan order, so each point's neighbours give the surface's direction there.
+  function icpLine(src, dst, { guess, iters, reject }) {
+    const normals = dst.map((q, j) => {
+      const a = dst[Math.max(0, j - 1)];
+      const b = dst[Math.min(dst.length - 1, j + 1)];
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const len = Math.hypot(dx, dy);
+      // no surface direction across a gap or at an end
+      if (!len || len > 0.3) return null;
+      return [-dy / len, dx / len];
+    });
+    let T = guess.slice();
+    const errs = [];
+    const history = [T.slice()];
+    for (let it = 0; it < iters; it++) {
+      const H = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+      ];
+      const g = [0, 0, 0];
+      let sumE = 0;
+      let used = 0;
+      src.forEach((p0) => {
+        const p = toWorld(T, p0);
+        let best = Infinity;
+        let bj = -1;
+        for (let j = 0; j < dst.length; j++) {
+          const d = (p[0] - dst[j][0]) ** 2 + (p[1] - dst[j][1]) ** 2;
+          if (d < best) {
+            best = d;
+            bj = j;
+          }
+        }
+        const n = normals[bj];
+        if (!n || Math.sqrt(best) > reject) return;
+        const q = dst[bj];
+        const r = n[0] * (p[0] - q[0]) + n[1] * (p[1] - q[1]);
+        // the residual's change for a small move [dx, dy, dθ] (the turn about the origin)
+        const J = [n[0], n[1], -n[0] * p[1] + n[1] * p[0]];
+        for (let a = 0; a < 3; a++) {
+          g[a] += J[a] * r;
+          for (let b = 0; b < 3; b++) H[a][b] += J[a] * J[b];
+        }
+        sumE += Math.abs(r);
+        used++;
+      });
+      errs.push(used ? sumE / used : Infinity);
+      if (used < 3) break;
+      const d = solve(
+        H,
+        g.map((v) => -v)
+      );
+      if (!d) break;
+      T = compose(d, T);
+      history.push(T.slice());
+      if (Math.abs(d[2]) < 1e-7 && Math.hypot(d[0], d[1]) < 1e-7) break;
     }
     return { T, errs, history };
   }
