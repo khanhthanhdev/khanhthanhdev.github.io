@@ -344,6 +344,54 @@
     return { raw, t, heading: headingOf };
   }
 
+  // An ultrasonic range finder: it sends a cone of sound (±half degrees) and reports the first echo. A wall hit at
+  // more than `maxIncidence` from straight on reflects the sound away (specular) and sends no echo back.
+  function sonar(world, pose, { half = rad(15), rays = 31, maxIncidence = rad(40), max = 4 } = {}) {
+    let best = Infinity;
+    let bestA = null;
+    const hits = [];
+    for (let i = 0; i < rays; i++) {
+      const a = pose[2] - half + (2 * half * i) / (rays - 1);
+      const { r, seg } = rayHit(world, pose[0], pose[1], a, max);
+      if (!seg) {
+        hits.push({ a, r: max, echo: false });
+        continue;
+      }
+      const [x1, y1, x2, y2] = seg.s;
+      // angle between the ray and the wall's normal
+      const nx = -(y2 - y1);
+      const ny = x2 - x1;
+      const inc = Math.acos(Math.abs(Math.cos(a) * nx + Math.sin(a) * ny) / Math.hypot(nx, ny));
+      const echo = inc <= maxIncidence;
+      hits.push({ a, r, echo, inc });
+      if (echo && r < best) {
+        best = r;
+        bestA = a;
+      }
+    }
+    return { r: best, a: bestA, hits, ahead: ray(world, pose[0], pose[1], pose[2], 50) };
+  }
+
+  // An accelerometer on a robot standing still, integrated twice into a position: a bias and white noise turn into a
+  // position error that grows with the square of time.
+  function accelDrift(seconds, { rate = 100, bias = 0.01, sd = 0.02, seed = 13 } = {}) {
+    const r = rng(seed);
+    const dt = 1 / rate;
+    let v = 0;
+    let x = 0;
+    const t = [];
+    const pos = [];
+    const n = Math.round(seconds * rate);
+    for (let i = 0; i < n; i++) {
+      const a = bias + r.gauss(0, sd);
+      v += a * dt;
+      x += v * dt;
+      t.push((i + 1) * dt);
+      pos.push(x);
+    }
+    return { t, pos };
+  }
+
   // An exponential moving average: y ← y + α (x − y).
   function ema(xs, alpha) {
     let y = xs[0];
@@ -1232,6 +1280,8 @@
     readEncoder,
     readings,
     gyro,
+    sonar,
+    accelDrift,
     ema,
     MOTOR,
     pidRun,

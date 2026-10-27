@@ -246,8 +246,9 @@
   // A time-series chart with real axes: set(series, { xMax, yMin, yMax, marks }) where each series is
   // { xs, ys, cls, label }. Gaps (null) break a line. Unlike the clustering chart, x is a real number.
   function plot(parent, opts = {}) {
-    const W = opts.width ?? 280;
-    const H = opts.height ?? 160;
+    // on phones a plot is drawn narrower, so its text stays readable once the stage is scaled to the screen
+    const W = narrow.matches ? Math.min(opts.width ?? 280, 250) : (opts.width ?? 280);
+    const H = narrow.matches ? Math.min(opts.height ?? 160, 170) : (opts.height ?? 160);
     const g = s("g", { class: "mr-plot tf-obj" });
     const title = s("text", { class: "tf-mat-title", x: 0, y: -12, text: opts.title || "" });
     const body = s("g");
@@ -257,7 +258,7 @@
       el: g,
       W,
       H,
-      box: { x: -44, y: -30, width: W + 44 + (opts.right ?? 60), height: H + 30 + (opts.xTitle ? 40 : 24) },
+      box: { x: -44, y: -30, width: W + 44 + Math.min(opts.right ?? 60, narrow.matches ? 64 : Infinity), height: H + 30 + (opts.xTitle ? 40 : 24) },
       title: (t) => (title.textContent = t),
       set(series, o = {}) {
         const xMin = o.xMin ?? 0;
@@ -316,7 +317,8 @@
               );
           }
         });
-        if (opts.xTitle) nodes.push(s("text", { class: "tf-small", x: W / 2, y: H + 34, "text-anchor": "middle", text: opts.xTitle }));
+        const xTitle = o.xTitle ?? opts.xTitle;
+        if (xTitle) nodes.push(s("text", { class: "tf-small", x: W / 2, y: H + 34, "text-anchor": "middle", text: xTitle }));
         body.replaceChildren(...nodes);
       },
     };
