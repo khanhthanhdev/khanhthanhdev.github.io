@@ -831,7 +831,10 @@
     const top = Math.max(...logs);
     const ws = logs.map((l) => Math.exp(l - top));
     const sum = ws.reduce((a, b) => a + b, 0);
-    return ps.map((q, i) => ({ p: q.p, w: ws[i] / sum }));
+    const out = ps.map((q, i) => ({ p: q.p, w: ws[i] / sum }));
+    // how well even the best particle explains the scan: the RMS error of its beams (m)
+    out.fit = top > -1e8 && beams.length ? sd * Math.sqrt((-2 * top) / beams.length) : Infinity;
+    return out;
   }
   // Low-variance (systematic) resampling: one random offset, n evenly spaced pointers into the cumulative weights.
   function resample(ps, r) {
@@ -861,7 +864,8 @@
     });
     return [x, y, Math.atan2(s, c)];
   }
-  // The whole run: a path of poses the robot really takes; at each one it gets an odometry step and a scan.
+  // The whole run: a path of poses the robot really takes; at each one it gets an odometry step and a scan. At the
+  // steps listed in `carried`, the robot is picked up and put down elsewhere: its wheels report no motion.
   function mclRun(world, poses, opts = {}) {
     const r = rng(opts.seed ?? 31);
     const n = opts.n ?? 400;
@@ -869,7 +873,7 @@
     let ps = mclInit(world, n, r, opts.around ?? null);
     const frames = [{ ps, est: mclMean(ps), neff: n }];
     for (let k = 1; k < poses.length; k++) {
-      const step = relative(poses[k - 1], poses[k]);
+      const step = opts.carried && opts.carried.includes(k) ? [0, 0, 0] : relative(poses[k - 1], poses[k]);
       ps = mclMove(ps, step, r, opts.noise);
       const sc = scan(world, opts.kidnap && k >= opts.kidnap[0] ? compose(opts.kidnap[1], relative(poses[opts.kidnap[0]], poses[k])) : poses[k], {
         n: beams,
@@ -879,10 +883,13 @@
       ps = mclWeigh(world, ps, sc, { sd: opts.sd ?? 0.25 });
       const est = mclMean(ps);
       const ne = neff(ps);
-      frames.push({ weighed: ps, est, neff: ne, scan: sc });
+      frames.push({ weighed: ps, est, neff: ne, scan: sc, fit: ps.fit });
       if (ne < n / 2) ps = resample(ps, r);
-      // a few fresh random particles let the filter recover from a wrong answer (the "augmented" MCL idea)
-      if (opts.inject) {
+      // when even the best particle fits the scan badly, the filter is probably wrong: a few fresh random particles let
+      // it recover (the "augmented" MCL idea)
+      const lost = frames[frames.length - 1].fit > (opts.lost ?? 0.3);
+      frames[frames.length - 1].lost = lost;
+      if (opts.inject && lost) {
         const fresh = mclInit(world, Math.round(n * opts.inject), r);
         ps = ps
           .slice(0, n - fresh.length)
