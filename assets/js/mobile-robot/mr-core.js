@@ -632,6 +632,35 @@
     return { mu: pm + k * (z - pm), v: (1 - k) * pv, gain: k, pm, pv };
   }
 
+  // A robot driving down a corridor, `n` steps of `step` metres. Its wheels report each step with noise `odoSd`; every
+  // `every` steps it measures its distance along the corridor with noise `zSd` (Infinity: never). Returns, per step,
+  // the truth, the odometry, and the 1-D Kalman filter's estimate and standard deviation.
+  function kfCorridor({ n = 200, step = 0.05, odoSd = 0.01, zSd = 0.05, every = 10, seed = 5 } = {}) {
+    const rw = rng(seed);
+    const rz = rng(seed + 1000);
+    let x = 0;
+    let odom = 0;
+    let mu = 0;
+    let v = 0;
+    const out = { truth: [0], odom: [0], mu: [0], sd: [0], fix: [false] };
+    for (let k = 1; k <= n; k++) {
+      x += step;
+      const meas = step + rw.gauss(0, odoSd);
+      const zNoise = rz.gauss(0, zSd); // drawn every step, so the noise doesn't depend on how often it's used
+      odom += meas;
+      const fix = isFinite(every) && k % every === 0;
+      const o = kf1(mu, v, meas, odoSd ** 2, fix ? x + zNoise : null, zSd ** 2);
+      mu = o.mu;
+      v = o.v;
+      out.truth.push(x);
+      out.odom.push(odom);
+      out.mu.push(mu);
+      out.sd.push(Math.sqrt(v));
+      out.fix.push(fix);
+    }
+    return out;
+  }
+
   // Known beacons the robot can measure range and bearing to (a UWB or reflector setup, or landmarks a camera knows).
   const BEACONS = [
     [0.4, 5.6],
@@ -647,12 +676,15 @@
   function ekfRun(legs, opts = {}) {
     const dt = opts.dt ?? 0.1;
     const r = rng(opts.seed ?? 21);
+    const rz = rng((opts.seed ?? 21) + 1000); // the beacons' noise, apart, so the wheels' errors don't depend on them
     const odoSd = opts.odoSd ?? 0.05; // share of each step's travel
     const rangeSd = opts.rangeSd ?? 0.15;
     const bearSd = opts.bearSd ?? rad(4);
     const every = opts.every ?? 1;
     const use = opts.beacons ?? true;
     const reach = opts.range ?? 4.5;
+    // the wheel noise the filter assumes, which tuning may get wrong; the truth uses odoSd
+    const qSd = opts.assumeOdoSd ?? odoSd;
     let truth = (opts.start ?? [1, 1, 0]).slice();
     let odom = truth.slice();
     let x = truth.slice();
@@ -686,8 +718,8 @@
           [0, 1, ds * Math.cos(m)],
           [0, 0, 1],
         ];
-        const sl = (odoSd * Math.abs(ml) + 1e-4) ** 2;
-        const sr = (odoSd * Math.abs(mr) + 1e-4) ** 2;
+        const sl = (qSd * Math.abs(ml) + 1e-4) ** 2;
+        const sr = (qSd * Math.abs(mr) + 1e-4) ** 2;
         // wheel noise mapped into the pose
         const V = [
           [Math.cos(m) / 2, Math.cos(m) / 2],
@@ -712,7 +744,7 @@
             const dy = b[1] - truth[1];
             const q = Math.hypot(dx, dy);
             if (q > reach) return;
-            const z = [q + r.gauss(0, rangeSd), wrap(Math.atan2(dy, dx) - truth[2] + r.gauss(0, bearSd))];
+            const z = [q + rz.gauss(0, rangeSd), wrap(Math.atan2(dy, dx) - truth[2] + rz.gauss(0, bearSd))];
             const ex = b[0] - x[0];
             const ey = b[1] - x[1];
             const qq = ex * ex + ey * ey;
@@ -1450,6 +1482,7 @@
     kf1,
     BEACONS,
     ekfRun,
+    kfCorridor,
     ellipse2,
     mclInit,
     mclMove,
