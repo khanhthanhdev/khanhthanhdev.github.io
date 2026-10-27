@@ -71,7 +71,7 @@ $$u = K_p\, e.$$
 
 Far below the target, push hard; close to it, push gently. With $$K_p = 0.1$$ the wheel settles at 6.43 rad/s, not 10, and the load still drags it down to 5.00.
 
-That shortfall is built in. A P controller only pushes when there's an error, so it needs an error to hold any speed at all. Raise $$K_p$$ and the error shrinks: at 1.0 the wheel reaches 9.47 rad/s, and holds 9.26 under load. But raise it past about 1.4 and every 10 ms correction overshoots the last: the speed rattles and the duty slams between full and zero. Try it.
+That shortfall is built in. A P controller only pushes when there's an error, so it needs an error to hold any speed at all. Raise $$K_p$$ and the error shrinks: at 1.0 the wheel reaches 9.47 rad/s, and holds 9.26 under load. But raise it past about 1.33 and every 10 ms correction overshoots the last: the speed rattles and the duty slams between full and zero. Try it.
 
 </div>
 
@@ -89,13 +89,13 @@ Push $$K_i$$ higher and it recovers faster, but overshoots: 6% at $$K_i = 2$$. T
 </div>
 
 <div class="tf-step" data-step="pid" data-title="D: react to the trend, and to the noise." markdown="1">
-**The third term looks at how fast the speed is changing**, the **derivative**, and pushes against it, braking a fast rise before it overshoots:
+**The third term looks at how fast the speed is changing**, the **derivative**, and pushes against the change. The idea is to brake a fast rise before it overshoots:
 
 $$u = K_p\, e + K_i \int e\, dt - K_d\, \frac{d\omega}{dt}.$$
 
 (Taking the derivative of the measured speed rather than of the error means a sudden new target doesn't make the output jump.)
 
-Here it barely helps: a motor speed loop is already smooth. And it has a cost. The measured speed is noisy: with 1,320 counts per turn, one count in a 10 ms cycle is 0.48 rad/s. The derivative amplifies that noise. With noise of 0.5 rad/s, the PI controller's duty jitters by 5.0%; with $$K_d = 0.002$$ it jitters by 19.2%, and with 0.005 by 39.5%, heating the motor for nothing.
+Here it doesn't help. Without noise, $$K_d = 0.002$$ raises the overshoot from 0.1% to 2.8% and slows the rise from 0.14 s to 0.15 s; $$K_d = 0.005$$ gives 7.0% and 0.17 s. A motor speed loop has nothing for it to brake, and the slower start leaves the integral more to wind up. It also has a cost. The measured speed is noisy: with 1,320 counts per turn, one count in a 10 ms cycle is 0.48 rad/s. The derivative amplifies that noise. With noise of 0.5 rad/s, the PI controller's duty jitters by 5.0%; with $$K_d = 0.002$$ it jitters by 19.2%, and with 0.005 by 39.5%, heating the motor for nothing.
 
 The D term earns its place in **position** loops, like a robot arm's joint or a balancing robot, where the thing controlled has momentum to brake.
 

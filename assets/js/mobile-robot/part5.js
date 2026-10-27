@@ -167,7 +167,7 @@
         const r = run({ kp: state.kp, ki: state.ki });
         both(r, "PI");
         strip(
-          `${r.rise == null ? "never reaches 90% of the target" : `90% of the target in ${f2(r.rise)} s`} · overshoot ${pct(r.overshoot)} · the load pulls it to ${f2(r.dip)}, then back to ${f2(r.end)}`
+          `Kp ${state.kp.toFixed(2)}, Ki ${state.ki.toFixed(1)} · ${r.rise == null ? "never reaches 90%" : `90% of the target in ${f2(r.rise)} s`} · overshoot ${pct(r.overshoot)} · the load pulls it to ${f2(r.dip)}, then back to ${f2(r.end)}`
         );
       },
 
