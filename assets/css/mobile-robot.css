@@ -12,6 +12,7 @@
   --mr-e: #9810fa;
   --mr-floor: #fbfbfa;
   --mr-shape: #d4d4d8;
+  --mr-ink: #27272a;
 }
 
 html[data-theme="dark"] {
@@ -22,6 +23,7 @@ html[data-theme="dark"] {
   --mr-e: #b86bff;
   --mr-floor: #202227;
   --mr-shape: #4a4d55;
+  --mr-ink: #e4e4e7;
 }
 
 .mr-svg .tf-obj {
