@@ -101,6 +101,16 @@
     },
   };
 
+  // three overlapping classes for guidance (part 9): round blobs of spread 0.6 whose centres sit 1.73 apart, on a
+  // circle of radius 1, so about one point in eight lies closer to another class's centre
+  DATASETS.classes = {
+    label: "three overlapping classes",
+    weights: [1 / 3, 1 / 3, 1 / 3],
+    means: [90, 210, 330].map((deg) => [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)]),
+    sd: [0.6, 0.6, 0.6],
+    classes: [0, 1, 2],
+  };
+
   // n points from a dataset, as a flat Float64Array [x0, y0, x1, y1, …]. labels[i] is the component each came from.
   function sample(data, n, seed = 1) {
     const rand = rng(seed);
@@ -300,6 +310,41 @@
           sy -= (r[k] * (y - c.mean[1])) / c.v;
         });
         return [sx, sy];
+      },
+    };
+  }
+
+  // Exact guided noise predictions for a dataset with classes (part 9). cls is the class of every point (an Int32Array,
+  // or one number for all). With p_t(x | c) the noisy density of class c's components and p_t(x) of all of them:
+  //   classifier-free guidance, weight w:  ε̃ = (1 + w)·ε(x | c) − w·ε(x)
+  //   classifier guidance, scale s:        ∇ log p_t(x) + s·∇ log p_t(c | x), i.e. ε̃ = ε(x) + s·(ε(x | c) − ε(x))
+  // since ∇ log p_t(c | x) = ∇ log p_t(x | c) − ∇ log p_t(x) for the exact classifier. So scale s is weight w = s − 1.
+  function exactGuided(data, sch, opts = {}) {
+    const all = exactModel(data, sch);
+    const K = Math.max(...data.classes) + 1;
+    const per = Array.from({ length: K }, (_, c) => {
+      const idx = data.classes.map((cc, k) => (cc === c ? k : -1)).filter((k) => k >= 0);
+      const tot = idx.reduce((sum, k) => sum + data.weights[k], 0);
+      return exactModel(
+        { weights: idx.map((k) => data.weights[k] / tot), means: idx.map((k) => data.means[k]), sd: idx.map((k) => data.sd[k]) },
+        sch
+      );
+    });
+    const w = opts.scale != null ? opts.scale - 1 : (opts.w ?? 0);
+    return {
+      name: "exact, guided",
+      classModel: (c) => per[c],
+      eps(xs, t) {
+        const u = all.eps(xs, t);
+        const n = xs.length / 2;
+        const out = new Float64Array(xs.length);
+        for (let i = 0; i < n; i++) {
+          const c = typeof opts.cls === "number" ? opts.cls : opts.cls[i];
+          const ec = per[c].eps(xs.subarray(2 * i, 2 * i + 2), t);
+          out[2 * i] = (1 + w) * ec[0] - w * u[2 * i];
+          out[2 * i + 1] = (1 + w) * ec[1] - w * u[2 * i + 1];
+        }
+        return out;
       },
     };
   }
@@ -560,9 +605,11 @@
   }
 
   // Builds the network's inputs for points xs (flat [x, y, …]) at step t (a number, or an Int32Array per point).
-  function netInputs(xs, t, T) {
+  // With K > 0 the network is conditional: K more inputs, a one-hot code for the class (cls, a number or an Int32Array
+  // per point), where the last slot, K − 1, means "no class" (classifier-free guidance trains with it).
+  function netInputs(xs, t, T, cls = null, K = 0) {
     const n = xs.length / 2;
-    const d = LAYERS[0];
+    const d = 2 + EMBED + K;
     const inp = new Float64Array(n * d);
     const emb = new Float64Array(EMBED);
     let lastT = -1;
@@ -575,24 +622,55 @@
       inp[i * d] = xs[2 * i];
       inp[i * d + 1] = xs[2 * i + 1];
       inp.set(emb, i * d + 2);
+      if (K) {
+        const c = cls == null ? K - 1 : typeof cls === "number" ? cls : cls[i];
+        inp[i * d + 2 + EMBED + (c < 0 ? K - 1 : c)] = 1;
+      }
     }
     return inp;
   }
 
   // The trained network as a model with the same interface as exactModel: eps(xs, t) → ε̂ for every point.
   // A network trained to predict x_0 (net.target === "x0") is converted with ε̂ = (x_t − √ᾱ x̂_0) / √(1 − ᾱ).
-  function netModel(net, sch) {
+  // A network with a third output (Improved DDPM's learned variance) also answers v(xs, t). A conditional network
+  // (net.K > 0) takes opts.cls (a class, or null for "no class") and opts.w, the classifier-free guidance weight:
+  // ε̃ = (1 + w)·ε(x, c) − w·ε(x, ∅) (Ho and Salimans, 2022).
+  function netModel(net, sch, opts = {}) {
+    const out = net.layers[net.layers.length - 1];
+    const K = net.K || 0;
+    const run = (xs, t, cls) => {
+      const n = xs.length / 2;
+      const res = forward(net, netInputs(xs, t, sch.T, cls, K), n).out;
+      if (out === 2) return res;
+      const e = new Float64Array(2 * n);
+      for (let i = 0; i < n; i++) {
+        e[2 * i] = res[out * i];
+        e[2 * i + 1] = res[out * i + 1];
+      }
+      return e;
+    };
     return {
       name: net.target === "x0" ? "network (predicts x₀)" : "network",
       eps(xs, t) {
-        const n = xs.length / 2;
-        const { out } = forward(net, netInputs(xs, t, sch.T), n);
-        if (net.target !== "x0") return out;
+        let e;
+        const w = opts.w ?? 0;
+        if (K && opts.cls != null && w !== 0) {
+          const c = run(xs, t, opts.cls);
+          const u = run(xs, t, null);
+          e = new Float64Array(c.length);
+          for (let i = 0; i < c.length; i++) e[i] = (1 + w) * c[i] - w * u[i];
+        } else e = run(xs, t, K ? (opts.cls ?? null) : null);
+        if (net.target !== "x0") return e;
         const a = Math.sqrt(sch.alphaBar[t]);
         const b = Math.sqrt(1 - sch.alphaBar[t]);
-        const e = new Float64Array(out.length);
-        for (let i = 0; i < out.length; i++) e[i] = (xs[i] - a * out[i]) / b;
+        for (let i = 0; i < e.length; i++) e[i] = (xs[i] - a * e[i]) / b;
         return e;
+      },
+      // the learned mix between log β_t (v = 1) and log β~_t (v = 0); only for three-output networks
+      v(xs, t) {
+        const n = xs.length / 2;
+        const res = forward(net, netInputs(xs, t, sch.T, opts.cls ?? null, K), n).out;
+        return Float64Array.from({ length: n }, (_, i) => res[out * i + 2]);
       },
     };
   }
@@ -639,6 +717,14 @@
     const xt = new Float64Array(2 * batch);
     const eps = new Float64Array(2 * batch);
     const ts = new Int32Array(batch);
+    const cs = new Int32Array(batch);
+    const K = net.K || 0;
+    const pUncond = opts.pUncond ?? 0.2;
+    const out = net.layers[net.layers.length - 1];
+    // Improved DDPM's hybrid loss: L_simple + λ·L_vlb, where L_vlb only trains the variance output (the mean is held
+    // fixed inside it). As in their code, each step's KL is in bits per dimension and weighted by T/1000.
+    const learnSigma = out === 3;
+    const vbWeight = sch.T / 1000 / (2 * Math.LN2);
     const weight = new Float64Array(sch.T + 1).fill(1);
     if (opts.weighting === "vlb" && sch.kind !== "ve") {
       let mean = 0;
@@ -656,15 +742,19 @@
           x0[2 * i] = data.means[k][0] + data.sd[k] * rand.normal();
           x0[2 * i + 1] = data.means[k][1] + data.sd[k] * rand.normal();
           ts[i] = 1 + rand.int(sch.T);
+          // conditional training: the component's class, dropped to "no class" with probability pUncond
+          if (K) cs[i] = rand.next() < pUncond ? K - 1 : data.classes[k];
         }
         // sort by t so each embedding is computed once per run of equal t
         const order = Array.from(ts.keys()).sort((p, q) => ts[p] - ts[q]);
         const sx0 = new Float64Array(2 * batch);
         const sts = new Int32Array(batch);
+        const scs = new Int32Array(batch);
         order.forEach((p, i) => {
           sx0[2 * i] = x0[2 * p];
           sx0[2 * i + 1] = x0[2 * p + 1];
           sts[i] = ts[p];
+          scs[i] = cs[p];
         });
         for (let i = 0; i < batch; i++) {
           // VP: x_t = √ᾱ x_0 + √(1 − ᾱ) ε. VE (score networks): x̃ = x_0 + σ_i ε, and predicting ε is denoising score
@@ -679,15 +769,33 @@
             xt[2 * i + d] = a * sx0[2 * i + d] + b * e;
           }
         }
-        const cache = forward(net, netInputs(xt, sts, sch.T), batch, true);
+        const cache = forward(net, netInputs(xt, sts, sch.T, K ? scs : null, K), batch, true);
         const target = net.target === "x0" ? sx0 : eps;
-        const dout = new Float64Array(2 * batch);
+        const dout = new Float64Array(out * batch);
         let loss = 0;
-        for (let i = 0; i < 2 * batch; i++) {
-          const r = cache.out[i] - target[i];
-          const w = weight[sts[i >> 1]];
-          loss += w * r * r;
-          dout[i] = (2 * w * r) / batch;
+        for (let i = 0; i < batch; i++) {
+          for (let d = 0; d < 2; d++) {
+            const r = cache.out[out * i + d] - target[2 * i + d];
+            const w = weight[sts[i]];
+            loss += w * r * r;
+            dout[out * i + d] = (2 * w * r) / batch;
+          }
+          if (!learnSigma || sts[i] < 2) continue;
+          // KL(N(μ~, β~) ‖ N(μ_θ, Σ)) in 2D with Σ = exp(v log β + (1 − v) log β~) and μ_θ from ε_θ, held fixed
+          const t = sts[i];
+          const v = cache.out[out * i + 2];
+          const lb = Math.log(sch.beta[t]);
+          const lbt = Math.log(sch.betaTilde[t]);
+          const S = Math.exp(v * lb + (1 - v) * lbt);
+          const post = posterior([sx0[2 * i], sx0[2 * i + 1]], [xt[2 * i], xt[2 * i + 1]], sch, t);
+          const k = sch.beta[t] / Math.sqrt(1 - sch.alphaBar[t]);
+          const ia = 1 / Math.sqrt(sch.alpha[t]);
+          let d2 = 0;
+          for (let d = 0; d < 2; d++) d2 += (post.mean[d] - ia * (xt[2 * i + d] - k * cache.out[out * i + d])) ** 2;
+          const r = sch.betaTilde[t] / S;
+          loss += (vbWeight * (r - 1 - Math.log(r) + d2 / (2 * S))) / 1; // reported in the loss for monitoring
+          const dLogS = -r + 1 - d2 / (2 * S);
+          dout[out * i + 2] = (vbWeight * dLogS * (lb - lbt)) / batch;
         }
         const g = backward(net, cache, dout, batch);
         const progress = Math.min(1, opt.step / steps);
@@ -718,7 +826,9 @@
   function loadNet(name) {
     const spec = root.DM && root.DM.WEIGHTS && root.DM.WEIGHTS[name];
     if (!spec) return null;
-    return { layers: LAYERS, w: decodeWeights(spec.w), T: spec.T, target: spec.target, dataset: spec.dataset, schedule: spec.schedule };
+    const K = spec.K || 0;
+    const layers = [2 + EMBED + K, HIDDEN, HIDDEN, HIDDEN, spec.out || 2];
+    return { layers, K, w: decodeWeights(spec.w), T: spec.T, target: spec.target, dataset: spec.dataset, schedule: spec.schedule };
   }
 
   /* ---------------------------------------------------------------- sampling */
@@ -1013,6 +1123,52 @@
     };
   }
 
+  // Ancestral sampling on a shortened chain, as Improved DDPM samples with fewer steps (Nichol and Dhariwal, 2021).
+  // Over steps t → s the chain is respaced: β' = 1 − ᾱ_t/ᾱ_s and β~' = (1 − ᾱ_s)/(1 − ᾱ_t)·β'. The mean is the forward
+  // posterior's with x̂₀ from ε_θ; the variance is β' ("beta"), β~' ("tilde"), or the network's learned mix
+  // exp(v log β' + (1 − v) log β~') ("learned", for a three-output network).
+  function respacedStepper(model, sch, xT, opts = {}) {
+    const S = opts.S ?? 50;
+    const variance = opts.variance ?? "beta";
+    const rand = rng(opts.seed ?? 91);
+    const steps = [...stepList(sch.T, S, opts.spacing), 0];
+    let x = Float64Array.from(xT);
+    let k = 0;
+    const frames = [Float64Array.from(x)];
+    return {
+      frames,
+      steps,
+      next(count = 5) {
+        for (let c = 0; c < count && k < steps.length - 1; c++, k++) {
+          const t = steps[k];
+          const sPrev = steps[k + 1];
+          const at = sch.alphaBar[t];
+          const as = sch.alphaBar[sPrev];
+          const b = 1 - at / as;
+          const bt = ((1 - as) / (1 - at)) * b;
+          const e = model.eps(x, t);
+          const v = variance === "learned" && sPrev > 0 ? model.v(x, t) : null;
+          const tau = opts.temperature ?? 1; // scales the added noise; below 1 trades diversity for fidelity
+          const c0 = (Math.sqrt(as) * b) / (1 - at);
+          const ct = (Math.sqrt(at / as) * (1 - as)) / (1 - at);
+          const nx = new Float64Array(x.length);
+          for (let i = 0; i < x.length; i += 2) {
+            let sd = 0;
+            if (sPrev > 0)
+              sd = tau * Math.sqrt(variance === "tilde" ? bt : v ? Math.exp(v[i >> 1] * Math.log(b) + (1 - v[i >> 1]) * Math.log(bt)) : b);
+            for (let d = 0; d < 2; d++) {
+              const x0 = (x[i + d] - Math.sqrt(1 - at) * e[i + d]) / Math.sqrt(at);
+              nx[i + d] = c0 * x0 + ct * x[i + d] + sd * rand.normal();
+            }
+          }
+          x = nx;
+          frames.push(Float64Array.from(x));
+        }
+        return k < steps.length - 1 ? k / (steps.length - 1) : null;
+      },
+    };
+  }
+
   // DDIM run backwards: encode clean points into noise along the same deterministic path, in S steps from step 1 up
   // to T. Each step uses the network at the current step to estimate x̂₀ and ε, then moves to the next step's mix.
   // Returns every frame, from x₀ (frames[0]) to x_T.
@@ -1157,6 +1313,35 @@
   // The standard Gaussian as a dataset, for measuring how close a cloud is to pure noise.
   const STANDARD = { weights: [1], means: [[0, 0]], sd: [1] };
 
+  // Precision and recall for generative models in the k-nearest-neighbour form of Kynkäänniemi et al. (2019). Each
+  // real point gets a ball reaching its k-th nearest real neighbour; the union of the balls estimates where the data
+  // lives. Precision is the share of samples inside it. Recall swaps the roles: the share of real points inside the
+  // balls around the samples. Precision measures fidelity, recall measures coverage.
+  function precisionRecall(samples, real, k = 3) {
+    const radii = (xs) => {
+      const n = xs.length / 2;
+      const r = new Float64Array(n);
+      const d = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) d[j] = (xs[2 * i] - xs[2 * j]) ** 2 + (xs[2 * i + 1] - xs[2 * j + 1]) ** 2;
+        d.sort();
+        r[i] = d[k]; // d[0] is the point itself
+      }
+      return r;
+    };
+    const inside = (pts, centres, r2) => {
+      let c = 0;
+      for (let i = 0; i < pts.length; i += 2)
+        for (let j = 0; j < centres.length; j += 2)
+          if ((pts[i] - centres[j]) ** 2 + (pts[i + 1] - centres[j + 1]) ** 2 <= r2[j >> 1]) {
+            c++;
+            break;
+          }
+      return c / (pts.length / 2);
+    };
+    return { precision: inside(samples, real, radii(real)), recall: inside(real, samples, radii(samples)) };
+  }
+
   // The mean and per-axis spread of a cloud: { mean: [x, y], sd: [x, y] }.
   function moments(xs) {
     const n = xs.length / 2;
@@ -1192,6 +1377,20 @@
       let se = 0;
       for (let i = 0; i < xt.length; i++) se += (eps[i] - e[i]) ** 2;
       se /= m;
+      if (sigma === "learned") {
+        // a per-point variance from the network's v: average the 2D KL over the points
+        const v = model.v(xt, t);
+        const c = sch.beta[t] ** 2 / (sch.alpha[t] * (1 - sch.alphaBar[t]));
+        let kl = 0;
+        for (let i = 0; i < m; i++) {
+          const S = Math.exp(v[i] * Math.log(sch.beta[t]) + (1 - v[i]) * Math.log(sch.betaTilde[t]));
+          const d2 = c * ((eps[2 * i] - e[2 * i]) ** 2 + (eps[2 * i + 1] - e[2 * i + 1]) ** 2);
+          const r = sch.betaTilde[t] / S;
+          kl += r - 1 - Math.log(r) + d2 / (2 * S);
+        }
+        out[t] = kl / m;
+        continue;
+      }
       const s2 = sigma === "tilde" ? sch.betaTilde[t] : sch.beta[t];
       const meanTerm = ((sch.beta[t] ** 2 / (sch.alpha[t] * (1 - sch.alphaBar[t]))) * se) / (2 * s2);
       const r = sch.betaTilde[t] / s2;
@@ -1222,6 +1421,7 @@
     posterior,
     noisyComponents,
     exactModel,
+    exactGuided,
     blurred,
     trueReverse,
     mixturePdf,
@@ -1253,10 +1453,12 @@
     reverseStepper,
     stepList,
     ddimStepper,
+    respacedStepper,
     ddimInvert,
     odeLogLikelihood,
     sliced,
     slicedToData,
+    precisionRecall,
     dataFloor,
     noisedData,
     STANDARD,

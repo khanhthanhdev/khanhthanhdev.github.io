@@ -19,6 +19,10 @@ const NETS = {
   "swissroll-eps": { dataset: "swissroll", schedule: "linear", T: 200, target: "eps", steps: 30000, seed: 1 },
   "swissroll-x0": { dataset: "swissroll", schedule: "linear", T: 200, target: "x0", steps: 30000, seed: 1 },
   "swissroll-vlb": { dataset: "swissroll", schedule: "linear", T: 200, target: "eps", weighting: "vlb", steps: 30000, seed: 1 },
+  // Improved DDPM's learned variance (part 8): a third output v, trained with the hybrid loss
+  "swissroll-learned": { dataset: "swissroll", schedule: "linear", T: 200, target: "eps", out: 3, steps: 30000, seed: 1 },
+  // classifier-free guidance (part 9): conditioned on the class (or "no class", dropped with probability 0.2)
+  "classes-cfg": { dataset: "classes", schedule: "linear", T: 200, target: "eps", K: 4, pUncond: 0.2, steps: 30000, seed: 1 },
   // a noise-conditional score network (part 5): 10 noise levels from 0.03 to 4, x̃ = x + σ·ε, trained to predict ε
   "twomodes-ncsn": { dataset: "twomodes", schedule: "ve", sigmaMax: 4, sigmaMin: 0.03, T: 10, target: "eps", steps: 30000, seed: 1 },
 };
@@ -26,8 +30,16 @@ const NETS = {
 function train(name, spec) {
   const data = DM.DATASETS[spec.dataset];
   const sch = spec.schedule === "ve" ? DM.veSchedule(spec.sigmaMax, spec.sigmaMin, spec.T) : DM.schedule(spec.schedule, spec.T);
-  const net = DM.createNet(spec.seed);
-  const tr = DM.trainer(net, data, sch, { steps: spec.steps, target: spec.target, weighting: spec.weighting, batch: 256, seed: spec.seed + 100 });
+  const net = DM.createNet(spec.seed, [2 + DM.EMBED + (spec.K || 0), 48, 48, 48, spec.out || 2]);
+  net.K = spec.K || 0;
+  const tr = DM.trainer(net, data, sch, {
+    steps: spec.steps,
+    target: spec.target,
+    weighting: spec.weighting,
+    pUncond: spec.pUncond,
+    batch: 256,
+    seed: spec.seed + 100,
+  });
   const start = Date.now();
   let avg = 0;
   for (let i = 1; i <= spec.steps; i++) {
@@ -37,7 +49,7 @@ function train(name, spec) {
       avg = 0;
     }
   }
-  if (sch.kind === "ve") return { ...spec, w: DM.encodeWeights(net.w) };
+  if (sch.kind === "ve" || net.K) return { ...spec, w: DM.encodeWeights(net.w) };
   const frames = DM.ddpmSample(DM.netModel(net, sch), sch, DM.gaussian(1000, 2));
   const sw = DM.sliced(frames[0], DM.sample(data, 1000, 9).xs);
   console.log(`${name}: sliced Wasserstein distance of 1000 samples to the data: ${sw.toFixed(4)}`);

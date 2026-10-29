@@ -293,9 +293,10 @@
         (yTicks || [y[0], y[1]]).forEach((v) =>
           nodes.push(s("text", { class: "tf-small", x: -6, y: Y(v) + 4, "text-anchor": "end", text: yLog ? fy(tf(v)) : fy(v) }))
         );
+        const fx = (v) => fmt(v, Number.isInteger(v) ? 0 : Math.abs(v) < 1 ? 2 : 1);
         nodes.push(
-          s("text", { class: "tf-small", x: 0, y: H + 16, "text-anchor": "middle", text: fmt(x0, 0) }),
-          s("text", { class: "tf-small", x: W, y: H + 16, "text-anchor": "middle", text: fmt(x1, 0) })
+          s("text", { class: "tf-small", x: 0, y: H + 16, "text-anchor": "middle", text: fx(x0) }),
+          s("text", { class: "tf-small", x: W, y: H + 16, "text-anchor": "middle", text: fx(x1) })
         );
         if (xLabel) nodes.push(s("text", { class: "tf-small", x: W / 2, y: H + 32, "text-anchor": "middle", text: xLabel }));
         body.replaceChildren(...nodes);

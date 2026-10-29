@@ -180,6 +180,43 @@ html[data-theme="dark"] {
   stroke-dasharray: 3 3;
 }
 
+/* ------------------------------------------------------------ the U-Net diagram (part 8) */
+
+.dm-unet-box {
+  fill: var(--tf-cell);
+  stroke: var(--tf-grid);
+  stroke-width: 1.2;
+  transition:
+    fill 300ms ease,
+    stroke 300ms ease;
+}
+
+.dm-unet-node.is-on .dm-unet-box {
+  fill: color-mix(in srgb, var(--dm-model) 14%, var(--tf-paper));
+  stroke: var(--dm-model);
+}
+
+.tf-svg .dm-unet-text {
+  fill: var(--tf-ink);
+  font-size: 12px;
+}
+
+.tf-svg .dm-unet-sub,
+.tf-svg .dm-unet-note {
+  fill: var(--tf-muted);
+  font-size: 11px;
+}
+
+.dm-unet-arrow {
+  fill: none;
+  stroke: var(--tf-muted);
+  stroke-width: 1.4;
+}
+
+.dm-unet-arrow.is-skip {
+  stroke-dasharray: 4 3;
+}
+
 /* ------------------------------------------------------------ stage chrome */
 
 .tf-scrolly.is-busy .tf-note {
