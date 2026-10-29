@@ -23,9 +23,50 @@ const NETS = {
   "swissroll-learned": { dataset: "swissroll", schedule: "linear", T: 200, target: "eps", out: 3, steps: 30000, seed: 1 },
   // classifier-free guidance (part 9): conditioned on the class (or "no class", dropped with probability 0.2)
   "classes-cfg": { dataset: "classes", schedule: "linear", T: 200, target: "eps", K: 4, pUncond: 0.2, steps: 30000, seed: 1 },
+  // EDM's preconditioning, noise distribution and loss weighting (part 11), with σ_data = 1 for our data
+  "swissroll-edm": { dataset: "swissroll", kind: "edm", sigmaData: 1, steps: 30000, seed: 1 },
+  // rectified flow (part 12): straight noise-to-data paths, then one round of "reflow" on the first model's own pairs
+  "swissroll-flow": { dataset: "swissroll", kind: "flow", steps: 30000, seed: 1 },
+  "swissroll-reflow": { dataset: "swissroll", kind: "reflow", from: "swissroll-flow", pairs: 20000, pairSteps: 100, steps: 30000, seed: 1 },
   // a noise-conditional score network (part 5): 10 noise levels from 0.03 to 4, x̃ = x + σ·ε, trained to predict ε
   "twomodes-ncsn": { dataset: "twomodes", schedule: "ve", sigmaMax: 4, sigmaMin: 0.03, T: 10, target: "eps", steps: 30000, seed: 1 },
 };
+
+// EDM, flow and reflow networks have their own trainers and no diffusion schedule.
+function trainOther(name, spec, weights) {
+  const data = DM.DATASETS[spec.dataset];
+  const net = DM.createNet(spec.seed);
+  let tr;
+  if (spec.kind === "edm") tr = DM.edmTrainer(net, data, { steps: spec.steps, sigmaData: spec.sigmaData, seed: spec.seed + 100 });
+  else if (spec.kind === "flow") tr = DM.flowTrainer(net, DM.dataPairs(data), { steps: spec.steps, seed: spec.seed + 100 });
+  else {
+    // reflow: pair each noise with where the first flow takes it, then learn straight paths between those pairs
+    const first = { layers: DM.LAYERS, w: DM.decodeWeights(weights[spec.from].w) };
+    const z = DM.gaussian(spec.pairs, spec.seed + 7);
+    const st = DM.flowStepper(DM.flowModel(first), z, { n: spec.pairSteps });
+    while (st.next(100) != null);
+    const y = st.frames[st.frames.length - 1];
+    console.log(`${name}: ${spec.pairs} pairs from ${spec.from} with ${spec.pairSteps} Euler steps`);
+    tr = DM.flowTrainer(
+      net,
+      (rand) => {
+        const i = rand.int(spec.pairs);
+        return [y[2 * i], y[2 * i + 1], z[2 * i], z[2 * i + 1]];
+      },
+      { steps: spec.steps, seed: spec.seed + 100 }
+    );
+  }
+  const start = Date.now();
+  let avg = 0;
+  for (let i = 1; i <= spec.steps; i++) {
+    avg += tr.step();
+    if (i % 2000 === 0) {
+      console.log(`${name}: step ${i}, loss ${(avg / 2000).toFixed(4)}, ${((Date.now() - start) / 1000).toFixed(0)} s`);
+      avg = 0;
+    }
+  }
+  return { ...spec, w: DM.encodeWeights(net.w) };
+}
 
 function train(name, spec) {
   const data = DM.DATASETS[spec.dataset];
@@ -68,7 +109,7 @@ const only = process.argv[2];
 const weights = { ...existing };
 Object.entries(NETS).forEach(([name, spec]) => {
   if (only && !name.startsWith(only)) return;
-  weights[name] = train(name, spec);
+  weights[name] = spec.kind ? trainOther(name, spec, weights) : train(name, spec);
 });
 
 const body = Object.entries(weights)

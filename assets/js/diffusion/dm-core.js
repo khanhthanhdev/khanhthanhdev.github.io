@@ -1229,6 +1229,243 @@
     return { logp: out, end: x };
   }
 
+  /* ---------------------------------------------------------------- EDM: the design space (Karras et al., 2022) */
+
+  // EDM writes every model as x = y + σ·n (data y, standard noise n), and the network as a denoiser D(x; σ) ≈ E[y | x].
+  // The probability flow ODE is then dx/dσ = (x − D(x; σ)) / σ. VP data relates by x_VP = x/√(1 + σ²), σ² = (1 − ᾱ)/ᾱ.
+
+  // The VP time t of a noise level σ, for the VP SDE: ln(1 + σ²) = −ln ᾱ(t) = βmin t + ½(βmax − βmin) t².
+  function vpTime(sigma, sde = vpSDE()) {
+    const L = Math.log1p(sigma * sigma);
+    const a = 0.5 * (sde.beta(1) - sde.beta(0));
+    const b = sde.beta(0);
+    return (-b + Math.sqrt(b * b + 4 * a * L)) / (2 * a);
+  }
+
+  // A denoiser from a network trained on the 200-step VP chain (parts 1–4): D(x; σ) = x − σ·ε_θ(x/√(1 + σ²), 200 t(σ)).
+  // In EDM's Table 1 this is the VP column: c_skip = 1, c_out = −σ, c_in = 1/√(σ² + 1).
+  function vpDenoiser(model, steps = 200) {
+    return (xs, sigma) => {
+      const cin = 1 / Math.sqrt(1 + sigma * sigma);
+      const e = model.eps(
+        Float64Array.from(xs, (v) => v * cin),
+        vpTime(sigma) * steps
+      );
+      const out = new Float64Array(xs.length);
+      for (let i = 0; i < xs.length; i++) out[i] = xs[i] - sigma * e[i];
+      return out;
+    };
+  }
+
+  // The exact denoiser of a mixture dataset: Tweedie's formula, D = x + σ²·∇ log p_σ(x).
+  function exactDenoiser(data) {
+    const cache = new Map();
+    return (xs, sigma) => {
+      const key = sigma.toPrecision(12);
+      if (!cache.has(key)) cache.set(key, blurred(data, sigma));
+      const b = cache.get(key);
+      const g = b.scores(xs);
+      for (let i = 0; i < xs.length; i++) g[i] = xs[i] + sigma * sigma * g[i];
+      return g;
+    };
+  }
+
+  // EDM's preconditioning (Table 1): D(x; σ) = c_skip·x + c_out·F(c_in·x; c_noise), with
+  // c_skip = σd²/(σ² + σd²), c_out = σ·σd/√(σ² + σd²), c_in = 1/√(σ² + σd²), c_noise = ¼ ln σ. Our network takes its noise
+  // input through the same sine–cosine embedding as the step t, so ln σ is mapped linearly onto [0, 200].
+  const EDM = { sigmaMin: 0.002, sigmaMax: 80, pMean: -1.2, pStd: 1.2, rho: 7 };
+  const edmCoef = (sigma, sd) => ({
+    skip: (sd * sd) / (sigma * sigma + sd * sd),
+    out: (sigma * sd) / Math.sqrt(sigma * sigma + sd * sd),
+    in: 1 / Math.sqrt(sigma * sigma + sd * sd),
+    noise: 200 * Math.min(1, Math.max(0, (Math.log(sigma) - Math.log(EDM.sigmaMin)) / (Math.log(EDM.sigmaMax) - Math.log(EDM.sigmaMin)))),
+  });
+
+  function edmDenoiser(net, sigmaData = 1) {
+    return (xs, sigma) => {
+      const c = edmCoef(sigma, sigmaData);
+      const n = xs.length / 2;
+      const { out } = forward(
+        net,
+        netInputs(
+          Float64Array.from(xs, (v) => v * c.in),
+          c.noise,
+          200
+        ),
+        n
+      );
+      const d = new Float64Array(xs.length);
+      for (let i = 0; i < xs.length; i++) d[i] = c.skip * xs[i] + c.out * out[i];
+      return d;
+    };
+  }
+
+  // EDM training: σ with ln σ ~ N(P_mean, P_std²), x = y + σ·n, and a plain squared error on F against its effective
+  // target (y − c_skip·x)/c_out. The loss weight λ(σ) = (σ² + σd²)/(σ·σd)² times c_out² is exactly 1, so every noise
+  // level's loss starts at the same scale.
+  function edmTrainer(net, data, opts = {}) {
+    const batch = opts.batch ?? 256;
+    const steps = opts.steps ?? 6000;
+    const lr = opts.lr ?? 2e-3;
+    const sd = opts.sigmaData ?? 1;
+    const rand = rng(opts.seed ?? 5);
+    const opt = adam(net, lr);
+    return {
+      opt,
+      step() {
+        const xin = new Float64Array(2 * batch);
+        const tgt = new Float64Array(2 * batch);
+        const tn = new Float64Array(batch);
+        for (let i = 0; i < batch; i++) {
+          const k = pick(rand, data.weights);
+          const sigma = Math.exp(EDM.pMean + EDM.pStd * rand.normal());
+          const c = edmCoef(sigma, sd);
+          tn[i] = c.noise;
+          for (let d = 0; d < 2; d++) {
+            const y = data.means[k][d] + data.sd[k] * rand.normal();
+            const x = y + sigma * rand.normal();
+            xin[2 * i + d] = c.in * x;
+            tgt[2 * i + d] = (y - c.skip * x) / c.out;
+          }
+        }
+        const cache = forward(net, netInputs(xin, tn, 200), batch, true);
+        const dout = new Float64Array(2 * batch);
+        let loss = 0;
+        for (let i = 0; i < 2 * batch; i++) {
+          const r = cache.out[i] - tgt[i];
+          loss += r * r;
+          dout[i] = (2 * r) / batch;
+        }
+        const g = backward(net, cache, dout, batch);
+        const progress = Math.min(1, opt.step / steps);
+        opt.apply(g, lr * (0.1 + 0.9 * 0.5 * (1 + Math.cos(Math.PI * progress))));
+        return loss / batch;
+      },
+    };
+  }
+
+  // EDM's time steps: σ_i = (σmax^(1/ρ) + i/(N − 1)·(σmin^(1/ρ) − σmax^(1/ρ)))^ρ for i < N, then σ_N = 0.
+  // ρ = 1 spaces them evenly in σ; larger ρ crowds them towards σmin. EDM uses ρ = 7.
+  function edmSigmas(N, opts = {}) {
+    const rho = opts.rho ?? EDM.rho;
+    const lo = opts.sigmaMin ?? EDM.sigmaMin;
+    const hi = opts.sigmaMax ?? EDM.sigmaMax;
+    const out = [];
+    for (let i = 0; i < N; i++) out.push((hi ** (1 / rho) + (i / Math.max(1, N - 1)) * (lo ** (1 / rho) - hi ** (1 / rho))) ** rho);
+    out.push(0);
+    return out;
+  }
+
+  // Solves dx/dσ = (x − D(x; σ))/σ through the given σ list, from x = σ_0·n. "euler" takes one denoiser call per step;
+  // "heun" corrects each step with a second call at its end (EDM's Algorithm 1), except the last step to σ = 0,
+  // which is a plain Euler step. frames[k] is the cloud at sigmas[k]; evals counts denoiser calls.
+  function edmStepper(D, sigmas, noise, opts = {}) {
+    const heun = (opts.solver ?? "heun") === "heun";
+    let x = Float64Array.from(noise, (v) => v * sigmas[0]);
+    let k = 0;
+    let evals = 0;
+    const frames = [Float64Array.from(x)];
+    return {
+      frames,
+      sigmas,
+      get evals() {
+        return evals;
+      },
+      next(count = 5) {
+        for (let c = 0; c < count && k < sigmas.length - 1; c++, k++) {
+          const s0 = sigmas[k];
+          const s1 = sigmas[k + 1];
+          const d0 = D(x, s0);
+          evals++;
+          const slope = new Float64Array(x.length);
+          for (let i = 0; i < x.length; i++) slope[i] = (x[i] - d0[i]) / s0;
+          const nx = new Float64Array(x.length);
+          for (let i = 0; i < x.length; i++) nx[i] = x[i] + (s1 - s0) * slope[i];
+          if (heun && s1 > 0) {
+            const d1 = D(nx, s1);
+            evals++;
+            for (let i = 0; i < x.length; i++) nx[i] = x[i] + (s1 - s0) * 0.5 * (slope[i] + (nx[i] - d1[i]) / s1);
+          }
+          x = nx;
+          frames.push(Float64Array.from(x));
+        }
+        return k < sigmas.length - 1 ? k / (sigmas.length - 1) : null;
+      },
+    };
+  }
+
+  /* ---------------------------------------------------------------- flow matching and rectified flow */
+
+  // Flow matching with straight paths (Lipman et al., 2022; Liu et al., 2022, "rectified flow"): mix data y and noise
+  // z along a straight line, x_t = (1 − t)·y + t·z for t in [0, 1], and train a network v(x_t, t) to predict the
+  // line's velocity z − y. (The papers put noise at t = 0; we keep noise at t = 1, like the rest of the series.)
+  // pairs(rand) returns one training pair [y_x, y_y, z_x, z_y]: data with fresh noise, or a reflow pair.
+  function flowTrainer(net, pairs, opts = {}) {
+    const batch = opts.batch ?? 256;
+    const steps = opts.steps ?? 6000;
+    const lr = opts.lr ?? 2e-3;
+    const rand = rng(opts.seed ?? 5);
+    const opt = adam(net, lr);
+    return {
+      opt,
+      step() {
+        const xin = new Float64Array(2 * batch);
+        const tgt = new Float64Array(2 * batch);
+        const tt = new Float64Array(batch);
+        for (let i = 0; i < batch; i++) {
+          const [yx, yy, zx, zy] = pairs(rand);
+          const t = rand.next();
+          tt[i] = 200 * t;
+          xin[2 * i] = (1 - t) * yx + t * zx;
+          xin[2 * i + 1] = (1 - t) * yy + t * zy;
+          tgt[2 * i] = zx - yx;
+          tgt[2 * i + 1] = zy - yy;
+        }
+        const cache = forward(net, netInputs(xin, tt, 200), batch, true);
+        const dout = new Float64Array(2 * batch);
+        let loss = 0;
+        for (let i = 0; i < 2 * batch; i++) {
+          const r = cache.out[i] - tgt[i];
+          loss += r * r;
+          dout[i] = (2 * r) / batch;
+        }
+        const g = backward(net, cache, dout, batch);
+        const progress = Math.min(1, opt.step / steps);
+        opt.apply(g, lr * (0.1 + 0.9 * 0.5 * (1 + Math.cos(Math.PI * progress))));
+        return loss / batch;
+      },
+    };
+  }
+
+  // Data with fresh noise, the first round of rectified flow.
+  const dataPairs = (data) => (rand) => {
+    const k = pick(rand, data.weights);
+    return [data.means[k][0] + data.sd[k] * rand.normal(), data.means[k][1] + data.sd[k] * rand.normal(), rand.normal(), rand.normal()];
+  };
+
+  // The trained velocity network: v(xs, t) for t in [0, 1].
+  const flowModel = (net) => (xs, t) => forward(net, netInputs(xs, 200 * t, 200), xs.length / 2).out;
+
+  // Euler steps of dx/dt = v from t = 1 (noise) to t = 0 (data): x ← x − Δt·v. frames[k] is the cloud after k steps.
+  function flowStepper(v, noise, opts = {}) {
+    const n = opts.n ?? 50;
+    let x = Float64Array.from(noise);
+    let k = 0;
+    const frames = [Float64Array.from(x)];
+    return {
+      frames,
+      next(count = 10) {
+        for (let c = 0; c < count && k < n; c++, k++) {
+          const t = 1 - k / n;
+          const vel = v(x, t);
+          for (let i = 0; i < x.length; i++) x[i] -= vel[i] / n;
+          frames.push(Float64Array.from(x));
+        }
+        return k < n ? k / n : null;
+      },
+    };
+  }
+
   /* ---------------------------------------------------------------- measuring */
 
   // How far apart two point clouds are: the sliced Wasserstein-1 distance, the average over 64 fixed directions of
@@ -1456,6 +1693,19 @@
     respacedStepper,
     ddimInvert,
     odeLogLikelihood,
+    vpTime,
+    vpDenoiser,
+    exactDenoiser,
+    EDM,
+    edmCoef,
+    edmDenoiser,
+    edmTrainer,
+    edmSigmas,
+    edmStepper,
+    flowTrainer,
+    dataPairs,
+    flowModel,
+    flowStepper,
     sliced,
     slicedToData,
     precisionRecall,
