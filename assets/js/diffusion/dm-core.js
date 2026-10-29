@@ -961,6 +961,118 @@
     };
   }
 
+  /* ---------------------------------------------------------------- DDIM and the probability flow ODE */
+
+  // S steps over 1 … T, from the top: [T, …, 1] (rounded, no repeats). "even" spaces them evenly; "quadratic" puts
+  // step k (from the clean end) at about T·(k/S)², crowding them near the data, as the DDIM paper did for CIFAR-10.
+  function stepList(T, S, spacing = "even") {
+    const out = [];
+    for (let k = 0; k < S; k++) {
+      const u = 1 - k / Math.max(1, S - 1); // 1 → 0
+      const t = Math.max(1, Math.round(spacing === "quadratic" ? 1 + (T - 1) * u * u : 1 + (T - 1) * u));
+      if (!out.includes(t)) out.push(t);
+    }
+    return out;
+  }
+
+  // DDIM sampling (Song, Meng and Ermon, 2020), with any trained ε network and no retraining. Over a sub-sequence of
+  // steps t → s (s < t), predict x̂₀ = (x_t − √(1 − ᾱ_t)·ε_θ) / √ᾱ_t and move to
+  //   x_s = √ᾱ_s·x̂₀ + √(1 − ᾱ_s − σ²)·ε_θ + σ·z,  σ = η·√((1 − ᾱ_s)/(1 − ᾱ_t))·√(1 − ᾱ_t/ᾱ_s)
+  // η = 0 is deterministic (DDIM); η = 1 is DDPM's ancestral sampler on the shortened chain. The last step goes to
+  // s = 0, where ᾱ = 1, so it returns x̂₀ itself. frames[k] is the cloud after k steps; steps[k] the step it is at.
+  function ddimStepper(model, sch, xT, opts = {}) {
+    const S = opts.S ?? 50;
+    const eta = opts.eta ?? 0;
+    const rand = rng(opts.seed ?? 81);
+    const steps = [...stepList(sch.T, S, opts.spacing), 0];
+    let x = Float64Array.from(xT);
+    let k = 0;
+    const frames = [Float64Array.from(x)];
+    return {
+      frames,
+      steps,
+      next(count = 5) {
+        for (let c = 0; c < count && k < steps.length - 1; c++, k++) {
+          const t = steps[k];
+          const sPrev = steps[k + 1];
+          const at = sch.alphaBar[t];
+          const as = sch.alphaBar[sPrev];
+          const e = model.eps(x, t);
+          const sigma = eta * Math.sqrt((1 - as) / (1 - at)) * Math.sqrt(1 - at / as);
+          const dir = Math.sqrt(Math.max(0, 1 - as - sigma * sigma));
+          const nx = new Float64Array(x.length);
+          for (let i = 0; i < x.length; i++) {
+            const x0 = (x[i] - Math.sqrt(1 - at) * e[i]) / Math.sqrt(at);
+            nx[i] = Math.sqrt(as) * x0 + dir * e[i] + (sigma > 0 ? sigma * rand.normal() : 0);
+          }
+          x = nx;
+          frames.push(Float64Array.from(x));
+        }
+        return k < steps.length - 1 ? k / (steps.length - 1) : null;
+      },
+    };
+  }
+
+  // DDIM run backwards: encode clean points into noise along the same deterministic path, in S steps from step 1 up
+  // to T. Each step uses the network at the current step to estimate x̂₀ and ε, then moves to the next step's mix.
+  // Returns every frame, from x₀ (frames[0]) to x_T.
+  function ddimInvert(model, sch, x0, S = 50) {
+    const steps = [0, ...stepList(sch.T, S).reverse()];
+    let x = Float64Array.from(x0);
+    const frames = [Float64Array.from(x)];
+    for (let k = 0; k + 1 < steps.length; k++) {
+      const t = steps[k];
+      const n = steps[k + 1];
+      const at = sch.alphaBar[t];
+      const an = sch.alphaBar[n];
+      const e = model.eps(x, Math.max(1, t));
+      const nx = new Float64Array(x.length);
+      for (let i = 0; i < x.length; i++) {
+        const xh = (x[i] - Math.sqrt(1 - at) * e[i]) / Math.sqrt(at);
+        nx[i] = Math.sqrt(an) * xh + Math.sqrt(1 - an) * e[i];
+      }
+      x = nx;
+      frames.push(Float64Array.from(x));
+    }
+    return frames;
+  }
+
+  // The exact log-likelihood of points under the model, through the probability flow ODE (Song et al., 2021):
+  // dx/dt = v(x, t) = −½β(t)·x − ½β(t)·s_θ(x, t) carries the data at t ≈ 0 to noise at t = 1, and along the way
+  // d log p_t(x(t)) / dt = −∇·v. So log p₀(x) = log N(x(1); 0, I) + ∫ ∇·v dt. In 2D the divergence is computed by
+  // finite differences of the score (two extra network calls per step). n Euler steps from tMin to 1.
+  function odeLogLikelihood(score, sde, xs, opts = {}) {
+    const n = opts.n ?? 200;
+    const tMin = opts.tMin ?? 1 / sde.steps;
+    const h = 1e-3;
+    const m = xs.length / 2;
+    let x = Float64Array.from(xs);
+    const div = new Float64Array(m);
+    const dt = (1 - tMin) / n;
+    for (let k = 0; k < n; k++) {
+      const t = tMin + k * dt;
+      const b = sde.beta(t);
+      const s = score(x, t);
+      const px = Float64Array.from(x);
+      const py = Float64Array.from(x);
+      for (let i = 0; i < m; i++) {
+        px[2 * i] += h;
+        py[2 * i + 1] += h;
+      }
+      const sx = score(px, t);
+      const sy = score(py, t);
+      for (let i = 0; i < m; i++) {
+        // ∇·v = −β (the −½β·x part, in 2D) − ½β·(∂s_x/∂x + ∂s_y/∂y)
+        const ds = (sx[2 * i] - s[2 * i]) / h + (sy[2 * i + 1] - s[2 * i + 1]) / h;
+        div[i] += (-b - 0.5 * b * ds) * dt;
+      }
+      for (let i = 0; i < x.length; i++) x[i] += (-0.5 * b * x[i] - 0.5 * b * s[i]) * dt;
+    }
+    const out = new Float64Array(m);
+    for (let i = 0; i < m; i++) out[i] = -Math.log(2 * Math.PI) - 0.5 * (x[2 * i] ** 2 + x[2 * i + 1] ** 2) + div[i];
+    return { logp: out, end: x };
+  }
+
   /* ---------------------------------------------------------------- measuring */
 
   // How far apart two point clouds are: the sliced Wasserstein-1 distance, the average over 64 fixed directions of
@@ -1139,6 +1251,10 @@
     vpScore,
     forwardSDE,
     reverseStepper,
+    stepList,
+    ddimStepper,
+    ddimInvert,
+    odeLogLikelihood,
     sliced,
     slicedToData,
     dataFloor,
