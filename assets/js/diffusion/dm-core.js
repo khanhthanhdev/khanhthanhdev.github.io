@@ -268,6 +268,17 @@
         return out;
       },
       x0hat,
+      // a draw from q(x_0 | x_t): pick a component by its posterior weight, then the Gaussian x_0 | x_t within it,
+      // N(μ_k + √ᾱ sd_k² / v_k · (x_t − √ᾱ μ_k), sd_k² (1 − ᾱ) / v_k I)
+      sampleX0(x, y, t, rand) {
+        const ab = sch.alphaBar[t];
+        const a = Math.sqrt(ab);
+        const cs = comps(t);
+        const c = cs[pick(rand, responsibilities(cs, x, y).r)];
+        const g = (a * c.v0) / c.v;
+        const sd = Math.sqrt((c.v0 * (1 - ab)) / c.v);
+        return [c.m0[0] + g * (x - c.mean[0]) + sd * rand.normal(), c.m0[1] + g * (y - c.mean[1]) + sd * rand.normal()];
+      },
       // log p_t(x) and the score ∇ log p_t(x) = −(x − E[√ᾱ x_0 | x]) / (1 − ᾱ) … here computed per component
       logp: (x, y, t) => responsibilities(comps(t), x, y).logp,
       score(x, y, t) {
@@ -758,8 +769,8 @@
     const m = opts.m ?? 512;
     const sigma = opts.sigma ?? "beta";
     const { xs: x0 } = sample(data, m, opts.seed ?? 31);
-    const out = new Float64Array(sch.T + 1);
-    for (let t = 2; t <= sch.T; t++) {
+    const out = opts.into ?? new Float64Array(sch.T + 1);
+    for (let t = Math.max(2, opts.from ?? 2); t <= (opts.to ?? sch.T); t++) {
       const { xt, eps } = qSample(x0, sch, t, 1000 + t);
       const e = model.eps(xt, t);
       let se = 0;
@@ -771,6 +782,12 @@
       out[t] = meanTerm + (r - 1 - Math.log(r));
     }
     return out;
+  }
+
+  // KL(N(m1, v1 I) ‖ N(m2, v2 I)) in 2 dimensions, in nats.
+  function kl2(m1, v1, m2, v2) {
+    const r = v1 / v2;
+    return r - 1 - Math.log(r) + ((m1[0] - m2[0]) ** 2 + (m1[1] - m2[1]) ** 2) / (2 * v2);
   }
 
   /* ---------------------------------------------------------------- export */
@@ -811,6 +828,7 @@
     sliced,
     moments,
     boundTerms,
+    kl2,
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = DM;
