@@ -249,6 +249,12 @@ Each part lists: the question it answers, the source paper(s), what the reader c
 4. Parts 8–10 (images, guidance, latent diffusion).
 5. Parts 11–12, then go back and add forward links across the series, as was done for the mobile robots series.
 
+### Progress
+
+- **Step 1 done.** `assets/js/diffusion/dm-core.js` (datasets as exact Gaussian mixtures, schedules, forward process, exact model and true reverse kernels, a 5,714-weight MLP with backprop and Adam, DDPM sampler, sliced Wasserstein distance, bound terms), `dm-view.js` (plots, charts, pictures), `dm-scrolly.js`, `assets/css/diffusion.css`, `_includes/dm-series.liquid`. Shipped networks are rebuilt with `node bin/dm-pretrain.js` into `dm-weights.js`: `swissroll-eps` (L_simple), `swissroll-x0` (predicts x₀) and `swissroll-vlb` (the bound's weights), 30,000 steps each.
+- **Step 2 done.** Parts 1–4 are published as `_posts/2026-10-29-dm-{1..4}-*.md`. The toy uses T = 200 (the linear schedule stretched by 5); parts 2 and 4 use T = 1000 where the papers' numbers are quoted.
+- **Next:** parts 5–7 (scores and Langevin, SDEs, probability flow ODE and DDIM). `swissroll` and `twomodes` are already exact mixtures, so true scores for part 5 are available through `DM.exactModel(...).score`.
+
 ### B.5 Notation (fix once, use everywhere)
 
 - Data $\mathbf{x}_0$, noisy $\mathbf{x}_t$, noise $\boldsymbol\epsilon \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$, discrete steps $t = 1, \dots, T$.
