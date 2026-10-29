@@ -24,12 +24,13 @@
     const x0 = DM.sample(data, N, 1).xs;
     const fwd = DM.forwardChain(x0, sch, 11);
     const fresh = DM.gaussian(N, 77); // a fresh standard Gaussian sample, to compare the end of the chain with
+    const floor = DM.dataFloor(data, N);
     const followers = [17, 233, 402, 611, 700];
     const net = DM.loadNet("swissroll-eps");
     const model = DM.netModel(net, sch);
 
-    // reference clouds for "how close is the reverse chain to the forward chain at step t"
-    const refAt = (t) => DM.qSample(DM.sample(data, N, 5).xs, sch, t, 900 + t).xt;
+    // how close a cloud at step t is to the exact distribution of the data noised to step t
+    const toStep = (xs, t) => DM.slicedToData(xs, DM.noisedData(data, sch.alphaBar[t]));
 
     /* -------------------------------------------- objects */
 
@@ -57,7 +58,7 @@
         () => {
           rev = stepper.frames;
           revFit = [];
-          for (let t = 0; t <= T; t += 10) revFit.push([t, DM.sliced(rev[t], refAt(t), 32)]);
+          for (let t = 0; t <= T; t += 10) revFit.push([t, toStep(rev[t], t)]);
           stage.busy(null);
           stage.note(note());
           stage.redraw();
@@ -199,10 +200,10 @@
         main.title(`x${sub(T)}: after all ${T} steps`).cloud("pts", fwd[T], "dm-data");
         main.cloud("fresh", t > 0.3 ? fresh : null, "dm-noise is-faint").rings(gaussRings);
         const m = DM.moments(fwd[T]);
-        const d = DM.sliced(fwd[T], fresh);
-        const dd = DM.sliced(fresh, DM.gaussian(N, 78));
+        const d = DM.slicedToData(fwd[T], DM.STANDARD);
+        const dd = DM.slicedToData(fresh, DM.STANDARD);
         strip(
-          `mean ${pt(m.mean)} · spread ${pt(m.sd)} · distance to a fresh N(0, I) sample ${fmt(d, 3)} (two fresh samples: ${fmt(dd, 3)}) · rings at 1 and 2`
+          `mean ${pt(m.mean)} · spread ${pt(m.sd)} · distance to an exact N(0, I): ${fmt(d, 3)} (a fresh Gaussian sample: ${fmt(dd, 3)}) · rings at 1 and 2`
         );
         layout({ main: [0, 0] });
         return;
@@ -264,21 +265,22 @@
           const k = Math.round((1 - t) * T);
           main.title(`sampling: x${sub(k)}`).cloud("pts", rev[k], "dm-model");
           main.paths(pathsUpTo(rev, Math.min(T, k + 25), k));
-          const d = DM.sliced(rev[k], refAt(k), 32);
+          const d = toStep(rev[k], k);
           fit.set({
             series: [{ values: revFit, cls: "dm-model", label: "" }],
             x: [0, T],
-            y: [0, Math.max(0.2, ...revFit.map((p) => p[1]))],
+            y: [0, Math.max(0.1, ...revFit.map((p) => p[1]))],
             cursor: k,
           });
-          strip(`t = ${k} · distance from the sampled cloud to the data noised to the same step: ${fmt(d, 3)}`);
+          strip(
+            `t = ${k} · distance from the sampled cloud to the data noised to the same step: ${fmt(d, 3)} (${N} real noised points sit about 0.05 away)`
+          );
           layout({ main: [0, 0], fit: beside(470, 120) });
           return;
         }
         main.title("samples (red) on top of the data (blue)").cloud("pts", x0, "dm-data is-faint").cloud("model", rev[0], "dm-model is-strong");
-        const ref = DM.sample(data, N, 9).xs;
         strip(
-          `distance from the samples to the data: ${fmt(DM.sliced(rev[0], ref), 3)} · from one data sample to another: ${fmt(DM.sliced(x0, ref), 3)} · from pure noise to the data: ${fmt(DM.sliced(fresh, ref), 3)}`
+          `distance to the true spiral: samples ${fmt(DM.slicedToData(rev[0], data), 3)} · ${N} real data points ${fmt(floor, 3)} (average of 5 draws) · pure noise ${fmt(DM.slicedToData(fresh, data), 3)}`
         );
         layout({ main: [0, 0] });
       }

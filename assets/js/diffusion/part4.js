@@ -24,7 +24,7 @@
     const data = DM.DATASETS.swissroll;
     const sch = DM.schedule("linear", T);
     const x0s = DM.sample(data, N, 1).xs;
-    const ref = DM.sample(data, N, 9).xs;
+    const floor = DM.dataFloor(data, N);
     const shipped = {
       eps: DM.netModel(DM.loadNet("swissroll-eps"), sch),
       x0: DM.netModel(DM.loadNet("swissroll-x0"), sch),
@@ -255,7 +255,7 @@
           yTicks: target === "eps" ? [0, FLOOR, 1.2] : [0, 1],
         });
         const last = curve.length ? curve[curve.length - 1][1] : null;
-        const d = preview ? DM.sliced(preview.xs, ref.subarray(0, 2 * PREVIEW)) : null;
+        const d = preview ? DM.slicedToData(preview.xs, data) : null;
         strip(
           `step ${k} of ${TRAIN_STEPS} · batch 128 · loss ${last == null ? "–" : fmt(last, 3)}` +
             (target === "eps" ? ` (best possible ${FLOOR})` : "") +
@@ -302,7 +302,7 @@
         main.title(name[a]).cloud("pts", x0s, "dm-data is-faint").cloud("b", runs[a][0], "dm-model is-strong");
         right.title(name[b]).cloud("pts", x0s, "dm-data is-faint").cloud("b", runs[b][0], "dm-x0 is-strong");
         strip(
-          `distance of ${N} samples to the data: ${name[a]} ${fmt(DM.sliced(runs[a][0], ref), 3)} · ${name[b]} ${fmt(DM.sliced(runs[b][0], ref), 3)} · a second data sample: ${fmt(DM.sliced(x0s, ref), 3)}`
+          `distance of ${N} samples to the true spiral: ${name[a]} ${fmt(DM.slicedToData(runs[a][0], data), 3)} · ${name[b]} ${fmt(DM.slicedToData(runs[b][0], data), 3)} · ${N} real data points: ${fmt(floor, 3)} (average of 5 draws)`
         );
         layout({ main: [0, 0, { scale: 0.75 }], right: [320, 0, { scale: 0.75 }] });
       }

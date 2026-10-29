@@ -842,6 +842,125 @@
     return xs;
   }
 
+  /* ---------------------------------------------------------------- stochastic differential equations */
+
+  // The variance-preserving SDE of Song et al. (2021), dx = −½β(t)x dt + √β(t) dw on t ∈ [0, 1], with
+  // β(t) = βmin + t(βmax − βmin). With βmin = 0.1 and βmax = 20 it is the limit of DDPM's linear schedule, and of our
+  // 200-step toy schedule: step i of the chain is time t = i/200. ᾱ(t) = exp(−∫β) = exp(−βmin t − ½(βmax − βmin)t²).
+  function vpSDE(betaMin = 0.1, betaMax = 20, steps = 200) {
+    const beta = (t) => betaMin + t * (betaMax - betaMin);
+    const alphaBar = (t) => Math.exp(-betaMin * t - 0.5 * (betaMax - betaMin) * t * t);
+    return { kind: "vp", beta, alphaBar, sigma: (t) => Math.sqrt(1 - alphaBar(t)), steps };
+  }
+
+  // The variance-exploding SDE: dx = √(dσ²/dt) dw with σ(t) = σmin (σmax/σmin)^t, the limit of a geometric ladder.
+  function veSDE(sigmaMin = 0.03, sigmaMax = 5) {
+    const sigma = (t) => sigmaMin * (sigmaMax / sigmaMin) ** t;
+    const g2 = (t) => 2 * Math.log(sigmaMax / sigmaMin) * sigma(t) ** 2; // dσ²/dt
+    return { kind: "ve", sigma, g2 };
+  }
+
+  // A network trained on the 200-step chain, read as a score at continuous time t: s(x, t) = −ε_θ(x, 200t) / σ(t).
+  // The network was trained at whole steps only; in between, its sine–cosine time input changes smoothly.
+  function vpScore(model, sde) {
+    return (xs, t) => {
+      const e = model.eps(xs, t * sde.steps);
+      const sd = sde.sigma(t);
+      for (let i = 0; i < e.length; i++) e[i] = -e[i] / sd;
+      return e;
+    };
+  }
+
+  // Simulates the forward VP SDE from x0 with n Euler–Maruyama steps. frames[k] is the cloud at time k/n.
+  function forwardSDE(x0, sde, n = 200, seed = 13) {
+    const rand = rng(seed);
+    const dt = 1 / n;
+    let x = Float64Array.from(x0);
+    const frames = [Float64Array.from(x)];
+    for (let k = 0; k < n; k++) {
+      const t = k * dt;
+      const sd = Math.sqrt(sde.kind === "ve" ? sde.g2(t) * dt : sde.beta(t) * dt);
+      const drift = sde.kind === "ve" ? 0 : -0.5 * sde.beta(t) * dt;
+      const nx = new Float64Array(x.length);
+      for (let i = 0; i < x.length; i++) nx[i] = x[i] + drift * x[i] + sd * rand.normal();
+      frames.push(nx);
+      x = nx;
+    }
+    return frames;
+  }
+
+  // Sampling with the reverse-time SDE (Anderson, 1982), dx = [f(x, t) − g(t)² ∇ log p_t(x)] dt + g(t) dw̄, run from
+  // t = 1 down to t = tMin in n Euler–Maruyama steps (the predictor). With corrector > 0, each step is followed by that
+  // many Langevin steps at the new time (the corrector of Song et al.'s predictor–corrector sampler, Algorithm 5), with
+  // step size ε = 2α(r‖z‖/‖g‖)², where α = 1 − β(t)/200 is the toy chain's α_i at that time and r is the
+  // "signal-to-noise ratio". mode "ode" drops the noise and halves the score term: the probability flow ODE (part 7).
+  // denoise (on by default) replaces the last point by the best guess of the clean point, x + σ(t)²·s(x, t) for
+  // x = √ᾱ·x₀ + noise, divided by √ᾱ: the usual last step of these samplers, removing the noise left at tMin.
+  // times[k] and frames[k] go from t = 1 (k = 0) to tMin (k = n).
+  function reverseStepper(score, sde, xT, opts = {}) {
+    const n = opts.n ?? 200;
+    const tMin = opts.tMin ?? 1 / sde.steps;
+    const corrector = opts.corrector ?? 0;
+    const r = opts.snr ?? 0.16;
+    const ode = opts.mode === "ode";
+    const rand = rng(opts.seed ?? 71);
+    const dt = (1 - tMin) / n;
+    let x = Float64Array.from(xT);
+    let k = 0;
+    const frames = [Float64Array.from(x)];
+    const times = [1];
+    let evals = 0;
+    return {
+      frames,
+      times,
+      get evals() {
+        return evals;
+      },
+      next(count = 10) {
+        for (let c = 0; c < count && k < n; c++, k++) {
+          const t = 1 - k * dt;
+          const b = sde.beta(t);
+          const g = score(x, t);
+          evals++;
+          const nx = new Float64Array(x.length);
+          const sd = Math.sqrt(b * dt);
+          for (let i = 0; i < x.length; i++) {
+            // reverse time: x(t − dt) = x(t) − [f − g² s] dt (+ noise); f = −½βx, g² = β
+            const drift = -0.5 * b * x[i] - (ode ? 0.5 : 1) * b * g[i];
+            nx[i] = x[i] - drift * dt + (ode ? 0 : sd * rand.normal());
+          }
+          x = nx;
+          const tn = t - dt;
+          for (let m = 0; m < corrector; m++) {
+            const gs = score(x, tn);
+            evals++;
+            const z = new Float64Array(x.length);
+            let zn = 0;
+            let gn = 0;
+            for (let i = 0; i < x.length; i++) {
+              z[i] = rand.normal();
+              zn += z[i] * z[i];
+              gn += gs[i] * gs[i];
+            }
+            const alpha = 1 - sde.beta(tn) / sde.steps;
+            const step = 2 * alpha * ((r * Math.sqrt(zn)) / Math.sqrt(gn)) ** 2;
+            for (let i = 0; i < x.length; i++) x[i] += step * gs[i] + Math.sqrt(2 * step) * z[i];
+          }
+          if (k === n - 1 && opts.denoise !== false) {
+            const gs = score(x, tn);
+            evals++;
+            const s2 = sde.sigma(tn) ** 2;
+            const a = Math.sqrt(sde.alphaBar(tn));
+            for (let i = 0; i < x.length; i++) x[i] = (x[i] + s2 * gs[i]) / a;
+          }
+          frames.push(Float64Array.from(x));
+          times.push(tn);
+        }
+        return k < n ? k / n : null;
+      },
+    };
+  }
+
   /* ---------------------------------------------------------------- measuring */
 
   // How far apart two point clouds are: the sliced Wasserstein-1 distance, the average over 64 fixed directions of
@@ -867,6 +986,64 @@
     }
     return total / dirs;
   }
+
+  // The same distance, but from a cloud to the exact data distribution instead of to a second sample, so only one
+  // side is random. Along each direction the data is a 1D mixture of Gaussians with a known CDF F, and the distance is
+  // ∫ |F_n(x) − F(x)| dx, with F_n the cloud's empirical CDF, integrated on a fine grid.
+  function slicedToData(xs, data, dirs = 32, grid = 400) {
+    const n = xs.length / 2;
+    const p = new Float64Array(n);
+    let total = 0;
+    for (let d = 0; d < dirs; d++) {
+      const th = (Math.PI * (d + 0.5)) / dirs;
+      const c = Math.cos(th);
+      const sn = Math.sin(th);
+      for (let i = 0; i < n; i++) p[i] = c * xs[2 * i] + sn * xs[2 * i + 1];
+      p.sort();
+      const ms = data.means.map((m) => c * m[0] + sn * m[1]);
+      const lo = Math.min(p[0], ...ms) - 4 * Math.max(...data.sd);
+      const hi = Math.max(p[n - 1], ...ms) + 4 * Math.max(...data.sd);
+      const dx = (hi - lo) / grid;
+      let j = 0;
+      let sum = 0;
+      for (let g = 0; g < grid; g++) {
+        const x = lo + (g + 0.5) * dx;
+        while (j < n && p[j] <= x) j++;
+        let F = 0;
+        for (let k = 0; k < ms.length; k++) F += data.weights[k] * normalCdf((x - ms[k]) / data.sd[k]);
+        sum += Math.abs(j / n - F) * dx;
+      }
+      total += sum;
+    }
+    return total / dirs;
+  }
+
+  // Φ, the standard normal CDF (Abramowitz and Stegun 7.1.26, error under 1.5e-7).
+  function normalCdf(z) {
+    const t = 1 / (1 + 0.3275911 * (Math.abs(z) / Math.SQRT2));
+    const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
+    return z >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y);
+  }
+
+  // The floor for slicedToData: the average distance of `draws` fresh samples of n real data points.
+  function dataFloor(data, n, draws = 5) {
+    let sum = 0;
+    for (let d = 0; d < draws; d++) sum += slicedToData(sample(data, n, 500 + d).xs, data);
+    return sum / draws;
+  }
+
+  // The data after t steps of the forward process, as a dataset of its own (component k becomes
+  // N(√ᾱ μ_k, (ᾱ sd_k² + 1 − ᾱ) I)), for measuring a cloud at step t against the exact answer.
+  function noisedData(data, ab) {
+    return {
+      weights: data.weights,
+      means: data.means.map((m) => [Math.sqrt(ab) * m[0], Math.sqrt(ab) * m[1]]),
+      sd: data.sd.map((s) => Math.sqrt(ab * s * s + 1 - ab)),
+    };
+  }
+
+  // The standard Gaussian as a dataset, for measuring how close a cloud is to pure noise.
+  const STANDARD = { weights: [1], means: [[0, 0]], sd: [1] };
 
   // The mean and per-axis spread of a cloud: { mean: [x, y], sd: [x, y] }.
   function moments(xs) {
@@ -957,7 +1134,17 @@
     langevinStepper,
     annealedStepper,
     uniform,
+    vpSDE,
+    veSDE,
+    vpScore,
+    forwardSDE,
+    reverseStepper,
     sliced,
+    slicedToData,
+    dataFloor,
+    noisedData,
+    STANDARD,
+    normalCdf,
     moments,
     boundTerms,
     kl2,

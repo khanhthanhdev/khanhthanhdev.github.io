@@ -24,7 +24,7 @@
     const data = DM.DATASETS.twomodes;
     const sch = DM.veSchedule(4, 0.03, L);
     const x0 = DM.sample(data, N, 1).xs;
-    const ref = DM.sample(data, N, 9).xs;
+    const floor = DM.dataFloor(data, N);
     const init = DM.uniform(N, 3, 1);
     const exact = Array.from({ length: L + 1 }, (_, i) => DM.blurred(data, i ? sch.sigma[i] : 0));
     const ncsn = DM.netModel(DM.loadNet("twomodes-ncsn"), sch);
@@ -281,7 +281,7 @@
         main.title("plain Langevin, exact score").cloud("pts", x0, "dm-data is-faint").cloud("b", a, "dm-model is-strong");
         right.title("annealed Langevin, learned score").cloud("pts", x0, "dm-data is-faint").cloud("b", b, "dm-model is-strong");
         strip(
-          `left mode: ${pct(leftShare(a))} and ${pct(leftShare(b))} (data: ${pct(leftShare(x0))}) · distance to the data: ${fmt(DM.sliced(a, ref), 3)} and ${fmt(DM.sliced(b, ref), 3)} (a second data sample: ${fmt(DM.sliced(x0, ref), 3)})`
+          `left mode: ${pct(leftShare(a))} and ${pct(leftShare(b))} (data: ${pct(leftShare(x0))}) · distance to the true mixture: ${fmt(DM.slicedToData(a, data), 3)} and ${fmt(DM.slicedToData(b, data), 3)} (${N} real data points: ${fmt(floor, 3)}, average of 5 draws)`
         );
         layout({ main: [0, 0, { scale: 0.75 }], right: [320, 0, { scale: 0.75 }] });
         return;
