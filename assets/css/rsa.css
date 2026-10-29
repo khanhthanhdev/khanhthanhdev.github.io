@@ -1,0 +1,352 @@
+/* Styles for the interactive figures in the "RSA, step by step" post.
+   Look: Screen Works technical-drawing style (see screen-works.css): paper, ink, hairlines, one accent. */
+
+/* Classes are created from JS, so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+.rsa-figure {
+  --rsa-ok: #1e8e4e;
+  --rsa-bad: #c0392b;
+
+  position: relative;
+  margin: 2.5rem 0 0.75rem;
+  padding: var(--sw-gap);
+  border-radius: var(--sw-radius);
+  background: var(--sw-paper);
+  color: var(--sw-ink);
+  font-family: var(--sw-font);
+  font-weight: 500;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+html[data-theme="dark"] .rsa-figure {
+  --rsa-ok: #4fd18a;
+  --rsa-bad: #ff7b6b;
+}
+
+.rsa-placeholder {
+  margin: 0;
+  color: var(--sw-muted);
+}
+
+.rsa-caption {
+  margin: 0.75rem 0 2.25rem;
+  color: var(--sw-muted);
+  font-size: 0.85rem;
+}
+
+.rsa-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rsa-sub {
+  display: block;
+  margin: 0.15rem 0 0.6rem;
+  color: var(--sw-muted);
+  font-size: 0.8rem;
+}
+
+.rsa-mono,
+.rsa-wire,
+.rsa-stats,
+.rsa-table {
+  font-family: var(--sw-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.rsa-mono {
+  overflow-wrap: anywhere;
+}
+
+.rsa-mono.is-key {
+  padding: 0 0.3rem;
+  border-radius: var(--sw-radius);
+  background: var(--sw-accent-tint);
+}
+
+.rsa-mono sup,
+sup.rsa-mono {
+  font-size: 0.7em;
+}
+
+/* Controls */
+
+.rsa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 1.25rem;
+  margin: 0.9rem 0;
+}
+
+.rsa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.rsa-input {
+  width: 9rem;
+  max-width: 100%;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--sw-ink);
+  border-radius: var(--sw-radius);
+  background: var(--sw-paper);
+  color: var(--sw-ink);
+  font-family: var(--sw-mono);
+  font-size: 0.88rem;
+}
+
+.rsa-input.is-wide {
+  width: 18rem;
+}
+
+.rsa-seg {
+  display: inline-flex;
+  align-self: flex-start;
+  overflow: hidden;
+  border: 1px solid var(--sw-ink);
+  border-radius: var(--sw-radius);
+}
+
+.rsa-seg button {
+  padding: 0.15rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--sw-ink);
+  font-family: var(--sw-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.rsa-seg button + button {
+  border-left: 1px solid var(--sw-ink);
+}
+
+.rsa-seg button[aria-pressed="true"] {
+  background: var(--sw-accent-tint);
+}
+
+.rsa-btn,
+.rsa-chip {
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--sw-ink);
+  border-radius: var(--sw-radius);
+  background: var(--sw-paper);
+  color: var(--sw-ink);
+  font-family: var(--sw-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.rsa-chip {
+  margin: 0 0.35rem 0.25rem 0;
+  padding: 0 0.45rem;
+}
+
+.rsa-btn:hover,
+.rsa-chip:hover,
+.rsa-btn-primary {
+  background: var(--sw-accent-tint);
+}
+
+.rsa-input:focus-visible,
+.rsa-btn:focus-visible,
+.rsa-chip:focus-visible,
+.rsa-seg button:focus-visible,
+.rsa-table-wrap:focus-visible {
+  outline: 2px solid var(--sw-accent);
+  outline-offset: 2px;
+}
+
+/* The numbered steps of the key generator */
+
+.rsa-steps {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rsa-step {
+  margin: 0 0 1rem;
+  padding: 0 0 1rem;
+  border-bottom: var(--sw-hairline) solid var(--sw-grid);
+}
+
+.rsa-step-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.rsa-num {
+  color: var(--sw-accent);
+  font-family: var(--sw-mono);
+  font-size: 0.8rem;
+}
+
+.rsa-step-title {
+  font-size: 0.95rem;
+}
+
+.rsa-step-body {
+  padding-left: 1.6rem;
+}
+
+.rsa-line {
+  margin: 0.3rem 0;
+}
+
+.rsa-note {
+  margin: 0.3rem 0;
+  color: var(--sw-muted);
+  font-size: 0.82rem;
+}
+
+.rsa-ok,
+.rsa-bad {
+  font-size: 0.85rem;
+}
+
+.rsa-ok {
+  color: var(--rsa-ok);
+  white-space: nowrap;
+}
+
+.rsa-bad {
+  color: var(--rsa-bad);
+}
+
+.rsa-warn {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--rsa-bad);
+  font-size: 0.85rem;
+}
+
+/* Key pair cards */
+
+.rsa-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.rsa-key {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--sw-ink);
+  border-radius: var(--sw-radius);
+}
+
+.rsa-key.is-public {
+  border-color: var(--sw-accent);
+  background: var(--sw-accent-tint);
+}
+
+.rsa-key.is-private {
+  border-style: dashed;
+}
+
+/* Tables of algorithm steps */
+
+.rsa-table-wrap {
+  max-width: 100%;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.rsa-table-wrap.is-tall {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.rsa-table {
+  width: auto;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.rsa-table th {
+  position: sticky;
+  top: 0;
+  padding: 0.25rem 0.75rem 0.25rem 0;
+  border-bottom: 1px solid var(--sw-ink);
+  background: var(--sw-paper);
+  color: var(--sw-muted);
+  font-family: var(--sw-font);
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.rsa-table td {
+  padding: 0.2rem 0.75rem 0.2rem 0;
+  border-bottom: var(--sw-hairline) solid var(--sw-grid);
+  white-space: nowrap;
+}
+
+.rsa-table tr.is-muted td {
+  color: var(--sw-muted);
+}
+
+.rsa-table tr.is-key td {
+  background: var(--sw-accent-tint);
+}
+
+/* Encrypt / decrypt panels */
+
+.rsa-keyline {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+}
+
+.rsa-panel {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 0 0;
+  border-top: var(--sw-hairline) solid var(--sw-grid);
+}
+
+.rsa-wire {
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px dashed var(--sw-ink);
+  border-radius: var(--sw-radius);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.rsa-stats {
+  margin: 0.5rem 0;
+  color: var(--sw-muted);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 576px) {
+  .rsa-figure {
+    padding: 16px;
+  }
+
+  .rsa-step-body {
+    padding-left: 0;
+  }
+
+  .rsa-input,
+  .rsa-input.is-wide {
+    width: 100%;
+  }
+
+  .rsa-field {
+    flex: 1 1 8rem;
+  }
+}
+
+/* purgecss end ignore */
