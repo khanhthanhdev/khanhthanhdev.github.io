@@ -217,6 +217,23 @@ html[data-theme="dark"] {
   stroke-dasharray: 4 3;
 }
 
+/* ------------------------------------------------------------ pictures and attention (part 10) */
+
+.dm-pixels {
+  image-rendering: pixelated;
+}
+
+.dm-attn-cell {
+  fill: var(--dm-heat);
+  stroke: var(--tf-grid);
+  transition: fill-opacity 300ms ease;
+}
+
+.tf-svg .dm-attn-num {
+  fill: var(--tf-ink);
+  font-size: 10px;
+}
+
 /* ------------------------------------------------------------ stage chrome */
 
 .tf-scrolly.is-busy .tf-note {
