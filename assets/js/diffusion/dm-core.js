@@ -155,6 +155,15 @@
     return { kind, T, beta, alpha, alphaBar, betaTilde, snr: (t) => alphaBar[t] / (1 - alphaBar[t]) };
   }
 
+  // A ladder of noise levels for score-based models in the style of Song and Ermon (2019): data plus noise of
+  // standard deviation sigma[i], x̃ = x + σ_i·ε, for i = 1 … L, spaced geometrically from sigmaMin (i = 1) to sigmaMax
+  // (i = L). Numbered from the clean end, like the steps t of DDPM (the paper numbers them from the noisy end).
+  function veSchedule(sigmaMax = 4, sigmaMin = 0.03, L = 10) {
+    const sigma = new Float64Array(L + 1);
+    for (let i = 1; i <= L; i++) sigma[i] = sigmaMin * (sigmaMax / sigmaMin) ** ((i - 1) / Math.max(1, L - 1));
+    return { kind: "ve", T: L, sigma };
+  }
+
   /* ---------------------------------------------------------------- the forward process */
 
   // One forward step, x_t = √(1 − β_t)·x_{t−1} + √β_t·ε, applied to every point in place.
@@ -291,6 +300,37 @@
           sy -= (r[k] * (y - c.mean[1])) / c.v;
         });
         return [sx, sy];
+      },
+    };
+  }
+
+  // The data with noise of standard deviation sigma added (no shrinking): component k becomes N(μ_k, (sd_k² + σ²) I).
+  // Returns the exact density, log density and score ∇ log p_σ of that blurred data.
+  function blurred(data, sigma) {
+    const comps = data.means.map((m, k) => ({ w: data.weights[k], mean: m, v: data.sd[k] ** 2 + sigma * sigma }));
+    return {
+      comps,
+      pdf: (x, y) => mixturePdf(comps, x, y),
+      logp: (x, y) => responsibilities(comps, x, y).logp,
+      score(x, y) {
+        const { r } = responsibilities(comps, x, y);
+        let sx = 0;
+        let sy = 0;
+        comps.forEach((c, k) => {
+          sx -= (r[k] * (x - c.mean[0])) / c.v;
+          sy -= (r[k] * (y - c.mean[1])) / c.v;
+        });
+        return [sx, sy];
+      },
+      // the scores of a whole cloud at once
+      scores(xs) {
+        const out = new Float64Array(xs.length);
+        for (let i = 0; i < xs.length; i += 2) {
+          const [sx, sy] = this.score(xs[i], xs[i + 1]);
+          out[i] = sx;
+          out[i + 1] = sy;
+        }
+        return out;
       },
     };
   }
@@ -600,7 +640,7 @@
     const eps = new Float64Array(2 * batch);
     const ts = new Int32Array(batch);
     const weight = new Float64Array(sch.T + 1).fill(1);
-    if (opts.weighting === "vlb") {
+    if (opts.weighting === "vlb" && sch.kind !== "ve") {
       let mean = 0;
       for (let t = 1; t <= sch.T; t++) {
         weight[t] = sch.beta[t] / (2 * sch.alpha[t] * (1 - sch.alphaBar[t]));
@@ -627,9 +667,12 @@
           sts[i] = ts[p];
         });
         for (let i = 0; i < batch; i++) {
-          const ab = sch.alphaBar[sts[i]];
-          const a = Math.sqrt(ab);
-          const b = Math.sqrt(1 - ab);
+          // VP: x_t = √ᾱ x_0 + √(1 − ᾱ) ε. VE (score networks): x̃ = x_0 + σ_i ε, and predicting ε is denoising score
+          // matching with Song and Ermon's weight λ(σ) = σ², since σ²‖s_θ + ε/σ‖² = ‖σ s_θ + ε‖².
+          const ve = sch.kind === "ve";
+          const ab = ve ? 1 : sch.alphaBar[sts[i]];
+          const a = ve ? 1 : Math.sqrt(ab);
+          const b = ve ? sch.sigma[sts[i]] : Math.sqrt(1 - ab);
           for (let d = 0; d < 2; d++) {
             const e = rand.normal();
             eps[2 * i + d] = e;
@@ -727,6 +770,78 @@
     };
   }
 
+  /* ---------------------------------------------------------------- Langevin dynamics */
+
+  // Langevin dynamics: x ← x + (α/2)·∇ log p(x) + √α·z, z ~ N(0, I), repeated. score(xs) returns the score of every
+  // point. Run a few iterations per call to next(); frames keeps the cloud every `every` iterations.
+  function langevinStepper(score, init, opts = {}) {
+    const rand = rng(opts.seed ?? 61);
+    const steps = opts.steps ?? 1000;
+    const alpha = opts.alpha ?? 0.01;
+    const every = opts.every ?? 10;
+    let x = Float64Array.from(init);
+    let k = 0;
+    const frames = [Float64Array.from(x)];
+    const sa = Math.sqrt(alpha);
+    return {
+      frames,
+      every,
+      next(count = 50) {
+        for (let c = 0; c < count && k < steps; c++, k++) {
+          const g = score(x);
+          for (let i = 0; i < x.length; i++) x[i] += 0.5 * alpha * g[i] + sa * rand.normal();
+          if ((k + 1) % every === 0) frames.push(Float64Array.from(x));
+        }
+        return k < steps ? k / steps : null;
+      },
+    };
+  }
+
+  // Annealed Langevin dynamics, Algorithm 1 of Song and Ermon (2019): for each noise level from the largest to the
+  // smallest, run T Langevin steps with that level's score and step size α_i = ε·σ_i²/σ_L² (σ_L the smallest),
+  // starting from where the last level ended. score(xs, i) returns the scores at level i of sch (a veSchedule).
+  // frames[j] is the cloud after j levels (frames[0] is the start); trail keeps the cloud every `every` steps.
+  function annealedStepper(score, sch, init, opts = {}) {
+    const rand = rng(opts.seed ?? 62);
+    const T = opts.T ?? 100;
+    const eps = opts.eps ?? 0.1 * sch.sigma[1] ** 2;
+    const every = opts.every ?? 10;
+    let x = Float64Array.from(init);
+    let level = sch.T;
+    let k = 0;
+    const frames = [Float64Array.from(x)];
+    const trail = [{ level, xs: Float64Array.from(x) }];
+    return {
+      frames,
+      trail,
+      alpha: (i) => (eps * sch.sigma[i] ** 2) / sch.sigma[1] ** 2,
+      next(count = 50) {
+        for (let c = 0; c < count && level >= 1; c++) {
+          const alpha = (eps * sch.sigma[level] ** 2) / sch.sigma[1] ** 2;
+          const sa = Math.sqrt(alpha);
+          const g = score(x, level);
+          for (let i = 0; i < x.length; i++) x[i] += 0.5 * alpha * g[i] + sa * rand.normal();
+          k++;
+          if (k % every === 0) trail.push({ level, xs: Float64Array.from(x) });
+          if (k === T) {
+            frames.push(Float64Array.from(x));
+            k = 0;
+            level--;
+          }
+        }
+        return level >= 1 ? 1 - level / sch.T : null;
+      },
+    };
+  }
+
+  // n points spread uniformly over the square [−r, r]², the starting point of the Langevin samplers.
+  function uniform(n, r = 3, seed = 1) {
+    const rand = rng(seed);
+    const xs = new Float64Array(2 * n);
+    for (let i = 0; i < 2 * n; i++) xs[i] = r * (2 * rand.next() - 1);
+    return xs;
+  }
+
   /* ---------------------------------------------------------------- measuring */
 
   // How far apart two point clouds are: the sliced Wasserstein-1 distance, the average over 64 fixed directions of
@@ -811,12 +926,14 @@
     sample,
     gaussian,
     schedule,
+    veSchedule,
     forwardStep,
     qSample,
     forwardChain,
     posterior,
     noisyComponents,
     exactModel,
+    blurred,
     trueReverse,
     mixturePdf,
     mixtureMoments,
@@ -837,6 +954,9 @@
     loadNet,
     ddpmSample,
     ddpmStepper,
+    langevinStepper,
+    annealedStepper,
+    uniform,
     sliced,
     moments,
     boundTerms,
