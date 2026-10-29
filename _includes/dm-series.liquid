@@ -1,0 +1,28 @@
+{% comment %}
+  Navigation for the "Diffusion models from scratch" series. Parts that are not published yet are listed without a link.
+  Usage: {% include dm-series.liquid %} in a post with `series: diffusion-models-from-scratch` and `part: N`.
+{% endcomment %}
+{% assign dm_titles = 'The idea: destroy structure, then undo it|The forward process in closed form|The reverse process and the variational bound|Predicting the noise: DDPM|Scores and Langevin dynamics|One picture: stochastic differential equations|Deterministic sampling: the probability flow ODE and DDIM|Real images: Improved DDPM and ADM|Classifier and classifier-free guidance|Latent diffusion and Stable Diffusion|The design space: EDM|Where it went next'
+  | split: '|'
+%}
+{% assign dm_parts = site.posts | where: 'series', 'diffusion-models-from-scratch' %}
+<nav class="tf-series" aria-label="Series: Diffusion models from scratch">
+  <span class="tf-label">Series · Diffusion models from scratch</span>
+  {% for title in dm_titles %}
+    {% assign n = forloop.index %}
+    {% assign dm_post = dm_parts | where: 'part', n | first %}
+    {% if dm_post == null %}
+      <span
+        ><b>{{ n }}</b>{{ title }} · soon</span
+      >
+    {% elsif dm_post.url == page.url %}
+      <span aria-current="page"
+        ><b>{{ n }}</b>{{ title -}}
+      </span>
+    {% else %}
+      <a href="{{ dm_post.url | relative_url }}"
+        ><b>{{ n }}</b>{{ title -}}
+      </a>
+    {% endif %}
+  {% endfor %}
+</nav>

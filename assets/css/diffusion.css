@@ -1,0 +1,241 @@
+/* Plots for the "Diffusion models from scratch" series. The stage, steps, controls and series navigation come
+   from transformer.css; this file only adds the plane, point clouds, rings, arrows, shading and the charts. */
+
+/* Classes are created from JS, so PurgeCSS cannot see them in the built HTML. */
+/* purgecss start ignore */
+
+:root {
+  --dm-data: #1f55ff;
+  --dm-noise: #8a8f98;
+  --dm-model: #e7000b;
+  --dm-true: #1e9e57;
+  --dm-heat: #9810fa;
+  --dm-x0: #d9730d;
+}
+
+html[data-theme="dark"] {
+  --dm-data: #6b8cff;
+  --dm-noise: #9a9ea6;
+  --dm-model: #ff5a5f;
+  --dm-true: #3fcf7f;
+  --dm-heat: #b86bff;
+  --dm-x0: #f0a04b;
+}
+
+.dm-data {
+  --dm: var(--dm-data);
+}
+.dm-noise {
+  --dm: var(--dm-noise);
+}
+.dm-model {
+  --dm: var(--dm-model);
+}
+.dm-true {
+  --dm: var(--dm-true);
+}
+.dm-x0 {
+  --dm: var(--dm-x0);
+}
+.dm-ink {
+  --dm: var(--tf-ink);
+}
+
+/* ------------------------------------------------------------ the plane */
+
+.dm-frame {
+  fill: var(--tf-paper);
+  stroke: var(--tf-grid);
+}
+
+.dm-frame.is-pickable {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.dm-tick {
+  stroke: var(--tf-grid);
+  stroke-width: 0.6;
+  stroke-opacity: 0.6;
+}
+
+.dm-axis {
+  stroke: var(--tf-grid);
+  stroke-width: 1;
+}
+
+.dm-axes,
+.dm-shade,
+.dm-rings,
+.dm-paths,
+.dm-clouds,
+.dm-arrows,
+.dm-marks {
+  pointer-events: none;
+}
+
+.dm-cloud {
+  fill: var(--dm, var(--dm-data));
+  fill-opacity: 0.62;
+}
+
+.dm-cloud.is-faint {
+  fill-opacity: 0.18;
+}
+
+.dm-cloud.is-strong {
+  fill-opacity: 0.9;
+}
+
+.dm-heat {
+  fill: var(--dm-heat);
+}
+
+.dm-ring {
+  fill: none;
+  stroke: var(--dm, var(--tf-ink));
+  stroke-width: 1.5;
+}
+
+.dm-ring.is-dashed {
+  stroke-dasharray: 4 3;
+  stroke-width: 1.2;
+}
+
+.dm-ring.is-filled {
+  fill: var(--dm, var(--tf-ink));
+  fill-opacity: 0.08;
+}
+
+.dm-path {
+  fill: none;
+  stroke: var(--dm, var(--tf-muted));
+  stroke-width: 1.2;
+  stroke-opacity: 0.75;
+}
+
+.dm-path.is-faint {
+  stroke-opacity: 0.25;
+}
+
+.dm-arrow {
+  fill: var(--dm, var(--tf-ink));
+  stroke: var(--dm, var(--tf-ink));
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+
+.dm-arrow.is-light {
+  stroke-width: 0.9;
+  opacity: 0.7;
+}
+
+.dm-mark {
+  fill: var(--dm, var(--tf-ink));
+  stroke: var(--tf-paper);
+  stroke-width: 1.5;
+}
+
+.dm-mark.is-hollow {
+  fill: var(--tf-paper);
+  stroke: var(--dm, var(--tf-ink));
+  stroke-width: 2;
+}
+
+.tf-svg .dm-mark-label {
+  fill: var(--dm, var(--tf-ink));
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tf-svg .dm-corner {
+  fill: var(--tf-muted);
+}
+
+/* ------------------------------------------------------------ charts */
+
+.dm-line {
+  fill: none;
+  stroke: var(--dm, var(--tf-ink));
+  stroke-width: 1.7;
+}
+
+.dm-line.is-dashed {
+  stroke-dasharray: 4 3;
+}
+
+.tf-svg .dm-line-label {
+  fill: var(--dm, var(--tf-ink));
+}
+
+.dm-dot {
+  fill: var(--dm, var(--tf-accent));
+  stroke: var(--tf-paper);
+  stroke-width: 1.5;
+}
+
+.dm-cursor {
+  stroke: var(--tf-accent);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+/* ------------------------------------------------------------ stage chrome */
+
+.tf-scrolly.is-busy .tf-note {
+  color: var(--tf-accent);
+}
+
+.dm-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--tf-grid);
+  border-radius: 5px;
+  background: var(--tf-cell);
+  color: var(--tf-ink);
+  font: inherit;
+}
+
+/* Greek letters and subscripts keep their case. */
+.tf-controls label.dm-nocaps {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------ figures in the "Going deeper" sections */
+
+.dm-fig-svg {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.dm-fig-svg text {
+  fill: var(--tf-ink);
+  font-family: var(--tf-font);
+  font-size: 12px;
+}
+
+.dm-fig-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+}
+
+.dm-fig-row input[type="range"] {
+  width: 160px;
+  accent-color: var(--tf-accent);
+}
+
+.dm-fig-row output {
+  font-family: var(--tf-mono);
+  font-size: 0.8rem;
+}
+
+/* purgecss end ignore */
