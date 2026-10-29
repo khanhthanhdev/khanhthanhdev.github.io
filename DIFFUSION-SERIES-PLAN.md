@@ -253,7 +253,9 @@ Each part lists: the question it answers, the source paper(s), what the reader c
 
 - **Step 1 done.** `assets/js/diffusion/dm-core.js` (datasets as exact Gaussian mixtures, schedules, forward process, exact model and true reverse kernels, a 5,714-weight MLP with backprop and Adam, DDPM sampler, sliced Wasserstein distance, bound terms), `dm-view.js` (plots, charts, pictures), `dm-scrolly.js`, `assets/css/diffusion.css`, `_includes/dm-series.liquid`. Shipped networks are rebuilt with `node bin/dm-pretrain.js` into `dm-weights.js`: `swissroll-eps` (L_simple), `swissroll-x0` (predicts x₀) and `swissroll-vlb` (the bound's weights), 30,000 steps each.
 - **Step 2 done.** Parts 1–4 are published as `_posts/2026-10-29-dm-{1..4}-*.md`. The toy uses T = 200 (the linear schedule stretched by 5); parts 2 and 4 use T = 1000 where the papers' numbers are quoted.
-- **Next:** parts 5–7 (scores and Langevin, SDEs, probability flow ODE and DDIM). `swissroll` and `twomodes` are already exact mixtures, so true scores for part 5 are available through `DM.exactModel(...).score`.
+- **Step 3 done.** Parts 5–7 are published (`dm-5-scores-and-langevin`, `dm-6-sdes`, `dm-7-ode-and-ddim`). New engine pieces: exact scores of blurred data, plain and annealed Langevin, a VE noise ladder and the shipped `twomodes-ncsn` score network, VP/VE SDEs with Euler–Maruyama and predictor–corrector sampling, DDIM (any η, even or quadratic spacing), DDIM inversion, and ODE log-likelihoods.
+- **Measurement.** Distances are `DM.slicedToData` (a cloud against the exact mixture), with `DM.dataFloor` as the real-data reference. At 800 points the floor is about 0.04 and varies by about ±0.013 between draws, so prose quotes 4,000- or 2,000-sample numbers computed in Node.
+- **Next:** parts 8–10 (Improved DDPM and ADM, guidance, latent diffusion). `DATASETS.clusters` is ready for part 9's conditional model.
 
 ### B.5 Notation (fix once, use everywhere)
 
