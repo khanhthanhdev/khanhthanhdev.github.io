@@ -262,7 +262,10 @@
     const api = {
       el: g,
       box: { x: -44, y: -32, width: W + 100, height: H + 74 },
-      title: (text) => (title.textContent = text || ""),
+      title(text) {
+        title.textContent = text || "";
+        return api;
+      },
       set({ series, x, y, cursor = null, yLog = false, xLabel = opts.xTitle, yTicks = null, marks = [] }) {
         const tf = (v) => (yLog ? Math.log10(Math.max(v, 1e-12)) : v);
         const [x0, x1] = x;
@@ -302,6 +305,42 @@
     return api;
   }
 
+  /* ---------------------------------------------------------------- image */
+
+  // A small greyscale picture, n × n pixels with values in [−1, 1] (black to white, the way image models scale
+  // pixels). Pixels are fixed greys in both themes: it is a photo, not a chart. set(values) repaints it.
+  function picture(parent, opts = {}) {
+    const n = opts.n ?? 32;
+    const W = opts.width ?? 240;
+    const c = W / n;
+    const g = s("g", { class: "dm-picture tf-obj" });
+    const title = s("text", { class: "tf-mat-title", x: 0, y: -12, text: opts.title || "" });
+    const cells = [];
+    for (let j = 0; j < n; j++)
+      for (let i = 0; i < n; i++) {
+        const r = s("rect", { x: (i * c).toFixed(2), y: (j * c).toFixed(2), width: (c + 0.3).toFixed(2), height: (c + 0.3).toFixed(2) });
+        cells.push(r);
+      }
+    g.append(s("rect", { class: "dm-frame", x: -1, y: -1, width: W + 2, height: W + 2 }), ...cells, title);
+    parent.append(g);
+    const api = {
+      el: g,
+      box: { x: -4, y: -30, width: W + 8, height: W + 34 },
+      title(text) {
+        title.textContent = text || "";
+        return api;
+      },
+      set(values) {
+        for (let k = 0; k < cells.length; k++) {
+          const v = Math.round(127.5 * (clamp(values[k], -1, 1) + 1));
+          cells[k].setAttribute("fill", `rgb(${v},${v},${v})`);
+        }
+        return api;
+      },
+    };
+    return api;
+  }
+
   /* ---------------------------------------------------------------- shared helpers */
 
   // Points i of a flat cloud as [x, y].
@@ -328,5 +367,13 @@
     return () => (alive = false);
   }
 
-  DM.view = { SIZE, plot, chart, at, followers, chunked };
+  // subscript digits, for labels like x₄₀
+  const SUB = "₀₁₂₃₄₅₆₇₈₉";
+  const sub = (n) =>
+    String(n)
+      .split("")
+      .map((d) => SUB[Number(d)] || d)
+      .join("");
+
+  DM.view = { SIZE, plot, chart, picture, at, followers, chunked, sub };
 })();

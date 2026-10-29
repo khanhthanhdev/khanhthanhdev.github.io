@@ -6,7 +6,7 @@
 
   const DM = window.DM;
   const { h, fmt } = window.TF.view;
-  const { plot, chart, at, chunked } = DM.view;
+  const { plot, chart, at, chunked, sub } = DM.view;
   DM.scenes = DM.scenes || {};
 
   const N = 800; // points in the cloud
@@ -286,14 +286,4 @@
 
     return { render };
   };
-
-  // subscript digits, for labels like x₄₀
-  const SUB = "₀₁₂₃₄₅₆₇₈₉";
-  function sub(n) {
-    return String(n)
-      .split("")
-      .map((d) => SUB[Number(d)] || d)
-      .join("");
-  }
-  DM.sub = sub;
 })();
