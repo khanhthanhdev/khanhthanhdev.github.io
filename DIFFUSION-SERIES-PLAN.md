@@ -255,7 +255,8 @@ Each part lists: the question it answers, the source paper(s), what the reader c
 - **Step 2 done.** Parts 1–4 are published as `_posts/2026-10-29-dm-{1..4}-*.md`. The toy uses T = 200 (the linear schedule stretched by 5); parts 2 and 4 use T = 1000 where the papers' numbers are quoted.
 - **Step 3 done.** Parts 5–7 are published (`dm-5-scores-and-langevin`, `dm-6-sdes`, `dm-7-ode-and-ddim`). New engine pieces: exact scores of blurred data, plain and annealed Langevin, a VE noise ladder and the shipped `twomodes-ncsn` score network, VP/VE SDEs with Euler–Maruyama and predictor–corrector sampling, DDIM (any η, even or quadratic spacing), DDIM inversion, and ODE log-likelihoods.
 - **Measurement.** Distances are `DM.slicedToData` (a cloud against the exact mixture), with `DM.dataFloor` as the real-data reference. At 800 points the floor is about 0.04 and varies by about ±0.013 between draws, so prose quotes 4,000- or 2,000-sample numbers computed in Node.
-- **Next:** parts 8–10 (Improved DDPM and ADM, guidance, latent diffusion). `DATASETS.clusters` is ready for part 9's conditional model.
+- **Step 4 done.** Parts 8–10 are published (`dm-8-improved-ddpm-and-adm`, `dm-9-guidance`, `dm-10-latent-diffusion`). New engine pieces: three-output networks with Improved DDPM's learned variance and hybrid loss, respaced ancestral sampling (fixed or learned variance, noise temperature), k-NN precision and recall, class-conditional networks with condition dropout and classifier-free guidance, exact guided models (`DM.exactGuided`), and the `classes` dataset. New shipped networks: `swissroll-learned` and `classes-cfg`. Part 10 uses 16 × 16 pictures of a dot placed by the Swiss roll, with a hand-written autoencoder.
+- **Next:** parts 11–12 (EDM's design space; transformers, flow matching and one-step models), then forward links across the series.
 
 ### B.5 Notation (fix once, use everywhere)
 
