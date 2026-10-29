@@ -27,9 +27,9 @@ js:
 
 Every sampler so far adds fresh noise at every step: DDPM's Algorithm 2, Langevin dynamics, the reverse SDE. That noise is part of why sampling took 1,000 network calls. DDPM generated 50,000 small CIFAR-10 images in about 20 hours; a GAN does it in under a minute.
 
-In October 2020, two papers removed the noise. [Song, Meng and Ermon's _Denoising diffusion implicit models_](https://arxiv.org/abs/2010.02502) (DDIM) found a deterministic sampler that works with any network already trained as in DDPM, and samples well in 10 to 50 times fewer steps. A month later, [Song et al.'s SDE paper](https://arxiv.org/abs/2011.13456) from part 6 derived the continuous version, the **probability flow ODE**, an ordinary differential equation whose solutions have exactly the same distribution as the reverse SDE at every moment.
+In October 2020, two papers removed the noise. [Song, Meng and Ermon's _Denoising diffusion implicit models_](https://arxiv.org/abs/2010.02502) (DDIM) found a deterministic sampler that works with any network already trained as in DDPM, and samples well in 10 to 50 times fewer steps. A month later, [Song et al.'s SDE paper](https://arxiv.org/abs/2011.13456) from [part 6]({% post_url 2026-10-29-dm-6-sdes %}) derived the continuous version, the **probability flow ODE**, an ordinary differential equation whose solutions have exactly the same distribution as the reverse SDE at every moment.
 
-Removing the noise does more than save time. It turns the model into a fixed, invertible map between noise and data: the same noise always gives the same sample, any data point can be encoded into noise and decoded back, and the model's exact likelihood can be computed. This part shows all of that with the network from part 4, still not retrained.
+Removing the noise does more than save time. It turns the model into a fixed, invertible map between noise and data: the same noise always gives the same sample, any data point can be encoded into noise and decoded back, and the model's exact likelihood can be computed. This part shows all of that with the network from [part 4]({% post_url 2026-10-29-dm-4-ddpm %}), still not retrained.
 
 ## Taking the noise out
 
@@ -62,7 +62,7 @@ Individual paths are completely different. The distributions are the same.
 </div>
 
 <div class="tf-step" data-step="ddim" data-title="DDIM: the same idea, discretely." markdown="1">
-**DDIM reaches the same place from a different direction.** Song, Meng and Ermon noticed that DDPM's training loss only depends on the one-jump marginals $$q(x_t \mid x_0)$$ of part 2, not on the forward process being a chain. So there is a whole family of forward processes with the same marginals, and one network trained with $$L_\text{simple}$$ serves all of them.
+**DDIM reaches the same place from a different direction.** Song, Meng and Ermon noticed that DDPM's training loss only depends on the one-jump marginals $$q(x_t \mid x_0)$$ of [part 2]({% post_url 2026-10-29-dm-2-forward-process %}), not on the forward process being a chain. So there is a whole family of forward processes with the same marginals, and one network trained with $$L_\text{simple}$$ serves all of them.
 
 Their sampler predicts the clean point, then jumps to any earlier step $$s$$:
 
@@ -77,7 +77,7 @@ The parameter $$\eta$$ sets $$\sigma$$: $$\eta = 1$$ is DDPM's ancestral sampler
 
 The paper's finding shows up on the toy: with few steps, the deterministic sampler beats the noisy one, and with many steps the noisy one catches up and passes it. On CIFAR-10 the paper measured FIDs of 13.4 against 41.1 at 10 steps and 4.7 against 8.0 at 50.
 
-The toy adds a lesson of its own: at 10 steps, the plain Euler solver is better than DDIM here. Both converge to the same ODE as the steps shrink (with 200 steps their samples are within 0.005 of each other). With few steps, _how_ you take them, and where you put them, matters as much as which equation you solve. Part 11 is about exactly that.
+The toy adds a lesson of its own: at 10 steps, the plain Euler solver is better than DDIM here. Both converge to the same ODE as the steps shrink (with 200 steps their samples are within 0.005 of each other). With few steps, _how_ you take them, and where you put them, matters as much as which equation you solve. [Part 11]({% post_url 2026-10-29-dm-11-edm-design-space %}) is about exactly that.
 
 </div>
 

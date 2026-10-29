@@ -33,7 +33,7 @@ They also gave the network a general way to take a condition, any sequence of ve
 
 ## The toy: pictures that are really two numbers
 
-This part needs data that looks like images. Each picture here is 16 × 16 grey pixels showing one soft dot, and the dot's position is a point drawn from the Swiss roll of part 1. A picture has 256 numbers, but only two of them are free: the dot's coordinates.
+This part needs data that looks like images. Each picture here is 16 × 16 grey pixels showing one soft dot, and the dot's position is a point drawn from the Swiss roll of [part 1]({% post_url 2026-10-29-dm-1-the-idea %}). A picture has 256 numbers, but only two of them are free: the dot's coordinates.
 
 That makes the ideal autoencoder easy to write by hand: the **encoder** finds the dot's centre of mass, and the **decoder** draws a dot at a given place. In the paper the autoencoder is a trained network; the rest of the method is exactly the same.
 
@@ -94,9 +94,9 @@ The grid illustrates the mechanism with hand-made vectors (a real model learns t
 </div>
 
 <div class="tf-step" data-step="pipeline" data-title="Stable Diffusion, end to end." markdown="1">
-**Put it together.** Stable Diffusion v1 encodes the prompt with CLIP's text encoder into 77 token vectors of 768 numbers. It starts from noise in the 64 × 64 × 4 latent space, and runs a U-Net with cross-attention layers for about 50 steps, with classifier-free guidance (part 9). Then the autoencoder's decoder turns the final latent into a 512 × 512 picture.
+**Put it together.** Stable Diffusion v1 encodes the prompt with CLIP's text encoder into 77 token vectors of 768 numbers. It starts from noise in the 64 × 64 × 4 latent space, and runs a U-Net with cross-attention layers for about 50 steps, with classifier-free guidance ([part 9]({% post_url 2026-10-29-dm-9-guidance %})). Then the autoencoder's decoder turns the final latent into a 512 × 512 picture.
 
-Every piece is from earlier in this series: the forward process and noise prediction (parts 2 to 4), a fast deterministic sampler (part 7), the U-Net (part 8), guidance (part 9). Latent diffusion's own contributions are the autoencoder that moves everything into a small space, and cross-attention as the doorway for the prompt.
+Every piece is from earlier in this series: the forward process and noise prediction (parts 2 to 4), a fast deterministic sampler ([part 7]({% post_url 2026-10-29-dm-7-ode-and-ddim %})), the U-Net ([part 8]({% post_url 2026-10-29-dm-8-improved-ddpm-and-adm %})), guidance (part 9). Latent diffusion's own contributions are the autoencoder that moves everything into a small space, and cross-attention as the doorway for the prompt.
 
 </div>
 

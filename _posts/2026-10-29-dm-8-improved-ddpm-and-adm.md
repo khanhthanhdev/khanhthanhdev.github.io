@@ -153,7 +153,7 @@ A denoiser has to see the whole image (is this blob a face?) and also get every 
 
 ### Scaling
 
-Nichol and Dhariwal fitted how FID and log-likelihood improved with training compute, and found smooth trends that kept improving as models grew. That was an early sign that diffusion models would reward scale the way language models do, and it set up the next three years: bigger U-Nets, then transformers (part 12), trained on more data.
+Nichol and Dhariwal fitted how FID and log-likelihood improved with training compute, and found smooth trends that kept improving as models grew. That was an early sign that diffusion models would reward scale the way language models do, and it set up the next three years: bigger U-Nets, then transformers ([part 12]({% post_url 2026-10-29-dm-12-where-it-went-next %})), trained on more data.
 
 ## Further reading
 

@@ -29,7 +29,7 @@ Parts 1 to 4 built diffusion models the way the 2015 paper and DDPM did: as a ch
 
 In 2019, a year before DDPM, Yang Song and Stefano Ermon published [_Generative modeling by estimating gradients of the data distribution_](https://arxiv.org/abs/1907.05600). Their network learns the **score**, the gradient of the log density, at many levels of noise. To sample, they follow the score uphill with a little noise mixed in, from the blurriest level down to the sharpest. Their CIFAR-10 model set a new record Inception Score for unconditional models (8.87).
 
-DDPM's paper pointed out that the two methods are close relatives. Part 6 shows they are the same model. This part builds the score view from scratch, on a dataset made to show its one big trap.
+DDPM's paper pointed out that the two methods are close relatives. [Part 6]({% post_url 2026-10-29-dm-6-sdes %}) shows they are the same model. This part builds the score view from scratch, on a dataset made to show its one big trap.
 
 ## The toy data
 
@@ -116,7 +116,7 @@ The annealed sampler recovers the 70/30 split and the shape of both blobs, even 
 </div>
 
 <div class="tf-step" data-step="same" data-title="Scores and noise are the same thing." markdown="1">
-**Now look back at part 4.** Its network predicts the noise $$\varepsilon$$ in a noisy point. For Gaussian noise, the best noise prediction and the score of the noisy data are the same thing up to a scale:
+**Now look back at [part 4]({% post_url 2026-10-29-dm-4-ddpm %}).** Its network predicts the noise $$\varepsilon$$ in a noisy point. For Gaussian noise, the best noise prediction and the score of the noisy data are the same thing up to a scale:
 
 $$\nabla_{x_t} \log q_t(x_t) = -\frac{\mathbb{E}[\varepsilon \mid x_t]}{\sqrt{1 - \bar\alpha_t}}$$
 

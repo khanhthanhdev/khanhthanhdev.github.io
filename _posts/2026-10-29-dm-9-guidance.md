@@ -118,7 +118,7 @@ To guide a diffusion model towards a condition $$c$$, replace the noise predicti
 | classifier guidance, scale $$s$$ | $$\varepsilon_\theta(x_t, t) - s\,\sqrt{1 - \bar\alpha_t}\;\nabla_{x_t}\log p_\phi(c \mid x_t, t)$$ | a classifier trained on noisy data |
 | classifier-free guidance, weight $$w$$ | $$(1 + w)\,\varepsilon_\theta(x_t, t, c) - w\,\varepsilon_\theta(x_t, t, \varnothing)$$ | one network trained with condition dropout |
 
-For classifier-free guidance, train as in part 4 but replace the condition by $$\varnothing$$ with probability $$p_\text{uncond}$$ (Ho and Salimans: 0.1 to 0.2 worked best; 0.5 was worse). Sampling costs two network evaluations per step, conditional and unconditional, usually run as one batch.
+For classifier-free guidance, train as in [part 4]({% post_url 2026-10-29-dm-4-ddpm %}) but replace the condition by $$\varnothing$$ with probability $$p_\text{uncond}$$ (Ho and Salimans: 0.1 to 0.2 worked best; 0.5 was worse). Sampling costs two network evaluations per step, conditional and unconditional, usually run as one batch.
 
 On the toy (2,100 samples per run, 50 steps; the data: confidence 0.82, spread 0.60, centres at radius 1):
 
@@ -137,7 +137,7 @@ A naming warning: libraries such as `diffusers` call $$1 + w$$ the **guidance sc
 
 ### Classifier guidance as a shifted Gaussian
 
-Dhariwal and Nichol derive their sampler step by step. The guided reverse step $$p(x_t \mid x_{t+1}, c) \propto p_\theta(x_t \mid x_{t+1})\,p_\phi(c \mid x_t)$$ is a Gaussian times something smooth; expanding $$\log p_\phi(c \mid x_t)$$ to first order around the Gaussian's mean $$\mu$$ (the same move as part 1's small-step argument) gives another Gaussian with the mean shifted:
+Dhariwal and Nichol derive their sampler step by step. The guided reverse step $$p(x_t \mid x_{t+1}, c) \propto p_\theta(x_t \mid x_{t+1})\,p_\phi(c \mid x_t)$$ is a Gaussian times something smooth; expanding $$\log p_\phi(c \mid x_t)$$ to first order around the Gaussian's mean $$\mu$$ (the same move as [part 1]({% post_url 2026-10-29-dm-1-the-idea %})'s small-step argument) gives another Gaussian with the mean shifted:
 
 $$\mathcal{N}\big(\mu + s\,\Sigma\,\nabla_x \log p_\phi(c \mid x)\big|_{x = \mu},\; \Sigma\big)$$
 
@@ -161,7 +161,7 @@ $$p(x)\,p(c \mid x)^s$$ is a fine target, but the guided sampler doesn't sample 
 
 ### From classes to text
 
-Nothing above needs $$c$$ to be a class. GLIDE (Nichol et al., 2021) conditioned on a text encoding, compared classifier-free guidance with guidance by CLIP's image–text similarity, and found people preferred classifier-free. Imagen, Stable Diffusion and the models after them all train with prompts dropped some of the time and sample with classifier-free guidance. Part 10 shows how the text gets into the network.
+Nothing above needs $$c$$ to be a class. GLIDE (Nichol et al., 2021) conditioned on a text encoding, compared classifier-free guidance with guidance by CLIP's image–text similarity, and found people preferred classifier-free. Imagen, Stable Diffusion and the models after them all train with prompts dropped some of the time and sample with classifier-free guidance. [Part 10]({% post_url 2026-10-29-dm-10-latent-diffusion %}) shows how the text gets into the network.
 
 ## Further reading
 

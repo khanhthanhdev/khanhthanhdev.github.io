@@ -91,7 +91,7 @@ $$\mathrm{SNR}(t) = \frac{\bar\alpha_t}{1 - \bar\alpha_t}$$
 
 The chart plots it on a log scale. It starts above 1,000 and falls to about $$3 \times 10^{-5}$$, through nine orders of magnitude. Signal and noise are equal (SNR = 1) after step 51 of 200.
 
-The SNR is a better way to think about a schedule than the $$\beta$$s themselves: two schedules with the same SNR at every step make exactly the same noisy examples, just labelled with different $$t$$. Part 11 takes that idea all the way.
+The SNR is a better way to think about a schedule than the $$\beta$$s themselves: two schedules with the same SNR at every step make exactly the same noisy examples, just labelled with different $$t$$. [Part 11]({% post_url 2026-10-29-dm-11-edm-design-space %}) takes that idea all the way.
 
 </div>
 
@@ -165,17 +165,17 @@ The coefficients are $$\sqrt{\bar\alpha_t}$$ and $$\sqrt{1-\bar\alpha_t}$$, not 
 
 ### The reparameterisation
 
-Writing a Gaussian sample as "mean plus scale times standard noise", $$x_t = \sqrt{\bar\alpha_t}\,x_0 + \sqrt{1-\bar\alpha_t}\,\varepsilon$$, is the same trick that makes variational autoencoders trainable (Kingma and Welling, 2013). Here it does something more useful: it hands us the exact noise $$\varepsilon$$ that was mixed in. Part 4 trains the network to predict exactly that $$\varepsilon$$ from $$x_t$$, which turns training into plain regression.
+Writing a Gaussian sample as "mean plus scale times standard noise", $$x_t = \sqrt{\bar\alpha_t}\,x_0 + \sqrt{1-\bar\alpha_t}\,\varepsilon$$, is the same trick that makes variational autoencoders trainable (Kingma and Welling, 2013). Here it does something more useful: it hands us the exact noise $$\varepsilon$$ that was mixed in. [Part 4]({% post_url 2026-10-29-dm-4-ddpm %}) trains the network to predict exactly that $$\varepsilon$$ from $$x_t$$, which turns training into plain regression.
 
 ### The posterior is also Gaussian
 
-The forward marginal also answers a backwards question. If you know both the clean point $$x_0$$ and the noisy $$x_t$$, the step in between, $$q(x_{t-1} \mid x_t, x_0)$$, is a Gaussian with a known centre and width. (It follows from Bayes' rule, with every factor Gaussian.) That Gaussian is what the network will be trained to imitate, and it is where part 3 starts.
+The forward marginal also answers a backwards question. If you know both the clean point $$x_0$$ and the noisy $$x_t$$, the step in between, $$q(x_{t-1} \mid x_t, x_0)$$, is a Gaussian with a known centre and width. (It follows from Bayes' rule, with every factor Gaussian.) That Gaussian is what the network will be trained to imitate, and it is where [part 3]({% post_url 2026-10-29-dm-3-reverse-process %}) starts.
 
 ### The continuous view
 
 For small $$\beta$$s, $$\log \bar\alpha_t = \sum_s \log(1 - \beta_s) \approx -\sum_s \beta_s$$. So $$\bar\alpha_t \approx e^{-\sum_{s \le t} \beta_s}$$: the signal decays exponentially in the total amount of noise added so far. For the linear schedule, $$\sum \beta_s \approx 10.05$$ over 1,000 steps, and indeed $$\bar\alpha_T \approx e^{-10.05} \approx 4.3 \times 10^{-5}$$ (the exact product is $$4.0 \times 10^{-5}$$).
 
-If you let the steps get smaller and more numerous, the sum becomes an integral and the chain becomes a stochastic differential equation. That's the subject of part 6, and it explains why "1,000 steps" is not sacred: what matters is the curve $$\bar\alpha(t)$$, not how finely it is sliced.
+If you let the steps get smaller and more numerous, the sum becomes an integral and the chain becomes a stochastic differential equation. That's the subject of [part 6]({% post_url 2026-10-29-dm-6-sdes %}), and it explains why "1,000 steps" is not sacred: what matters is the curve $$\bar\alpha(t)$$, not how finely it is sliced.
 
 ### The two small fixes in the cosine schedule
 
@@ -185,7 +185,7 @@ The cosine formula has two details. The offset $$s = 0.008$$ keeps $$\beta_t$$ f
 
 The 5% line in the last step is a rough rule for a 32 × 32 picture. On a 256 × 256 picture of the same scene, neighbouring pixels carry nearly the same information, so averaging over a small patch cancels much of the noise. The same SNR destroys much less of a large image than of a small one.
 
-The fix, from work like Hoogeboom, Heek and Salimans's [_simple diffusion_](https://arxiv.org/abs/2301.11093) (2023) and Chen's [_On the importance of noise scheduling for diffusion models_](https://arxiv.org/abs/2301.10972) (2023), is to shift the whole SNR curve down for higher resolutions, so that each step adds more noise. Latent diffusion (part 10) side-steps part of the problem by diffusing in a smaller space.
+The fix, from work like Hoogeboom, Heek and Salimans's [_simple diffusion_](https://arxiv.org/abs/2301.11093) (2023) and Chen's [_On the importance of noise scheduling for diffusion models_](https://arxiv.org/abs/2301.10972) (2023), is to shift the whole SNR curve down for higher resolutions, so that each step adds more noise. Latent diffusion ([part 10]({% post_url 2026-10-29-dm-10-latent-diffusion %})) side-steps part of the problem by diffusing in a smaller space.
 
 ## Further reading
 

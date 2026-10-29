@@ -102,7 +102,7 @@ The terms span four orders of magnitude, and the first few steps carry most of t
 
 The chart shows the best possible bound with each, step by step. They agree everywhere except the first few steps, where $$\tilde\beta_t$$ is much smaller than $$\beta_t$$ (at $$t = 2$$ it is a third). On this toy, $$\beta_t$$ gives the lower total.
 
-Part 8 shows how Improved DDPM let the network learn a width between the two, which improved the bound a lot.
+[Part 8]({% post_url 2026-10-29-dm-8-improved-ddpm-and-adm %}) shows how Improved DDPM let the network learn a width between the two, which improved the bound a lot.
 
 </div>
 
@@ -121,7 +121,7 @@ Since the widths are fixed, each middle term is a weighted squared error between
 
 $$L_{t-1} = \frac{1}{2\sigma_t^2}\,\big\lVert \tilde\mu_t(x_t, x_0) - \mu_\theta(x_t, t)\big\rVert^2 + C_t$$
 
-Part 4 rewrites that squared error in terms of the noise $$\varepsilon$$, and finds that dropping the weight $$1/2\sigma_t^2$$ makes better samples.
+[Part 4]({% post_url 2026-10-29-dm-4-ddpm %}) rewrites that squared error in terms of the noise $$\varepsilon$$, and finds that dropping the weight $$1/2\sigma_t^2$$ makes better samples.
 
 ## Going deeper
 

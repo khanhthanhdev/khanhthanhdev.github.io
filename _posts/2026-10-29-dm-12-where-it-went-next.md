@@ -53,7 +53,7 @@ Both are the same kind of model: a velocity field whose ODE carries noise to dat
 <div class="tf-step" data-step="flow" data-title="Sampling a flow." markdown="1">
 **To sample, follow the learned velocity backwards**, from noise at $$t = 1$$ to data at $$t = 0$$, here with 50 Euler steps: $$x \leftarrow x - v_\theta(x, t)\,\Delta t$$.
 
-This network has the same size as part 4's and was trained for the same number of steps. With 50 steps its samples are as good as diffusion's (on 2,000 samples: 0.029, against 0.034 for part 7's ODE with the same number of steps).
+This network has the same size as [part 4]({% post_url 2026-10-29-dm-4-ddpm %})'s and was trained for the same number of steps. With 50 steps its samples are as good as diffusion's (on 2,000 samples: 0.029, against 0.034 for [part 7]({% post_url 2026-10-29-dm-7-ode-and-ddim %})'s ODE with the same number of steps).
 
 </div>
 
@@ -92,7 +92,7 @@ With distillation they reached a one-step FID of 3.55 on CIFAR-10 (2.93 with two
 </div>
 
 <div class="tf-step" data-step="dit" data-title="Transformers instead of U-Nets." markdown="1">
-**The network changed too.** Peebles and Xie took latent diffusion (part 10) and swapped its U-Net for a standard vision transformer. The noisy latent is cut into $$2 \times 2$$ patches, each patch becomes a token, and a stack of transformer blocks processes the tokens. The step $$t$$ and the class come in through **adaLN-Zero**: they set each block's normalisation scale and shift (like ADM's AdaGN in part 8), plus a gate on each residual branch that starts at zero, so every block begins as the identity.
+**The network changed too.** Peebles and Xie took latent diffusion ([part 10]({% post_url 2026-10-29-dm-10-latent-diffusion %})) and swapped its U-Net for a standard vision transformer. The noisy latent is cut into $$2 \times 2$$ patches, each patch becomes a token, and a stack of transformer blocks processes the tokens. The step $$t$$ and the class come in through **adaLN-Zero**: they set each block's normalisation scale and shift (like ADM's AdaGN in [part 8]({% post_url 2026-10-29-dm-8-improved-ddpm-and-adm %})), plus a gate on each residual branch that starts at zero, so every block begins as the identity.
 
 Their finding: sample quality tracked the network's compute per forward pass very closely, whatever mix of depth, width and patch size provided it. Their largest model, DiT-XL/2, reached an FID of 2.27 on ImageNet 256 × 256, the best at the time, using less compute per step than pixel-space U-Nets.
 
@@ -107,7 +107,7 @@ Their finding: sample quality tracked the network's compute per forward pass ver
 
 $$L = \mathbb{E}_{t,\, y,\, z}\,\big\lVert v_\theta\big((1-t)\,y + t\,z,\; t\big) - (z - y)\big\rVert^2$$
 
-Lipman et al. proved that this per-pair ("conditional") loss has the same gradient as matching the true, intractable marginal velocity field, the same trick as denoising score matching in part 5. Diffusion is the special case of a particular Gaussian path.
+Lipman et al. proved that this per-pair ("conditional") loss has the same gradient as matching the true, intractable marginal velocity field, the same trick as denoising score matching in [part 5]({% post_url 2026-10-29-dm-5-scores-and-langevin %}). Diffusion is the special case of a particular Gaussian path.
 
 **Rectified flow** uses the same straight paths and adds **reflow**: retrain on (noise, sample) pairs produced by the previous flow, which straightens the paths further each round.
 
@@ -133,12 +133,12 @@ Twelve parts, six ideas. Each idea showed up early and kept coming back.
 {: .tf-table}
 | idea | where it starts | where it comes back |
 | --- | --- | --- |
-| **Destroy slowly, undo slowly.** Small noise steps make each reverse step nearly Gaussian. | part 1 | every later improvement takes fewer, larger steps without losing that: DDIM (7), learned variances (8), EDM (11), reflow (12) |
+| **Destroy slowly, undo slowly.** Small noise steps make each reverse step nearly Gaussian. | [part 1]({% post_url 2026-10-29-dm-1-the-idea %}) | every later improvement takes fewer, larger steps without losing that: DDIM (7), learned variances (8), EDM (11), reflow (12) |
 | **One network, several readings.** Noise, clean data, score, denoiser and velocity predictions are rewritings of each other. | parts 4 and 5 | the score view (5), the SDE view (6), EDM's denoiser (11), flow matching's velocity (12) |
 | **Training is denoising.** Every loss in the series is a squared error on noisy examples, weighted over noise levels. | part 4 | denoising score matching (5), $$L_\text{simple}$$ against the bound (4), EDM's weighting and noise distribution (11), flow matching (12) |
-| **Sampling is solving a differential equation.** | part 6 | ancestral sampling, Euler–Maruyama and predictor–corrector (6), DDIM and the probability flow ODE (7), Heun (11), straight flows (12) |
+| **Sampling is solving a differential equation.** | [part 6]({% post_url 2026-10-29-dm-6-sdes %}) | ancestral sampling, Euler–Maruyama and predictor–corrector (6), DDIM and the probability flow ODE (7), Heun (11), straight flows (12) |
 | **Guidance is adding a gradient.** | part 1's conditioning, part 6 | classifier and classifier-free guidance (9), text through cross-attention (10) |
-| **Spend capacity where it matters.** | part 2's cosine schedule | the lossy-compression reading of the bound (4), latent diffusion (10), EDM's noise distribution (11), transformers that scale (12) |
+| **Spend capacity where it matters.** | [part 2]({% post_url 2026-10-29-dm-2-forward-process %})'s cosine schedule | the lossy-compression reading of the bound (4), latent diffusion (10), EDM's noise distribution (11), transformers that scale (12) |
 
 ## Going deeper
 

@@ -42,7 +42,7 @@ This part goes through EDM's choices one at a time, and measures each on the toy
 <div class="tf-step" data-step="denoiser" data-title="Everything is a denoiser." markdown="1">
 **EDM's first move is a change of variables.** Write a noisy point as the data plus scaled noise, $$x = y + \sigma\, n$$, with no shrinking: the VE convention, with the noise level $$\sigma$$ itself as "time". VP models fit in by rescaling: their $$x_\text{VP}$$ is $$x/\sqrt{1+\sigma^2}$$, with $$\sigma^2 = (1-\bar\alpha)/\bar\alpha$$.
 
-In these coordinates, every network in this series is a **denoiser** $$D(x; \sigma)$$, an estimate of $$\mathbb{E}[y \mid x]$$: noise prediction, score and $$x_0$$ prediction are all rewritings of it. And the probability flow ODE of part 7 becomes
+In these coordinates, every network in this series is a **denoiser** $$D(x; \sigma)$$, an estimate of $$\mathbb{E}[y \mid x]$$: noise prediction, score and $$x_0$$ prediction are all rewritings of it. And the probability flow ODE of [part 7]({% post_url 2026-10-29-dm-7-ode-and-ddim %}) becomes
 
 $$\frac{dx}{d\sigma} = \frac{x - D(x; \sigma)}{\sigma}$$
 
@@ -104,7 +104,7 @@ Scroll to see training examples across the range of $$\sigma$$ that EDM samples.
 <div class="tf-step" data-step="result" data-title="The whole recipe on the toy." markdown="1">
 **Put it all together** and compare three samplers at 17, 35 and 79 network calls:
 
-- DDIM with the part 4 network (part 7);
+- DDIM with the [part 4]({% post_url 2026-10-29-dm-4-ddpm %}) network (part 7);
 - EDM's Heun sampler ($$\rho = 7$$) with the same part 4 network, read as a denoiser;
 - EDM's sampler with a network trained with EDM's preconditioning, noise distribution and loss weighting.
 
@@ -139,7 +139,7 @@ On the toy (2,000 samples, distance to the true spiral; 2,000 real points: 0.025
 | network calls | 17 | 35 | 79 |
 | --- | --- | --- | --- |
 | DDIM, part 4 network | 0.074 | 0.053 | 0.040 |
-| Euler in VP time (part 6), part 4 network | 0.040 | 0.034 | 0.034 |
+| Euler in VP time ([part 6]({% post_url 2026-10-29-dm-6-sdes %})), part 4 network | 0.040 | 0.034 | 0.034 |
 | EDM sampler, part 4 network | 0.078 | 0.036 | 0.035 |
 | EDM sampler, EDM-trained network | 0.124 | 0.035 | 0.029 |
 
