@@ -584,6 +584,8 @@
   // A trainer for one network: each call to step() draws a fresh batch of data points x_0, a step t for each
   // (uniform on 1…T), and noise ε, and takes one Adam step on the mean squared error of Ho et al.'s L_simple:
   //   target "eps": ‖ε − ε_θ(x_t, t)‖²      target "x0": ‖x_0 − x̂_θ(x_t, t)‖²
+  // weighting "vlb" multiplies each example's error by the weight the true bound puts on its step,
+  // β_t² / (2σ_t² α_t (1 − ᾱ_t)) with σ_t² = β_t, rescaled to average 1 over t, instead of L_simple's flat weight.
   // Returns the batch loss. lr decays along a cosine to 10% over `steps`.
   function trainer(net, data, sch, opts = {}) {
     const batch = opts.batch ?? 256;
@@ -597,6 +599,15 @@
     const xt = new Float64Array(2 * batch);
     const eps = new Float64Array(2 * batch);
     const ts = new Int32Array(batch);
+    const weight = new Float64Array(sch.T + 1).fill(1);
+    if (opts.weighting === "vlb") {
+      let mean = 0;
+      for (let t = 1; t <= sch.T; t++) {
+        weight[t] = sch.beta[t] / (2 * sch.alpha[t] * (1 - sch.alphaBar[t]));
+        mean += weight[t] / sch.T;
+      }
+      for (let t = 1; t <= sch.T; t++) weight[t] /= mean;
+    }
     return {
       opt,
       step() {
@@ -631,8 +642,9 @@
         let loss = 0;
         for (let i = 0; i < 2 * batch; i++) {
           const r = cache.out[i] - target[i];
-          loss += r * r;
-          dout[i] = (2 * r) / batch;
+          const w = weight[sts[i >> 1]];
+          loss += w * r * r;
+          dout[i] = (2 * w * r) / batch;
         }
         const g = backward(net, cache, dout, batch);
         const progress = Math.min(1, opt.step / steps);

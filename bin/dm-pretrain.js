@@ -18,13 +18,14 @@ const OUT = path.join(__dirname, "../assets/js/diffusion/dm-weights.js");
 const NETS = {
   "swissroll-eps": { dataset: "swissroll", schedule: "linear", T: 200, target: "eps", steps: 30000, seed: 1 },
   "swissroll-x0": { dataset: "swissroll", schedule: "linear", T: 200, target: "x0", steps: 30000, seed: 1 },
+  "swissroll-vlb": { dataset: "swissroll", schedule: "linear", T: 200, target: "eps", weighting: "vlb", steps: 30000, seed: 1 },
 };
 
 function train(name, spec) {
   const data = DM.DATASETS[spec.dataset];
   const sch = DM.schedule(spec.schedule, spec.T);
   const net = DM.createNet(spec.seed);
-  const tr = DM.trainer(net, data, sch, { steps: spec.steps, target: spec.target, batch: 256, seed: spec.seed + 100 });
+  const tr = DM.trainer(net, data, sch, { steps: spec.steps, target: spec.target, weighting: spec.weighting, batch: 256, seed: spec.seed + 100 });
   const start = Date.now();
   let avg = 0;
   for (let i = 1; i <= spec.steps; i++) {
