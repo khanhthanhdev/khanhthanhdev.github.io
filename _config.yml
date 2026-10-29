@@ -169,6 +169,7 @@ exclude:
   - AGENTS.md
   - CLAUDE.md
   - ACTION-PLAN.md
+  - DIFFUSION-SERIES-PLAN.md
   - ANALYTICS.md
   - QUICKSTART.md
   - SEO.md
