@@ -230,20 +230,14 @@
   const bad = (text) => h("span", { class: "rsa-bad", text: `✗ ${text}` });
 
   // Superscript power as DOM: base^exp mod n
-  const power = (base, exp, n) =>
-    h("span", { class: "rsa-mono" }, `${fmt(base)}`, h("sup", { text: String(exp) }), ` mod ${fmt(n)}`);
+  const power = (base, exp, n) => h("span", { class: "rsa-mono" }, `${fmt(base)}`, h("sup", { text: String(exp) }), ` mod ${fmt(n)}`);
 
   function powTable(base, exp, n, label) {
     const { rows } = powSteps(base, exp, n);
     return table(
       ["bit", "square", "× base?", "running value"],
       rows.map((r) => ({
-        cells: [
-          r.bit,
-          `${fmt(r.from)}² mod n = ${fmt(r.sq)}`,
-          r.bit === "1" ? `${fmt(r.sq)} × ${fmt(mod(base, n))} mod n` : "—",
-          fmt(r.x),
-        ],
+        cells: [r.bit, `${fmt(r.from)}² mod n = ${fmt(r.sq)}`, r.bit === "1" ? `${fmt(r.sq)} × ${fmt(mod(base, n))} mod n` : "—", fmt(r.x)],
         muted: r.bit === "0",
       })),
       { label, tall: rows.length > 12 }
@@ -370,7 +364,10 @@
           "03",
           "Compute φ(n) = (p − 1)(q − 1)",
           line(mono(`φ(n) = ${fmt(pv - 1n)} × ${fmt(qv - 1n)} = `), mono(fmt(phi), "is-key")),
-          h("p", { class: "rsa-note", text: "This counts the numbers below n that share no factor with it. Only someone who knows p and q can work it out quickly." })
+          h("p", {
+            class: "rsa-note",
+            text: "This counts the numbers below n that share no factor with it. Only someone who knows p and q can work it out quickly.",
+          })
         )
       );
 
@@ -445,15 +442,8 @@
             })),
             { label: "extended Euclid table", tall: inv.rows.length > 12 }
           ),
-          line(
-            mono(inv.t < 0n ? `t = ${fmt(inv.t)}, and ${fmt(inv.t)} + ${fmt(phi)} = ` : "d = "),
-            mono(fmt(inv.d), "is-key")
-          ),
-          line(
-            mono(`e × d = ${fmt(ev)} × ${fmt(inv.d)} = ${fmt(ev * inv.d)} = ${fmt(k)} × ${fmt(phi)} + 1`),
-            " ",
-            ok("e × d ≡ 1 (mod φ)")
-          )
+          line(mono(inv.t < 0n ? `t = ${fmt(inv.t)}, and ${fmt(inv.t)} + ${fmt(phi)} = ` : "d = "), mono(fmt(inv.d), "is-key")),
+          line(mono(`e × d = ${fmt(ev)} × ${fmt(inv.d)} = ${fmt(ev * inv.d)} = ${fmt(k)} × ${fmt(phi)} + 1`), " ", ok("e × d ≡ 1 (mod φ)"))
         )
       );
 
@@ -553,7 +543,10 @@
         if (cipher.input.dataset.auto === "true") cipher.input.value = String(c);
         enc.append(
           line(mono("c = m"), h("sup", { class: "rsa-mono", text: "e" }), mono(" mod n = "), power(m, key.e, key.n)),
-          h("p", { class: "rsa-note", text: `e = ${fmt(key.e)} is ${key.e.toString(2)} in binary. Read it left to right: square every step, and also multiply by m when the bit is 1.` }),
+          h("p", {
+            class: "rsa-note",
+            text: `e = ${fmt(key.e)} is ${key.e.toString(2)} in binary. Read it left to right: square every step, and also multiply by m when the bit is 1.`,
+          }),
           powTable(m, key.e, key.n, "square and multiply for encryption"),
           line(mono("c = "), mono(fmt(c), "is-key"))
         );
@@ -567,7 +560,10 @@
       const back = modPow(c, key.d, key.n);
       dec.append(
         line(mono("m = c"), h("sup", { class: "rsa-mono", text: "d" }), mono(" mod n = "), power(c, key.d, key.n)),
-        h("p", { class: "rsa-note", text: `d has ${bits(key.d)} bits, so this takes ${bits(key.d)} squarings, never ${fmt(key.d)} multiplications.` }),
+        h("p", {
+          class: "rsa-note",
+          text: `d has ${bits(key.d)} bits, so this takes ${bits(key.d)} squarings, never ${fmt(key.d)} multiplications.`,
+        }),
         powTable(c, key.d, key.n, "square and multiply for decryption"),
         line(
           mono("m = "),
@@ -628,12 +624,7 @@
     }
 
     function render() {
-      keyLine.replaceChildren(
-        "Public key ",
-        mono(`(n = ${fmt(key.n)}, e = ${fmt(key.e)})`),
-        " · private key ",
-        mono(`d = ${fmt(key.d)}`)
-      );
+      keyLine.replaceChildren("Public key ", mono(`(n = ${fmt(key.n)}, e = ${fmt(key.e)})`), " · private key ", mono(`d = ${fmt(key.d)}`));
       if (mode === "number") renderNumber();
       else renderText();
     }
@@ -763,7 +754,10 @@
         const q = n / factor;
         const phi = (p - 1n) * (q - 1n);
         const found = [line(mono(`n = ${fmt(p)} × ${fmt(q)}`), " ", ok("factored"))];
-        if (!isPrime(q)) found.push(h("p", { class: "rsa-note", text: `${fmt(q)} is not prime, so n has more than two prime factors and is not a normal RSA modulus.` }));
+        if (!isPrime(q))
+          found.push(
+            h("p", { class: "rsa-note", text: `${fmt(q)} is not prime, so n has more than two prime factors and is not a normal RSA modulus.` })
+          );
         else if (e !== null && e > 1n && gcd(e, phi) === 1n) {
           const d = inverseSteps(e, phi).d;
           found.push(

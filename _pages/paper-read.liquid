@@ -1,0 +1,59 @@
+---
+layout: page
+title: paper-read
+permalink: /paper-read/
+description: A reading shelf of research papers, with English–Vietnamese translations and notes on the arguments behind the results.
+nav: true
+nav_order: 3
+css:
+  - /assets/css/paper-read.css
+papers:
+  - title: SuperMimic
+    subtitle: Scaling Humanoid Whole-Body Control with One Differentiable World Model
+    description: One shared world model for learning humanoid motion. A close reading of the method, compute comparisons, and scaling results.
+    topic: Humanoid control
+    year: 2026
+    reader: /supermimic_annotated.html
+    preview: /assets/img/paper-read/supermimic.jpg
+    source: https://arxiv.org/abs/2610.28480
+  - title: REPAIR
+    subtitle: "Beyond Policy Patches: Distilling RL Specialists into Vision-Language-Action Policies"
+    description: From precision-critical RL specialists to a single VLA policy. Notes on value-guided distillation, on-policy refinement, and the experimental evidence.
+    topic: Robot manipulation
+    year: 2026
+    reader: /repair-annotated.html
+    preview: /assets/img/paper-read/repair.jpg
+    source: https://www.alphaxiv.org/abs/2611.02777
+---
+<div class="paper-shelf-meta">
+  <span>{{ page.papers | size }} annotated papers</span>
+  <span>English / Tiếng Việt</span>
+</div>
+
+<ul class="paper-gallery" aria-label="Papers to read">
+  {% for paper in page.papers %}
+    <li class="paper-card">
+      <a class="paper-card-preview" href="{{ paper.reader | relative_url }}" aria-label="Read {{ paper.title | escape }} with annotations">
+        <img src="{{ paper.preview | relative_url }}" alt="" width="960" height="600" loading="lazy">
+        <span class="paper-card-format">Annotated reading · EN / VI</span>
+      </a>
+      <div class="paper-card-body">
+        <div class="paper-card-meta">
+          <span>{{ paper.topic }}</span>
+          <span>{{ paper.year }}</span>
+        </div>
+        <h2>
+          <a href="{{ paper.reader | relative_url }}">{{ paper.title }}</a>
+        </h2>
+        <p class="paper-card-subtitle">{{ paper.subtitle }}</p>
+        <p class="paper-card-description">{{ paper.description }}</p>
+        <div class="paper-card-links">
+          <a href="{{ paper.reader | relative_url }}">Read with annotations <span aria-hidden="true">→</span></a>
+          <a href="{{ paper.source }}"
+            >Original paper <span class="sr-only">({{ paper.title }})</span><span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </div>
+    </li>
+  {% endfor %}
+</ul>

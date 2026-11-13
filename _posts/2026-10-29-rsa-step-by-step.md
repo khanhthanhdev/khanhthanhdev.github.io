@@ -169,14 +169,14 @@ $$
 
 The first two rows are free: $$3120 \equiv 0 \times 17$$ and $$17 \equiv 1 \times 17$$. Then each new row is _the row two above, minus $$q$$ times the row above_, where $$q$$ is the quotient of the two remainders. Subtracting rows keeps the rule true.
 
-| row | quotient $$q$$ | remainder $$r$$ | $$t$$                    |
-| --- | -------------- | --------------- | ------------------------ |
-| 0   |                | 3120            | 0                        |
-| 1   |                | 17              | 1                        |
-| 2   | 183            | 9               | $$0 - 183 \times 1 = -183$$  |
-| 3   | 1              | 8               | $$1 - 1 \times (-183) = 184$$ |
+| row | quotient $$q$$ | remainder $$r$$ | $$t$$                               |
+| --- | -------------- | --------------- | ----------------------------------- |
+| 0   |                | 3120            | 0                                   |
+| 1   |                | 17              | 1                                   |
+| 2   | 183            | 9               | $$0 - 183 \times 1 = -183$$         |
+| 3   | 1              | 8               | $$1 - 1 \times (-183) = 184$$       |
 | 4   | 1              | **1**           | $$-183 - 1 \times 184 = $$ **−367** |
-| 5   | 8              | 0               |                          |
+| 5   | 8              | 0               |                                     |
 
 Row 4 has remainder 1, so $$1 \equiv -367 \times 17 \pmod{3120}$$. The inverse is $$-367$$, and adding 3120 to make it positive:
 
@@ -192,13 +192,13 @@ So Bob's **public key** is $$(n, e) = (3233, 17)$$ and his **private key** is $$
 
 Alice wants to send $$m = 65$$ (the ASCII code for "A"). She computes $$c = 65^{17} \bmod 3233$$ with square and multiply. In binary, $$17 = 10001_2$$.
 
-| bit | square                         | multiply by 65?              | running value |
-| --- | ------------------------------ | ---------------------------- | ------------- |
-| 1   | $$1^2 = 1$$                    | $$1 \times 65 = 65$$         | 65            |
-| 0   | $$65^2 = 4225 \to 992$$        |                              | 992           |
-| 0   | $$992^2 = 984064 \to 1232$$    |                              | 1232          |
-| 0   | $$1232^2 = 1517824 \to 1547$$  |                              | 1547          |
-| 1   | $$1547^2 = 2393209 \to 789$$   | $$789 \times 65 = 51285 \to 2790$$ | **2790**  |
+| bit | square                        | multiply by 65?                    | running value |
+| --- | ----------------------------- | ---------------------------------- | ------------- |
+| 1   | $$1^2 = 1$$                   | $$1 \times 65 = 65$$               | 65            |
+| 0   | $$65^2 = 4225 \to 992$$       |                                    | 992           |
+| 0   | $$992^2 = 984064 \to 1232$$   |                                    | 1232          |
+| 0   | $$1232^2 = 1517824 \to 1547$$ |                                    | 1547          |
+| 1   | $$1547^2 = 2393209 \to 789$$  | $$789 \times 65 = 51285 \to 2790$$ | **2790**      |
 
 (The arrow means "take the remainder mod 3233".) Five steps instead of sixteen multiplications, and no number ever grows past $$3233^2$$.
 

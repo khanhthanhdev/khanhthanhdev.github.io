@@ -1,0 +1,117 @@
+.paper-shelf-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--global-divider-color);
+  color: var(--global-text-color-light);
+  font-size: 0.85rem;
+}
+
+.paper-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.paper-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--global-divider-color);
+  border-radius: 0.75rem;
+  background: var(--global-card-bg-color);
+}
+
+.paper-card-preview {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-bottom: 1px solid var(--global-divider-color);
+  background: #f6f3ed;
+}
+
+.paper-card-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  object-position: top;
+}
+
+.paper-card-format {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.25rem;
+  background: #243042;
+  color: #fff;
+  font-size: 0.7rem;
+}
+
+.paper-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.paper-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  color: var(--global-text-color-light);
+  font-size: 0.75rem;
+}
+
+.paper-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.paper-card h2 a {
+  color: var(--global-text-color);
+}
+
+.paper-card-subtitle {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.paper-card-description {
+  margin-bottom: 1.5rem;
+  color: var(--global-text-color-light);
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+
+.paper-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--global-divider-color);
+  font-size: 0.8rem;
+}
+
+.paper-card a:focus-visible {
+  outline: 3px solid var(--global-theme-color);
+  outline-offset: -3px;
+}
+
+@media (max-width: 600px) {
+  .paper-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
