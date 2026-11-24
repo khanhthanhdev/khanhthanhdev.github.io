@@ -2,5 +2,8 @@
   Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"
   Link: </llms.txt>; rel="describedby"; type="text/plain"
 
+/assets/js/robot-policy/lib/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
 /.well-known/api-catalog
   Content-Type: application/linkset+json; charset=utf-8
