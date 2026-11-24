@@ -4,7 +4,7 @@ title: about
 permalink: /
 subtitle: Electrical and Computer Engineering Student, VinUniversity, Hanoi, Vietnam
 description: >
-  Tran Khanh Thanh (Trần Khánh Thành / Thanh Tran / khanhthanhdev) is an Electrical and Computer Engineering student at VinUniversity, Hanoi, working on AI agents, robotics, and full-stack systems.
+  Tran Khanh Thanh (khanhthanhdev) is an Electrical and Computer Engineering student at VinUniversity, Hanoi, working on AI agents, robotics, and full-stack systems.
 keywords: "Tran Khanh Thanh, Trần Khánh Thành, Thanh Tran, Thành Trần, thanhkt, khanhthanhdev, Khanh Thanh, VinUniversity ECE, AI agents, robotics"
 profile:
   align: right
@@ -26,9 +26,9 @@ latest_projects:
   limit: 3 # leave blank to include all the projects
 ---
 
-Hi, I am **Tran Khanh Thanh** (Vietnamese: **Trần Khánh Thành**; also known as **khanhthanhdev**) - a **sophomore Electrical and Computer Engineering student at VinUniversity** in Hanoi, Vietnam. I am interested in **robotics**, **AI agents**, and **full-stack systems** that solve real-world problems.
+Hi, I am **Tran Khanh Thanh** (**khanhthanhdev**) - a **sophomore Electrical and Computer Engineering student at VinUniversity** in Hanoi, Vietnam. I am interested in **robotics**, **AI agents**, and **full-stack systems** that solve real-world problems.
 
-My current research focuses on **AI agents and robotics**, especially solving and accelerating traditional processes using AI Agents.
+My current research focuses on **Physical AI and robotics**, especially solving and accelerating traditional processes using AI.
 
 Some notable things worth mentioning:
 

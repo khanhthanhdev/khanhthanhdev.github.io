@@ -6,7 +6,7 @@ description: "How our team connected a stable robot workspace, human demonstrati
 tags: [robotics, imitation-learning, vla, turbovla, sim2real, mujoco, isaac-lab, lerobot, teleoperation]
 category: work
 importance: 1
-img: /assets/img/projects/6dof-robot/thumbnail.jpg
+img: /assets/img/projects/6dof-robot/setup_1.jpg
 github: https://github.com/khanhthanhdev/lerobot-nexarm
 toc:
   sidebar: true
@@ -32,7 +32,7 @@ flowchart LR
 
 I designed an aluminum-extrusion gantry to hold the arm bases and cameras in fixed positions. The overhead camera captures the full table, the front camera shows the gripper's approach, and a wrist camera helps when the arm blocks the other views. Keeping those viewpoints stable makes demonstrations easier to compare across sessions and with simulation.
 
-{% include figure.liquid path="/assets/img/projects/6dof-robot/workspace-setup.jpg" title="NexArm workspace with the gantry, leader and follower arms, and camera mounts" class="img-fluid rounded z-depth-1 my-3" %}
+{% include figure.liquid path="/assets/img/projects/6dof-robot/setup_1.jpg" title="NexArm workspace with the gantry, leader and follower arms, and camera mounts" class="img-fluid rounded z-depth-1 my-3" %}
 
 <div class="row my-3">
   <div class="col-sm-6 mt-3 mt-md-0">
