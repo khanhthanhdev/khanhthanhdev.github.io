@@ -1,13 +1,19 @@
 # NexArm project media
 
-- `thumbnail.jpg`: project card image
-- `workspace-setup.jpg`: assembled workstation
+- `setup_1.jpg`: optimized workstation photo (1600×1056), used for both the project card and workspace section
+- `thumbnail.jpg` and `workspace-setup.jpg`: copies of the same optimized photo for existing references
 - `cad-workspace-fusion360.jpg` and `gantry-rig-cad-render.png`: gantry design
 - `wrist-camera-mount.jpg`: wrist camera bracket
 - `robotics-lab-team.jpg`: project team
 - `teleop-poster.webp`: preview frame for the teleoperation video
+- `20261030_162831.jpg`: additional project photo, resized to 1600×1200
 
 The demonstration videos are in `assets/video/`.
+
+- `20261118_172224.mp4`: additional project recording, exported as 720×1280 H.264 at 30 fps with AAC audio and fast start for web playback.
+- `realsense-depth-rgb-stream.mp4`: depth recording; `VID_20261007_181306_124.mp4` contained the same encoded video stream and has been removed from the image folder.
+
+For new video embeds, use `controls`, `playsinline`, and `preload="none"` so the page does not download the recording before playback. These additional assets are ready to embed but are not currently used in the article.
 
 ## Video quality and size
 
@@ -24,6 +30,12 @@ ffmpeg -i "$TELEOP_SOURCE" -map 0:v:0 -map '0:a:0?' -vf fps=30 \
 
 ffmpeg -ss 6 -i "$TELEOP_SOURCE" -frames:v 1 -c:v libwebp -quality 82 \
   assets/img/projects/6dof-robot/teleop-poster.webp
+
+# Export the additional recording from its original source.
+ffmpeg -i "$RECORDING_SOURCE" -map 0:v:0 -map '0:a:0?' \
+  -vf "scale=720:-2,fps=30" -c:v libx264 -preset slow -crf 26 \
+  -pix_fmt yuv420p -c:a aac -b:a 64k -movflags +faststart \
+  assets/video/20261118_172224.mp4
 
 # The depth recording is already efficient H.264: preserve its quality without re-encoding.
 ffmpeg -i "$DEPTH_SOURCE" -map 0:v:0 -c:v copy -an -movflags +faststart \
