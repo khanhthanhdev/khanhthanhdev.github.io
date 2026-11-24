@@ -6,14 +6,15 @@
 - `wrist-camera-mount.jpg`: wrist camera bracket
 - `robotics-lab-team.jpg`: project team
 - `teleop-poster.webp`: preview frame for the teleoperation video
+- `policy-rollout-poster.webp`: preview frame for the policy rollout video
 - `20261030_162831.jpg`: additional project photo, resized to 1600×1200
 
 The demonstration videos are in `assets/video/`.
 
-- `20261118_172224.mp4`: additional project recording, exported as 720×1280 H.264 at 30 fps with AAC audio and fast start for web playback.
+- `20261118_172224.mp4`: policy rollout demo embedded in the article, exported as 720×1280 H.264 at 30 fps with AAC audio and fast start for web playback.
 - `realsense-depth-rgb-stream.mp4`: depth recording; `VID_20261007_181306_124.mp4` contained the same encoded video stream and has been removed from the image folder.
 
-For new video embeds, use `controls`, `playsinline`, and `preload="none"` so the page does not download the recording before playback. These additional assets are ready to embed but are not currently used in the article.
+For new video embeds, use `controls`, `playsinline`, and `preload="none"` so the page does not download the recording before playback. The additional photo is available for future use; the policy rollout video is embedded in the article.
 
 ## Video quality and size
 

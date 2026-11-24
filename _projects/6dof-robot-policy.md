@@ -69,7 +69,25 @@ We also built a MuJoCo scene for a three-bowl stacking task. Recorded joint traj
 
 ## Policy training and evaluation
 
-The project includes an ACT path for learning from camera views and robot state, plus a TurboVLA path that also accepts a task instruction. Real and simulated demonstrations can be used together during training. The diagram shows the intended flow through evaluation; this page does not claim a measured physical success rate for a trained policy.
+The project includes an ACT path for learning from camera views and robot state, plus a TurboVLA path that also accepts a task instruction. Real and simulated demonstrations can be used together during training. The video below shows a policy rollout on NexArm.
+
+<div class="my-4">
+  <video
+    src="{{ '/assets/video/20261118_172224.mp4' | relative_url | bust_file_cache }}"
+    poster="{{ '/assets/img/projects/6dof-robot/policy-rollout-poster.webp' | relative_url | bust_file_cache }}"
+    controls
+    playsinline
+    preload="none"
+    width="720"
+    height="1280"
+    class="d-block mx-auto rounded z-depth-1 shadow-sm"
+    style="width: 100%; max-width: 420px; height: auto;"
+    aria-label="NexArm policy rollout demonstration"
+  >
+    <a href="{{ '/assets/video/20261118_172224.mp4' | relative_url | bust_file_cache }}">Watch the policy rollout demonstration.</a>
+  </video>
+  <p class="text-muted mt-2 small">Policy rollout demonstration on NexArm.</p>
+</div>
 
 The [robot policy explorer]({{ '/works/robot-policy/' | relative_url }}) walks through one control cycle of [ACT]({{ '/works/robot-policy/act/' | relative_url }}) and [TurboVLA]({{ '/works/robot-policy/turbovla/' | relative_url }}) step by step, next to a 3D model of the NexArm in the bowl-stacking scene.
 
