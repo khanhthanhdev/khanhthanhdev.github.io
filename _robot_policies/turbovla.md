@@ -8,14 +8,14 @@ order: 2
 policy:
   horizon: 16
   execute: 8
-  fps: 30
+  fps: 20
 facts:
   - label: actions per chunk
     value: "16"
   - label: actions run before re-planning
     value: "8"
   - label: control rate
-    value: 30 Hz
+    value: 20 Hz
   - label: vision tokens (3 cameras)
     value: "588"
   - label: backbone
@@ -28,7 +28,7 @@ steps:
     body: >-
       TurboVLA reads the cameras, the joint state **and the task instruction**. DINOv3 encodes the images, a frozen BERT
       encodes the text, six interaction layers let each modality attend to the other, and a small decoder predicts 16
-      future actions. Only the first 8 are run, about a quarter of a second, before the policy sees the scene again.
+      future actions. Only the first 8 are run, 0.4 seconds of motion, before the policy sees the scene again.
     formulas:
       - '\hat{A}_t = \pi_\theta\big(I_t^{1..V},\ \ell,\ s_t\big) \in [-1, 1]^{16 \times 6}'
     where: >-
@@ -214,16 +214,16 @@ steps:
     title: Run 8, then infer again
     body: >-
       The min-max statistics turn the chunk back into joint and gripper targets. `rollout_turbovla.py` runs the first 8
-      (`--open-loop-steps 8`) at 30 Hz and throws the other 8 away, then captures new frames and runs the whole network
+      (`--open-loop-steps 8`) at 20 Hz and throws the other 8 away, then captures new frames and runs the whole network
       again. In the 3D view, the dots ahead of the gripper are the actions still to run before the next inference.
     formulas:
       - 'a = \tfrac{1}{2}(\hat a + 1)\,(a_{\max} - a_{\min}) + a_{\min}'
-      - '\Delta t_{\text{replan}} = 8 \times \tfrac{1}{30}\,\text{s} \approx 0.27\,\text{s}'
-    shapes: "8 × 33 ms = 0.27 s between observations"
+      - '\Delta t_{\text{replan}} = 8 \times \tfrac{1}{20}\,\text{s} = 0.4\,\text{s}'
+    shapes: "8 × 50 ms = 0.4 s between observations"
     detail: |-
-      Re-planning every 8 steps means the policy looks at the scene 3.75 times per second instead of once every 3.3 seconds
-      as with ACT, so it can react to a bowl that moved. The cost is one network pass per 0.27 s of motion instead of per
-      3.3 s. The paper's 31 ms latency was measured on an RTX 4090 in its LIBERO setup; on the computer driving the NexArm,
+      Re-planning every 8 steps means the policy looks at the scene 2.5 times per second instead of once every 5 seconds
+      as with ACT, so it can react to a bowl that moved. The cost is one network pass per 0.4 s of motion instead of per
+      5 s. The paper's 31 ms latency was measured on an RTX 4090 in its LIBERO setup; on the computer driving the NexArm,
       and with three cameras, it should be measured again, because it adds directly to the time between observing and acting.
     bounds: [832, 426, 408, 304]
     stage:

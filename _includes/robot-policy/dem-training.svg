@@ -1,0 +1,190 @@
+<svg viewBox="0 0 1610 958" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="dem-train-title dem-train-desc">
+  <title id="dem-train-title">DEM training step</title>
+  <desc id="dem-train-desc">Real stacking demonstrations with the idle start trimmed give a 16-step action chunk per sample. The chunk is mixed with Gaussian noise at a random time, a Jacobian-vector product through the head gives the MeanFlow target, and an adaptive-weighted squared error plus a dispersive term is the loss. History and camera views can be hidden in a fraction of samples. AdamW with warm-up and cosine decay updates the head and the vision encoder, NeoBERT stays frozen, and an exponential moving average of the weights is what runs on the arm.</desc>
+  <defs>
+    <marker id="dem-train-ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="ah" d="M0,1 L10,5 L0,9 z" />
+    </marker>
+  </defs>
+  <rect class="tick" x="40" y="22" width="6" height="34" />
+  <text class="H" x="62" y="51">DEM learns to jump from noise to a demonstrated chunk.</text>
+  <g aria-hidden="true">
+    <rect class="op c-image" x="62" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="86" y="89">IMAGE</text>
+    <rect class="op c-text" x="173" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="197" y="89">TEXT</text>
+    <rect class="op c-state" x="273" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="297" y="89">JOINT STATE</text>
+    <rect class="op c-latent" x="447" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="471" y="89">NOISE</text>
+    <rect class="op-a" x="563" y="76" width="14" height="14" rx="2" />
+    <text class="C" x="587" y="89">ACTIONS</text>
+  </g>
+  <g aria-hidden="true">
+    <rect class="badge" x="1449" y="26" width="121" height="30" rx="5" />
+    <text class="C" x="1509.5" y="46" text-anchor="middle">SCHEMATIC</text>
+  </g>
+
+  <path class="ln" d="M510 315 H568" marker-end="url(#dem-train-ah)" />
+  <path class="ln" d="M1040 315 H1098" marker-end="url(#dem-train-ah)" />
+  <path class="ln" d="M1335.0 480 V506 H275 V562" marker-end="url(#dem-train-ah)" />
+  <path class="ln" d="M510 729 H568" marker-end="url(#dem-train-ah)" />
+  <path class="ln" d="M1040 729 H1098" marker-end="url(#dem-train-ah)" />
+
+  <g data-step="t-data">
+    <text class="CL" x="40" y="136">1 · data</text>
+    <g>
+      <rect class="sk" x="40" y="150" width="470" height="330" rx="10" />
+    </g>
+    <text class="T" x="62" y="190">Real demos, idle start cut</text>
+    <rect class="sk f-cell" x="62" y="214" width="60" height="40" rx="3" />
+    <text class="CLs" x="92" y="239" text-anchor="middle">IDLE</text>
+    <rect class="op c-image" x="126" y="214" width="362" height="40" rx="3" />
+    <text class="S" x="307" y="239" text-anchor="middle">one episode · 20 fps · 3 cameras</text>
+    <path class="ln-t" d="M112 206 V262" />
+    <text class="Ms" x="112" y="280" text-anchor="start">cut 3 frames before the first move</text>
+    <g class="seq">
+      <rect class="op-a" x="182" y="300" width="16" height="34" rx="1" style="--j:0" />
+      <rect class="op-a" x="201" y="300" width="16" height="34" rx="1" style="--j:4" />
+      <rect class="op-a" x="220" y="300" width="16" height="34" rx="1" style="--j:8" />
+      <rect class="op-a" x="239" y="300" width="16" height="34" rx="1" style="--j:12" />
+      <rect class="op-a" x="258" y="300" width="16" height="34" rx="1" style="--j:16" />
+      <rect class="op-a" x="277" y="300" width="16" height="34" rx="1" style="--j:20" />
+      <rect class="op-a" x="296" y="300" width="16" height="34" rx="1" style="--j:24" />
+      <rect class="op-a" x="315" y="300" width="16" height="34" rx="1" style="--j:28" />
+      <rect class="op-a" x="334" y="300" width="16" height="34" rx="1" style="--j:32" />
+      <rect class="op-a" x="353" y="300" width="16" height="34" rx="1" style="--j:36" />
+      <rect class="op-a" x="372" y="300" width="16" height="34" rx="1" style="--j:40" />
+      <rect class="op-a" x="391" y="300" width="16" height="34" rx="1" style="--j:44" />
+      <rect class="op-a" x="410" y="300" width="16" height="34" rx="1" style="--j:48" />
+      <rect class="op-a" x="429" y="300" width="16" height="34" rx="1" style="--j:52" />
+      <rect class="op-a" x="448" y="300" width="16" height="34" rx="1" style="--j:56" />
+      <rect class="op-a" x="467" y="300" width="16" height="34" rx="1" style="--j:60" />
+    </g>
+    <rect class="op op-b c-image" x="126" y="300" width="40" height="34" rx="3" />
+    <text class="Ms" x="146" y="350" text-anchor="middle">o</text>
+    <text class="Ms" x="332" y="356" text-anchor="middle">next 16 actions</text>
+    <text class="M" x="62" y="458">147 train · 17 held out · 32,016 frames</text>
+  </g>
+  <g data-step="t-noise">
+    <text class="CL" x="570" y="136">2 · noise and time</text>
+    <g>
+      <rect class="sk" x="570" y="150" width="470" height="330" rx="10" />
+    </g>
+    <text class="T" x="592" y="190">Mix the chunk with noise</text>
+    <rect class="op-a" x="592" y="256" width="56" height="48" rx="3" />
+    <text class="S" x="620" y="285" text-anchor="middle">x</text>
+    <rect class="op c-latent" x="962" y="256" width="56" height="48" rx="3" />
+    <text class="S" x="990" y="285" text-anchor="middle">ε</text>
+    <path class="axis" d="M652 280 H958" />
+    <circle class="op c-latent" cx="872.3" cy="280" r="7" />
+    <circle class="op" cx="759.1" cy="280" r="5" />
+    <text class="Ms" x="872.3" y="264" text-anchor="middle">z_t</text>
+    <text class="Ms" x="759.1" y="304" text-anchor="middle">r</text>
+    <text class="Ms" x="872.3" y="304" text-anchor="middle">t</text>
+    <text class="Ms" x="655" y="324">t = 0 · data</text>
+    <text class="Ms" x="955" y="324" text-anchor="end">t = 1 · noise</text>
+    <text class="S" x="592" y="386">z_t = (1 − t) x + t ε</text>
+    <text class="S" x="832" y="386">v = ε − x</text>
+    <text class="M" x="592" y="458">logit-normal (−0.4, 1) · r = t in 50 %</text>
+  </g>
+  <g data-step="t-target">
+    <text class="CL" x="1100" y="136">3 · MeanFlow target</text>
+    <g>
+      <rect class="sk" x="1100" y="150" width="470" height="330" rx="10" />
+    </g>
+    <text class="T" x="1122" y="190">The head sets its own target</text>
+    <rect class="op" x="1122" y="212" width="200" height="52" rx="4" />
+    <text class="S" x="1222" y="244" text-anchor="middle">u_θ(z_t, r, t | C)</text>
+    <path class="ln-t" d="M1322 238 L1358 238" marker-end="url(#dem-train-ah)" />
+    <rect class="op" x="1362" y="212" width="186" height="52" rx="4" />
+    <text class="S" x="1455" y="236" text-anchor="middle">jvp along</text>
+    <text class="Ms" x="1455" y="254" text-anchor="middle">(v, 0, 1)</text>
+    <path class="ln-t" d="M1455 268 L1455 298" marker-end="url(#dem-train-ah)" />
+    <rect class="op op-b" x="1242" y="300" width="306" height="52" rx="4" />
+    <text class="S" x="1395" y="332" text-anchor="middle">u_tgt = sg(v − (t − r) du/dt)</text>
+    <path class="ln-t" d="M1222 268 L1222 386" marker-end="url(#dem-train-ah)" />
+    <text class="S" x="1234" y="396" text-anchor="start">u   vs   u_tgt</text>
+    <text class="M" x="1122" y="458">torch.func.jvp · head and loss in fp32</text>
+  </g>
+  <g data-step="t-loss">
+    <text class="CL" x="40" y="550">4 · loss</text>
+    <g>
+      <rect class="sk" x="40" y="564" width="470" height="330" rx="10" />
+    </g>
+    <text class="T" x="62" y="604">Adaptive weight + dispersion</text>
+    <rect class="op" x="62" y="688" width="18" height="36" rx="1" />
+    <rect class="op-a" x="62" y="732" width="18" height="54.9" rx="1" />
+    <rect class="op" x="88" y="676" width="18" height="48" rx="1" />
+    <rect class="op-a" x="88" y="732" width="18" height="46.4" rx="1" />
+    <rect class="op" x="114" y="632" width="18" height="92" rx="1" />
+    <rect class="op-a" x="114" y="732" width="18" height="36.5" rx="1" />
+    <rect class="op" x="140" y="692" width="18" height="32" rx="1" />
+    <rect class="op-a" x="140" y="732" width="18" height="60.2" rx="1" />
+    <rect class="op" x="166" y="664" width="18" height="60" rx="1" />
+    <rect class="op-a" x="166" y="732" width="18" height="42.1" rx="1" />
+    <rect class="op" x="192" y="680" width="18" height="44" rx="1" />
+    <rect class="op-a" x="192" y="732" width="18" height="48.5" rx="1" />
+    <rect class="op" x="218" y="684" width="18" height="40" rx="1" />
+    <rect class="op-a" x="218" y="732" width="18" height="51.2" rx="1" />
+    <rect class="op" x="244" y="648" width="18" height="76" rx="1" />
+    <rect class="op-a" x="244" y="732" width="18" height="38.7" rx="1" />
+    <text class="Ms" x="62" y="816">δ per sample (top) · weight w (bottom)</text>
+    <circle class="op c-latent" cx="370" cy="674" r="6" />
+    <circle class="op c-latent" cx="420" cy="654" r="6" />
+    <circle class="op c-latent" cx="450" cy="704" r="6" />
+    <circle class="op c-latent" cx="390" cy="734" r="6" />
+    <circle class="op c-latent" cx="435" cy="759" r="6" />
+    <circle class="op c-latent" cx="470" cy="674" r="6" />
+    <text class="Ms" x="427" y="792" text-anchor="middle">spread apart</text>
+    <text class="M" x="62" y="872">w = 1/√(δ + 1e-3) · + 0.25 L_disp</text>
+  </g>
+  <g data-step="t-masks">
+    <text class="CL" x="570" y="550">5 · masking</text>
+    <g>
+      <rect class="sk" x="570" y="564" width="470" height="330" rx="10" />
+    </g>
+    <text class="T" x="592" y="604">Hide history and views</text>
+    <rect class="sk f-cell" x="592" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="614" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="636" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="658" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="680" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="702" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="724" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="746" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="768" y="628" width="18" height="34" rx="1" />
+    <rect class="sk f-cell" x="790" y="628" width="18" height="34" rx="1" />
+    <text class="Ms" x="592" y="682">10 s of history · all hidden in 20 % of samples</text>
+    <rect class="sk f-cell" x="592" y="698" width="128" height="70" rx="4" />
+    <text class="CLs" x="656" y="738" text-anchor="middle">FRONT</text>
+    <rect class="op c-image" x="732" y="698" width="128" height="70" rx="4" />
+    <text class="CLs" x="796" y="738" text-anchor="middle">WRIST</text>
+    <rect class="sk f-cell" x="872" y="698" width="128" height="70" rx="4" />
+    <text class="CLs" x="936" y="738" text-anchor="middle">TOP</text>
+    <text class="Ms" x="592" y="794">front and top each hidden in 30 % of samples</text>
+    <text class="M" x="592" y="872">optional · needs global conditioning</text>
+  </g>
+  <g data-step="t-update">
+    <text class="CL" x="1100" y="550">6 · optimizer and EMA</text>
+    <g>
+      <rect class="sk" x="1100" y="564" width="470" height="330" rx="10" />
+    </g>
+    <text class="T" x="1122" y="604">Warm up, decay, average</text>
+    <rect class="op" x="1122" y="626" width="128" height="42" rx="4" />
+    <text class="S" x="1186" y="652" text-anchor="middle">clip 1.0</text>
+    <path class="ln-t" d="M1250 647 L1265 647" marker-end="url(#dem-train-ah)" />
+    <rect class="op" x="1271" y="626" width="128" height="42" rx="4" />
+    <text class="S" x="1335" y="652" text-anchor="middle">AdamW</text>
+    <path class="ln-t" d="M1399 647 L1414 647" marker-end="url(#dem-train-ah)" />
+    <rect class="op op-b" x="1420" y="626" width="128" height="42" rx="4" />
+    <text class="S" x="1484" y="652" text-anchor="middle">EMA 0.999</text>
+    <path class="axis" d="M1152 692 V802 H1548" />
+    <path class="curve-b draw" pathLength="1" d="M1152 802 L1154 796.7 L1156 791.4 L1157.9 786.1 L1159.9 780.8 L1161.9 775.5 L1163.9 770.2 L1165.9 764.9 L1167.8 759.6 L1169.8 754.3 L1171.8 749 L1173.8 743.7 L1175.8 738.4 L1177.7 733.1 L1179.7 727.8 L1181.7 722.5 L1183.7 717.2 L1185.7 711.9 L1187.6 706.6 L1189.6 701.3 L1191.6 696 L1193.6 696 L1195.6 696 L1197.5 696.1 L1199.5 696.1 L1201.5 696.2 L1203.5 696.3 L1205.5 696.4 L1207.4 696.5 L1209.4 696.7 L1211.4 696.8 L1213.4 697 L1215.4 697.2 L1217.3 697.4 L1219.3 697.6 L1221.3 697.8 L1223.3 698.1 L1225.3 698.3 L1227.2 698.6 L1229.2 698.9 L1231.2 699.2 L1233.2 699.5 L1235.2 699.9 L1237.1 700.2 L1239.1 700.6 L1241.1 701 L1243.1 701.4 L1245.1 701.8 L1247 702.2 L1249 702.6 L1251 703.1 L1253 703.6 L1255 704.1 L1256.9 704.6 L1258.9 705.1 L1260.9 705.6 L1262.9 706.1 L1264.9 706.7 L1266.8 707.2 L1268.8 707.8 L1270.8 708.4 L1272.8 709 L1274.8 709.6 L1276.7 710.2 L1278.7 710.9 L1280.7 711.5 L1282.7 712.2 L1284.7 712.9 L1286.6 713.5 L1288.6 714.2 L1290.6 714.9 L1292.6 715.6 L1294.6 716.4 L1296.5 717.1 L1298.5 717.8 L1300.5 718.6 L1302.5 719.4 L1304.5 720.1 L1306.4 720.9 L1308.4 721.7 L1310.4 722.5 L1312.4 723.3 L1314.4 724.1 L1316.3 724.9 L1318.3 725.8 L1320.3 726.6 L1322.3 727.4 L1324.3 728.3 L1326.2 729.1 L1328.2 730 L1330.2 730.9 L1332.2 731.7 L1334.2 732.6 L1336.1 733.5 L1338.1 734.4 L1340.1 735.3 L1342.1 736.2 L1344.1 737.1 L1346 738 L1348 738.9 L1350 739.8 L1352 740.7 L1354 741.6 L1355.9 742.5 L1357.9 743.5 L1359.9 744.4 L1361.9 745.3 L1363.9 746.2 L1365.8 747.2 L1367.8 748.1 L1369.8 749 L1371.8 749.9 L1373.8 750.8 L1375.7 751.8 L1377.7 752.7 L1379.7 753.6 L1381.7 754.5 L1383.7 755.5 L1385.6 756.4 L1387.6 757.3 L1389.6 758.2 L1391.6 759.1 L1393.6 760 L1395.5 760.9 L1397.5 761.8 L1399.5 762.7 L1401.5 763.6 L1403.5 764.5 L1405.4 765.4 L1407.4 766.3 L1409.4 767.1 L1411.4 768 L1413.4 768.9 L1415.3 769.7 L1417.3 770.6 L1419.3 771.4 L1421.3 772.2 L1423.3 773.1 L1425.2 773.9 L1427.2 774.7 L1429.2 775.5 L1431.2 776.3 L1433.2 777.1 L1435.1 777.9 L1437.1 778.6 L1439.1 779.4 L1441.1 780.2 L1443.1 780.9 L1445 781.6 L1447 782.4 L1449 783.1 L1451 783.8 L1453 784.5 L1454.9 785.1 L1456.9 785.8 L1458.9 786.5 L1460.9 787.1 L1462.9 787.8 L1464.8 788.4 L1466.8 789 L1468.8 789.6 L1470.8 790.2 L1472.8 790.8 L1474.7 791.3 L1476.7 791.9 L1478.7 792.4 L1480.7 792.9 L1482.7 793.4 L1484.6 793.9 L1486.6 794.4 L1488.6 794.9 L1490.6 795.4 L1492.6 795.8 L1494.5 796.2 L1496.5 796.6 L1498.5 797 L1500.5 797.4 L1502.5 797.8 L1504.4 798.1 L1506.4 798.5 L1508.4 798.8 L1510.4 799.1 L1512.4 799.4 L1514.3 799.7 L1516.3 799.9 L1518.3 800.2 L1520.3 800.4 L1522.3 800.6 L1524.2 800.8 L1526.2 801 L1528.2 801.2 L1530.2 801.3 L1532.2 801.5 L1534.1 801.6 L1536.1 801.7 L1538.1 801.8 L1540.1 801.9 L1542.1 801.9 L1544 802 L1546 802 L1548 802" />
+    <text class="Ms" x="1144" y="706" text-anchor="end">lr</text>
+    <text class="Ms" x="1154" y="822">warm-up 2k</text>
+    <text class="Ms" x="1548" y="822" text-anchor="end">cosine → 0 · 20k updates</text>
+    <text class="M" x="1122" y="872">head 5e-5 · vision 2.5e-5</text>
+  </g>
+  <text class="CL" x="40" y="934">source · lerobot_policy_dem · dem.head.meanflow · experiments/261117-dem-stack-bowls-real · click a block or use the arrow keys</text>
+</svg>

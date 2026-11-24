@@ -5,7 +5,7 @@ import test from "node:test";
 const site = (path) => new URL(`../_site/${path}`, import.meta.url);
 const repo = (path) => new URL(`../${path}`, import.meta.url);
 
-for (const model of ["act", "turbovla"]) {
+for (const model of ["act", "turbovla", "bsp", "dem"]) {
   test(`${model} page renders every step, its diagram group and all three panels`, async () => {
     const html = await readFile(site(`works/robot-policy/${model}/index.html`), "utf8");
     const steps = [...html.matchAll(/<li data-id="([a-z-]+)"/g)].map((match) => match[1]);
@@ -24,6 +24,8 @@ test("index lists every policy page", async () => {
 
   assert.match(html, /href="?\/works\/robot-policy\/act\/"?/);
   assert.match(html, /href="?\/works\/robot-policy\/turbovla\/"?/);
+  assert.match(html, /href="?\/works\/robot-policy\/bsp\/"?/);
+  assert.match(html, /href="?\/works\/robot-policy\/dem\/"?/);
 });
 
 // The minifier cannot parse ES modules and rewrites var() inside calc(), so these files must ship as written.
@@ -46,7 +48,8 @@ test("three.js bundle is tracked and served", async () => {
 test("NexArm asset decodes and the scripted motion reaches every IK target", async () => {
   const { buildRobot, buildScript, decodeGeometry } = await import("../assets/js/robot-policy/nexarm.js");
   const asset = JSON.parse(await readFile(repo("assets/robot/nexarm/nexarm.json"), "utf8"));
-  const buffer = await readFile(repo("assets/robot/nexarm/nexarm.bin"));
+  const { gunzipSync } = await import("node:zlib");
+  const buffer = gunzipSync(await readFile(repo("assets/robot/nexarm/nexarm.bin.gz")));
   const bin = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
 
   let triangles = 0;
@@ -55,7 +58,7 @@ test("NexArm asset decodes and the scripted motion reaches every IK target", asy
     triangles += geometry.index.count / 3;
     assert.ok(Number.isFinite(geometry.boundingSphere.radius));
   }
-  assert.ok(triangles > 10_000 && triangles < 60_000, `${triangles} triangles`);
+  assert.ok(triangles > 100_000 && triangles < 200_000, `${triangles} triangles`);
 
   const robot = buildRobot(asset);
   const script = buildScript(robot, asset);

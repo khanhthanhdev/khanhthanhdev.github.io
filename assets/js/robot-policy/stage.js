@@ -13,9 +13,11 @@ const LOOK = {
   accent_blue: { metalness: 0.15, roughness: 0.38 },
   gripper_jaw: { metalness: 0.1, roughness: 0.65 },
   gear_brass: { metalness: 0.85, roughness: 0.3 },
-  workcell_extrusion: { metalness: 0.7, roughness: 0.4 },
+  workcell_extrusion: { metalness: 0.75, roughness: 0.38 },
   workcell_panel: { metalness: 0, roughness: 0.92 },
-  workcell_plate: { metalness: 0.8, roughness: 0.35 },
+  workcell_plate: { metalness: 0.3, roughness: 0.55 },
+  table: { metalness: 0, roughness: 0.78 },
+  table_grommet: { metalness: 0.1, roughness: 0.5 },
 };
 
 const css = (el, name, fallback) => getComputedStyle(el).getPropertyValue(name).trim() || fallback;
@@ -72,21 +74,23 @@ function el(tag, cls, parent, text) {
 /**
  * Mount the stage into `container`.
  * policy: { name, horizon, execute, fps } (chunk length, actions run before re-planning, control rate)
+ * assetData: promise of [nexarm.json, inflated nexarm.bin.gz] from `assetUrl`, started by the caller so the download
+ * overlaps loading this module and three.js.
  */
-export async function mountStage(container, { assetUrl, policy }) {
-  const [asset, bin] = await Promise.all([
-    fetch(`${assetUrl}/nexarm.json`).then((r) => r.json()),
-    fetch(`${assetUrl}/nexarm.bin`).then((r) => r.arrayBuffer()),
-  ]);
+export async function mountStage(container, { assetUrl, policy, assetData }) {
+  const [asset, bin] = await assetData;
 
   const small = Math.min(window.innerWidth, window.innerHeight) < 700;
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // Four views render per frame (the stage and three camera feeds), so cap the pixel ratio below retina 2×.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // The shadow map is drawn once per frame, before the stage view, and reused by the camera feeds.
+  renderer.shadowMap.autoUpdate = false;
   renderer.domElement.className = "rp-stage-canvas";
   renderer.domElement.setAttribute("aria-hidden", "true");
   container.appendChild(renderer.domElement);
@@ -111,11 +115,30 @@ export async function mountStage(container, { assetUrl, policy }) {
     return materials.get(name);
   };
 
-  // Workcell, floor and bowls.
-  const floorMat = new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), floorMat);
+  // Workcell, oak tabletop and bowls. The table texture repeats `texrepeat` times per metre, as in MuJoCo.
+  let dirty = true;
+  const table = asset.scene.table;
+  const floorSize = 4;
+  const floorMat = material(table.material);
+  new THREE.TextureLoader().load(`${assetUrl}/${table.texture}`, (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(table.texrepeat[0] * floorSize, table.texrepeat[1] * floorSize);
+    tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    floorMat.map = tex;
+    floorMat.needsUpdate = true;
+    dirty = true;
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(floorSize, floorSize), floorMat);
   floor.receiveShadow = true;
   scene.add(floor);
+  for (const c of asset.scene.cylinders ?? []) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(c.size[0], c.size[0], 2 * c.size[1], 40), material(c.material));
+    m.rotation.x = Math.PI / 2;
+    m.position.fromArray(c.pos);
+    m.receiveShadow = true;
+    scene.add(m);
+  }
   const grid = new THREE.GridHelper(1.2, 24);
   grid.rotation.x = Math.PI / 2;
   grid.position.set(0, -0.2, 0.0005);
@@ -159,22 +182,34 @@ export async function mountStage(container, { assetUrl, policy }) {
     return f;
   });
 
-  // Lights.
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x404858, 0.55));
-  const key = new THREE.DirectionalLight(0xfff4e6, 2.1);
-  key.position.set(0.9, -1.1, 1.8);
-  key.target.position.set(0, -0.15, 0);
-  key.castShadow = true;
-  key.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
-  Object.assign(key.shadow.camera, { left: -0.7, right: 0.7, top: 0.7, bottom: -0.7, near: 0.5, far: 4 });
-  key.shadow.bias = -0.0004;
-  key.shadow.normalBias = 0.01;
-  scene.add(key, key.target);
-  const fill = new THREE.DirectionalLight(0xdfe8ff, 0.6);
-  fill.position.set(-1, -1.5, 0.8);
-  const rim = new THREE.DirectionalLight(0xffffff, 0.9);
+  // Lights from the workcell: the ceiling panel inside the frame (soft shadows) and the room fill through the open
+  // front, plus a dim hemisphere and rim so the dark links keep their shape in the orbit view.
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x5a5048, 0.6));
+  for (const l of asset.scene.lights ?? []) {
+    const pos = new THREE.Vector3().fromArray(l.pos);
+    const at = pos.clone().add(new THREE.Vector3().fromArray(l.dir));
+    if (l.type === "directional") {
+      const fill = new THREE.DirectionalLight(0xfff8f0, 1.1);
+      fill.position.copy(pos);
+      fill.target.position.copy(at);
+      scene.add(fill, fill.target);
+      continue;
+    }
+    const key = new THREE.SpotLight(0xfff6ec, 3.2, 0, THREE.MathUtils.degToRad(Math.min(l.cutoff, 85)), 0.75, 0);
+    key.position.copy(pos);
+    key.target.position.copy(at);
+    key.castShadow = l.castshadow;
+    key.shadow.mapSize.set(small ? 1024 : 1536, small ? 1024 : 1536);
+    key.shadow.focus = 0.55;
+    key.shadow.camera.near = 0.2;
+    key.shadow.camera.far = 1.6;
+    key.shadow.bias = -0.0006;
+    key.shadow.normalBias = 0.012;
+    scene.add(key, key.target);
+  }
+  const rim = new THREE.DirectionalLight(0xffffff, 0.6);
   rim.position.set(-1.2, 1, 1.4);
-  scene.add(fill, rim);
+  scene.add(rim);
 
   // Action chunk: one dot per predicted action; the executed prefix is drawn in the accent colour.
   const maxDots = Math.max(1, policy.horizon);
@@ -302,12 +337,16 @@ export async function mountStage(container, { assetUrl, policy }) {
 
   let spec = { shot: "hero", cams: true, chunk: true, frustums: false, joints: false };
   let playing = true;
+  let camsOn = true;
   let simTime = 0;
+  let shotTime = 0;
   let lastChunk = -1;
   let chunkBorn = 0;
   let visible = true;
   let width = 1;
   let height = 1;
+  // Camera-feed viewports in canvas pixels, measured once per layout change instead of every frame.
+  let camRects = null;
 
   const resize = () => {
     width = Math.max(1, container.clientWidth);
@@ -315,22 +354,30 @@ export async function mountStage(container, { assetUrl, policy }) {
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    camRects = null;
+    dirty = true;
   };
   resize();
   const ro = new ResizeObserver(resize);
   ro.observe(container);
+  ro.observe(camsRow);
   const io = new IntersectionObserver((entries) => (visible = entries[0].isIntersecting));
   io.observe(container);
 
+  // Theme colours are read here, on load and when the theme changes, never inside the render loop.
+  const executedColor = new THREE.Color();
+  const pendingColor = new THREE.Color();
   const applyTheme = () => {
     const bg = new THREE.Color(css(container, "--rp-stage-bg", "#e9ecef"));
     scene.background = bg;
     scene.fog = new THREE.Fog(bg, 2.2, 5);
-    floorMat.color.set(css(container, "--rp-stage-floor", "#d9dde2"));
     grid.material.color.set(css(container, "--rp-ink", "#18212c"));
     trail.material.color.set(css(container, "--rp-accent", "#e0a40b"));
     accent.set(css(container, "--rp-accent", "#e0a40b"));
     frustums.forEach((f) => f.material.color.copy(accent));
+    executedColor.copy(accent);
+    pendingColor.set(css(container, "--rp-pending", "#6a7380"));
+    dirty = true;
   };
   applyTheme();
   const mo = new MutationObserver(applyTheme);
@@ -338,9 +385,10 @@ export async function mountStage(container, { assetUrl, policy }) {
 
   const state = { q: [0, 0, 0, 0, 0], grip: 0, bowls: {} };
   const dummy = new THREE.Object3D();
-  const executedColor = new THREE.Color();
-  const pendingColor = new THREE.Color();
   const clock3 = new THREE.Clock();
+  const setText = (node, text) => {
+    if (node.textContent !== text) node.textContent = text;
+  };
 
   function updateChunk(now) {
     const step = Math.floor(simTime * policy.fps);
@@ -352,8 +400,6 @@ export async function mountStage(container, { assetUrl, policy }) {
     const start = chunk * policy.execute;
     const into = step - start;
     const reveal = Math.min(1, (now - chunkBorn) / 0.35);
-    executedColor.set(css(container, "--rp-accent", "#e0a40b"));
-    pendingColor.set(css(container, "--rp-pending", "#6a7380"));
     for (let k = 0; k < maxDots; k++) {
       const i = (start + k) % pathLen;
       dummy.position.fromArray(path, i * 3);
@@ -369,22 +415,27 @@ export async function mountStage(container, { assetUrl, policy }) {
     trailGeo.attributes.position.needsUpdate = true;
     trailGeo.setDrawRange(0, Math.max(0, Math.floor(maxDots * reveal)));
     chunkFill.style.width = `${(100 * Math.min(into, policy.execute)) / policy.execute}%`;
-    chunkText.textContent = `chunk ${chunk + 1} · action ${Math.min(into + 1, policy.execute)} of ${policy.execute} run · ${policy.horizon} predicted`;
+    setText(chunkText, `chunk ${chunk + 1} · action ${Math.min(into + 1, policy.execute)} of ${policy.execute} run · ${policy.horizon} predicted`);
+  }
+
+  function measureCams() {
+    const canvasRect = renderer.domElement.getBoundingClientRect();
+    camRects = CAMERA_ORDER.map((name) => {
+      const r = frames[name].getBoundingClientRect();
+      return { name, x: r.left - canvasRect.left, y: canvasRect.bottom - r.bottom, w: r.width, h: r.height };
+    }).filter((r) => r.w > 0 && r.h > 0);
   }
 
   function renderCams() {
-    const canvasRect = renderer.domElement.getBoundingClientRect();
+    if (!camRects) measureCams();
+    if (!camRects.length) return;
     renderer.setScissorTest(true);
     const fog = scene.fog;
     scene.fog = null;
-    for (const name of CAMERA_ORDER) {
-      const r = frames[name].getBoundingClientRect();
-      if (!r.width) continue;
-      const x = r.left - canvasRect.left;
-      const y = canvasRect.bottom - r.bottom;
-      renderer.setViewport(x, y, r.width, r.height);
-      renderer.setScissor(x, y, r.width, r.height);
-      renderer.render(scene, sensors[name]);
+    for (const r of camRects) {
+      renderer.setViewport(r.x, r.y, r.w, r.h);
+      renderer.setScissor(r.x, r.y, r.w, r.h);
+      renderer.render(scene, sensors[r.name]);
     }
     scene.fog = fog;
     renderer.setScissorTest(false);
@@ -397,33 +448,43 @@ export async function mountStage(container, { assetUrl, policy }) {
     const dt = Math.min(0.05, clock3.getDelta());
     if (!visible || document.hidden) return;
     const now = performance.now() / 1000;
-    if (playing) simTime += dt;
+    if (playing) {
+      simTime += dt;
+      shotTime += dt;
+    }
+
+    // The camera eases towards the current shot. When the motion is paused and the camera has arrived, nothing on
+    // screen changes, so the frame is skipped.
+    const goal = orbit.manual ? orbitGoal() : (shots[spec.shot] ?? shots.hero)(shotTime);
+    const k = 1 - Math.exp(-dt * (orbit.manual ? 14 : 2.6));
+    // Within 0.2 mm of the goal counts as arrived.
+    const settled = view.pos.distanceToSquared(goal.pos) < 4e-8 && view.target.distanceToSquared(goal.target) < 4e-8;
+    if (!playing && !dirty && settled && !drag) return;
+    dirty = false;
+    view.pos.lerp(goal.pos, k);
+    view.target.lerp(goal.target, k);
+    camera.position.copy(view.pos);
+    camera.lookAt(view.target);
 
     script.stateAt(simTime, state);
     for (const [name, v] of Object.entries(state.bowls)) bowls[name].position.copy(v);
     robot.tcp(tcp);
 
     const s = script.subtasks[state.subtask];
-    subtaskLabel.textContent = s ? `Subtask ${state.subtask + 1}/4 · ${s.name}` : "Ready pose";
-    clock.textContent = `t = ${state.time.toFixed(1)} s · ${policy.fps} Hz control`;
+    setText(subtaskLabel, s ? `Subtask ${state.subtask + 1}/4 · ${s.name}` : "Ready pose");
+    setText(clock, `t = ${state.time.toFixed(1)} s · ${policy.fps} Hz control`);
     if (spec.joints) {
-      state.q.forEach((v, i) => (jointRows[i].textContent = `${v >= 0 ? "+" : ""}${v.toFixed(2)} rad`));
-      jointRows[5].textContent = `${(state.grip * 1000).toFixed(1)} mm`;
+      state.q.forEach((v, i) => setText(jointRows[i], `${v >= 0 ? "+" : ""}${v.toFixed(2)} rad`));
+      setText(jointRows[5], `${(state.grip * 1000).toFixed(1)} mm`);
     }
 
     dots.visible = trail.visible = spec.chunk;
     if (spec.chunk) updateChunk(now);
     frustums.forEach((f) => (f.visible = spec.frustums));
 
-    const goal = orbit.manual ? orbitGoal() : (shots[spec.shot] ?? shots.hero)(now);
-    const k = 1 - Math.exp(-dt * (orbit.manual ? 14 : 2.6));
-    view.pos.lerp(goal.pos, k);
-    view.target.lerp(goal.target, k);
-    camera.position.copy(view.pos);
-    camera.lookAt(view.target);
-
+    renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
-    if (spec.cams) renderCams();
+    if (spec.cams && camsOn) renderCams();
   }
   frame();
 
@@ -434,16 +495,22 @@ export async function mountStage(container, { assetUrl, policy }) {
       hud.classList.toggle("show-chunk", !!spec.chunk);
       hud.classList.toggle("show-joints", !!spec.joints);
       container.dataset.beat = spec.beat ?? "";
+      camRects = null;
+      dirty = true;
     },
     resetView,
     get orbiting() {
       return orbit.manual;
     },
     setCams(on) {
+      camsOn = on;
       hud.classList.toggle("hide-cams", !on);
+      camRects = null;
+      dirty = true;
     },
     setPlaying(on) {
       playing = on;
+      dirty = true;
     },
     get playing() {
       return playing;

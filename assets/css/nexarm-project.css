@@ -1,0 +1,354 @@
+/* NexArm project page (/projects/6dof-robot-policy/). Scoped to .nx-* classes. Uses the Screen Works tokens
+   (--sw-*, from screen-works.css) for paper, ink and the single accent, and the site's --global-* colours for text so
+   light and dark themes both work. */
+
+.nx {
+  --nx-paper: var(--sw-paper);
+  --nx-ink: var(--global-text-color);
+  --nx-muted: var(--global-text-color-light);
+  --nx-rule: var(--global-divider-color);
+  --nx-accent: var(--sw-accent);
+  --nx-mono: var(--sw-mono);
+  --nx-radius: 10px;
+}
+
+.nx-eyebrow {
+  font-family: var(--nx-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nx-accent);
+  margin-bottom: 0.4rem;
+}
+
+/* ---------- hero ---------- */
+.nx-hero {
+  position: relative;
+  border-radius: var(--nx-radius);
+  overflow: hidden;
+  margin: 0.5rem 0 1.5rem;
+  background: #0d0f13;
+}
+.nx-hero img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  opacity: 0.72;
+}
+.nx-hero-copy {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 2.25rem 1.5rem 1.25rem;
+  background: linear-gradient(to top, rgba(10, 12, 16, 0.92), rgba(10, 12, 16, 0));
+  color: #f4f1ea;
+}
+.nx-hero-copy .nx-eyebrow {
+  color: #9fb4ff;
+}
+.nx .nx-hero-copy p {
+  color: #f4f1ea;
+  margin: 0;
+  max-width: 38rem;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+.nx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+.nx-chips span {
+  color: #f4f1ea;
+  font-family: var(--nx-mono);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border: 1px solid rgba(244, 241, 234, 0.35);
+  border-radius: 999px;
+}
+
+/* ---------- stat strip ---------- */
+.nx-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1px;
+  background: var(--nx-rule);
+  border: 1px solid var(--nx-rule);
+  border-radius: var(--nx-radius);
+  overflow: hidden;
+  margin: 1.5rem 0 2rem;
+}
+.nx-stat {
+  background: var(--global-bg-color);
+  padding: 0.9rem 1rem;
+}
+.nx-stat b {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--nx-ink);
+}
+.nx-stat span {
+  font-size: 0.78rem;
+  color: var(--nx-muted);
+}
+
+/* ---------- pipeline ---------- */
+.nx-pipeline {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  counter-reset: nx-stage;
+}
+.nx-pipeline li {
+  position: relative;
+  padding: 0.9rem 0.9rem 0.8rem;
+  border: 1px solid var(--nx-rule);
+  border-top: 3px solid var(--nx-accent);
+  border-radius: 6px;
+  background: var(--global-card-bg-color);
+  counter-increment: nx-stage;
+}
+.nx-pipeline li::before {
+  content: "0" counter(nx-stage);
+  font-family: var(--nx-mono);
+  font-size: 0.7rem;
+  color: var(--nx-accent);
+}
+.nx-pipeline b {
+  display: block;
+  margin: 0.15rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+.nx-pipeline span {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--nx-muted);
+}
+
+/* ---------- spec sheet ---------- */
+.nx-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+.nx-spec {
+  border: 1px solid var(--nx-rule);
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  background: var(--global-card-bg-color);
+}
+.nx-spec h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+.nx-spec dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.82rem;
+}
+.nx-spec dt {
+  font-weight: 400;
+  color: var(--nx-muted);
+}
+.nx-spec dd {
+  margin: 0;
+  font-family: var(--nx-mono);
+  font-size: 0.78rem;
+  text-align: right;
+  color: var(--nx-ink);
+}
+
+/* ---------- media layouts ---------- */
+.nx-bento {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 210px 210px;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0.4rem;
+}
+.nx-bento figure {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--nx-paper);
+}
+.nx-bento figure:first-child {
+  grid-row: span 2;
+}
+.nx .nx-bento img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  display: block;
+}
+.nx-bento figcaption {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  font-family: var(--nx-mono);
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(10, 12, 16, 0.72);
+  color: #f4f1ea;
+}
+.nx-split {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin: 1.5rem 0 2rem;
+}
+.nx-split video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: #0d0f13;
+}
+.nx-split .nx-cap {
+  font-size: 0.78rem;
+  color: var(--nx-muted);
+  margin-top: 0.4rem;
+}
+.nx-caption {
+  font-size: 0.8rem;
+  color: var(--nx-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* ---------- numbered technical list ---------- */
+.nx-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: nx-step;
+}
+.nx-steps li {
+  counter-increment: nx-step;
+  position: relative;
+  padding: 0 0 0.85rem 2.2rem;
+  font-size: 0.92rem;
+}
+.nx-steps li::before {
+  content: counter(nx-step);
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--nx-accent);
+  color: var(--nx-accent);
+  font-family: var(--nx-mono);
+  font-size: 0.72rem;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- policy cards ---------- */
+.nx-policies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+.nx-policy {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--nx-rule);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--global-card-bg-color);
+  color: var(--nx-ink);
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+a.nx-policy:hover {
+  text-decoration: none;
+  border-color: var(--nx-accent);
+  transform: translateY(-2px);
+}
+.nx-policy h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.2rem;
+}
+.nx-policy p {
+  font-size: 0.82rem;
+  color: var(--nx-muted);
+  margin: 0 0 0.75rem;
+}
+.nx-policy ul {
+  list-style: none;
+  padding: 0;
+  margin: auto 0 0;
+  font-size: 0.78rem;
+}
+.nx-policy li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-top: 1px dashed var(--nx-rule);
+}
+.nx-policy li b {
+  font-family: var(--nx-mono);
+  font-weight: 400;
+}
+.nx-policy .nx-more {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--nx-accent);
+}
+
+/* ---------- callout ---------- */
+.nx-callout {
+  border-left: 3px solid var(--nx-accent);
+  background: color-mix(in srgb, var(--nx-accent) 7%, transparent);
+  border-radius: 0 6px 6px 0;
+  padding: 0.85rem 1rem;
+  margin: 1.25rem 0 1.75rem;
+  font-size: 0.92rem;
+}
+.nx-callout p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .nx-pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .nx-hero img {
+    aspect-ratio: 4 / 5;
+  }
+  .nx-bento {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-rows: 220px;
+  }
+  .nx-bento figure:first-child {
+    grid-row: auto;
+  }
+  .nx-split {
+    grid-template-columns: 1fr;
+  }
+  .nx-split video {
+    max-width: 320px;
+    margin: 0 auto;
+    display: block;
+  }
+}

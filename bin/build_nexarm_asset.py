@@ -6,7 +6,10 @@ The output is a pair of files:
   nexarm.json  body tree (positions, quaternions, joints, geoms, sites, cameras), the bowl-stacking
                scene (workcell boxes, bowls, fixed cameras) and, for each mesh, its byte offsets
                and quantization parameters.
-  nexarm.bin   one binary blob: int16 positions, int8 normals and uint16/uint32 indices per mesh.
+  nexarm.bin.gz  one gzipped binary blob: int16 positions, int8 normals and uint16/uint32 indices per mesh.
+               Gzipped here because hosts do not compress application/octet-stream; the browser inflates it
+               with DecompressionStream.
+  table_oak.webp  the oak tabletop texture of the simulated (and real) workcell.
 
 Positions are stored relative to each mesh's bounding box and decoded in the browser as
 `(q + 32768) * scale[axis] + min[axis]`. Normals are split at creases so CAD edges stay sharp.
@@ -14,13 +17,14 @@ Positions are stored relative to each mesh's bounding box and decoded in the bro
 Usage (from the repository root, with a checkout of khanhthanhdev/lerobot-nexarm whose LFS meshes
 are present):
 
-  pip install numpy fast-simplification
+  pip install numpy fast-simplification pillow
   python3 bin/build_nexarm_asset.py --nexarm ../lerobot-nexarm --out assets/robot/nexarm
 """
 
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import math
 import struct
@@ -29,13 +33,13 @@ from pathlib import Path
 
 import fast_simplification
 import numpy as np
+from PIL import Image
 
+TABLE_TEXTURE_PX = 512
 CREASE_DEG = 38.0
-MIN_FACES = 400
-MAX_FACES = 6500
-KEEP_RATIO = 0.12
-# The bowl's 2 mm walls fold through each other at the default ratio, which shows as dark streaks.
-KEEP_RATIO_BY_MESH = {"bowl": 0.35}
+# Fraction of faces kept per mesh; meshes not listed keep every face. The CAD STLs are thin, non-manifold
+# shells, and decimating them much harder tears holes and spikes into the links (checked against MuJoCo renders).
+KEEP_RATIO_BY_MESH = {"link_1": 0.5, "link_3": 0.5, "link_4": 0.7, "link_5": 0.7, "bowl": 0.3}
 
 
 def floats(text: str | None, default: list[float] | None = None) -> list[float] | None:
@@ -65,11 +69,10 @@ def weld(tris: np.ndarray, scale: float) -> tuple[np.ndarray, np.ndarray]:
     return flat[first], faces
 
 
-def decimate(points: np.ndarray, faces: np.ndarray, keep: float = KEEP_RATIO) -> tuple[np.ndarray, np.ndarray]:
-    target = int(min(MAX_FACES * keep / KEEP_RATIO, max(MIN_FACES, len(faces) * keep)))
-    if len(faces) <= target:
+def decimate(points: np.ndarray, faces: np.ndarray, keep: float) -> tuple[np.ndarray, np.ndarray]:
+    if keep >= 1.0:
         return points, faces
-    p, f = fast_simplification.simplify(points.astype(np.float32), faces.astype(np.int32), 1 - target / len(faces))
+    p, f = fast_simplification.simplify(points.astype(np.float32), faces.astype(np.int32), 1 - keep)
     return p.astype(np.float64), f.astype(np.int64)
 
 
@@ -121,7 +124,7 @@ class BinWriter:
 
 def encode_mesh(name: str, path: Path, scale: float, out: BinWriter) -> dict:
     points, faces = weld(read_stl(path), scale)
-    points, faces = decimate(points, faces, KEEP_RATIO_BY_MESH.get(name, KEEP_RATIO))
+    points, faces = decimate(points, faces, KEEP_RATIO_BY_MESH.get(name, 1.0))
     pos, nrm, faces = crease_normals(points, faces)
     lo, hi = pos.min(axis=0), pos.max(axis=0)
     step = np.maximum(hi - lo, 1e-9) / 65535.0
@@ -218,19 +221,59 @@ def main() -> None:
         if g.get("type") == "box"
     ]
 
+    # The oak tabletop: the floor plane's material, its texture (re-encoded as WebP) and the cable grommet.
+    args.out.mkdir(parents=True, exist_ok=True)
+    world = scene.find("worldbody")
+    table_mat = next(m for m in scene.iter("material") if m.get("name") == "table")
+    texture = next(t for t in scene.iter("texture") if t.get("name") == table_mat.get("texture"))
+    image = Image.open(mjcf_dir / texture.get("file")).convert("RGB")
+    image.thumbnail((TABLE_TEXTURE_PX, TABLE_TEXTURE_PX))
+    image.save(args.out / "table_oak.webp", quality=82, method=6)
+    floor = next(g for g in world.findall("geom") if g.get("type") == "plane")
+    table = {
+        "size": floats(floor.get("size"))[:2],
+        "material": table_mat.get("name"),
+        "texture": "table_oak.webp",
+        "texrepeat": floats(table_mat.get("texrepeat"), [1, 1]),
+    }
+    cylinders = [
+        {"pos": floats(g.get("pos")), "size": floats(g.get("size")), "material": g.get("material")}
+        for g in world.findall("geom")
+        if g.get("type") == "cylinder"
+    ]
+    lights = [
+        {
+            "name": light.get("name"),
+            "type": light.get("type", "spot"),
+            "pos": floats(light.get("pos")),
+            "dir": floats(light.get("dir"), [0, 0, -1]),
+            "diffuse": floats(light.get("diffuse"), [0.7, 0.7, 0.7]),
+            "cutoff": float(light.get("cutoff", 45)),
+            "castshadow": light.get("castshadow", "true") == "true",
+        }
+        for light in world.findall("light")
+    ]
+
     asset = {
         "source": "khanhthanhdev/lerobot-nexarm sim/description/mjcf (nexarm.xml, bowl_stack_scene.xml, workcell.xml); "
         "visual meshes decimated and quantized by bin/build_nexarm_asset.py",
         "materials": materials,
         "meshes": meshes,
         "robot": root_body,
-        "scene": {"cameras": cameras, "bowls": bowls, "boxes": boxes},
+        "scene": {
+            "cameras": cameras,
+            "bowls": bowls,
+            "boxes": boxes,
+            "table": table,
+            "cylinders": cylinders,
+            "lights": lights,
+        },
     }
-    args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "nexarm.bin").write_bytes(bytes(out.buf))
+    (args.out / "nexarm.bin.gz").write_bytes(gzip.compress(bytes(out.buf), 9, mtime=0))
+    (args.out / "nexarm.bin").unlink(missing_ok=True)
     (args.out / "nexarm.json").write_text(json.dumps(asset, separators=(",", ":")))
     tris = sum(m["indexCount"] for m in meshes.values()) // 3
-    print(f"wrote {args.out}/nexarm.json + nexarm.bin ({len(out.buf) / 1024:.0f} KB, {tris} triangles)")
+    print(f"wrote {args.out}/nexarm.json + nexarm.bin.gz ({len(out.buf) / 1024:.0f} KB raw, {tris} triangles)")
 
 
 if __name__ == "__main__":

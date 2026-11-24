@@ -317,8 +317,8 @@
     </g>
     <path class="axis" d="M1122 604 H1542" />
     <text class="Ms" x="1122" y="626">0 s</text>
-    <text class="Ms" x="1542" y="626" text-anchor="end">3.33 s, then look again</text>
-    <text class="M" x="1122" y="684">30 Hz · no re-planning in between</text>
+    <text class="Ms" x="1542" y="626" text-anchor="end">5 s, then look again</text>
+    <text class="M" x="1122" y="684">20 Hz · no re-planning in between</text>
   </g>
   <text class="CL" x="40" y="746">source · lerobot/policies/act/modeling_act.py · click a block or use the arrow keys</text>
 </svg>

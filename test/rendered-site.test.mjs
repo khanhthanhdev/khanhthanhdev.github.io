@@ -43,15 +43,17 @@ test("main pages skip unused diagram, grid, and notebook scripts", async () => {
 });
 
 test("project pages keep the scripts their content needs", async () => {
+  // The NexArm page has a code block but no diagrams or zoomable images.
   const html = await readFile(new URL("../_site/projects/6dof-robot-policy/index.html", import.meta.url), "utf8");
-
-  assert.match(html, /src="[^"]*\/mermaid\/mermaid\.min\.js/);
-  assert.match(html, /src="[^"]*\/d3\/d3\.min\.js/);
-  assert.match(html, /src="[^"]*\/mermaid-setup\.js/);
   assert.match(html, /src="[^"]*\/copy_code\.js/);
+  assert.doesNotMatch(html, /src="[^"]*\/mermaid\/mermaid\.min\.js/);
   assert.doesNotMatch(html, /src="[^"]*\/zoom\.js/);
 
+  // Infi has Mermaid diagrams and zoomable images.
   const imageProject = await readFile(new URL("../_site/projects/infi/index.html", import.meta.url), "utf8");
+  assert.match(imageProject, /src="[^"]*\/mermaid\/mermaid\.min\.js/);
+  assert.match(imageProject, /src="[^"]*\/d3\/d3\.min\.js/);
+  assert.match(imageProject, /src="[^"]*\/mermaid-setup\.js/);
   assert.match(imageProject, /src="[^"]*\/zoom\.js/);
 });
 

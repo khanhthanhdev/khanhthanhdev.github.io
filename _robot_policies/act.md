@@ -8,14 +8,14 @@ order: 1
 policy:
   horizon: 100
   execute: 100
-  fps: 30
+  fps: 20
 facts:
   - label: actions per chunk
     value: "100"
   - label: actions run before re-planning
     value: "100"
   - label: control rate
-    value: 30 Hz
+    value: 20 Hz
   - label: encoder tokens (3 cameras)
     value: "902"
   - label: backbone
@@ -28,7 +28,7 @@ steps:
     body: >-
       ACT is conditioned on images and joint state only; it does not read the task text. Each cycle it reads every
       camera once, encodes them together with the arm's state, and predicts a **chunk of 100 actions**: joint and gripper
-      targets for the next 3.33 seconds at 30 Hz. The NexArm then runs the whole chunk before the policy is called again.
+      targets for the next 5 seconds at 20 Hz. The NexArm then runs the whole chunk before the policy is called again.
     formulas:
       - '\hat{A}_t = \pi_\theta\big(I_t^{1..V},\ s_t,\ z = 0\big) \in \mathbb{R}^{100 \times 6}'
     where: >-
@@ -43,7 +43,7 @@ steps:
       a one-step policy struggles to decide when a pause should end, while a chunk can represent the whole
       pause-then-move motion at once.
 
-      The price is reaction time. Nothing the cameras see during those 3.33 seconds changes what the arm does. That is
+      The price is reaction time. Nothing the cameras see during those 5 seconds changes what the arm does. That is
       acceptable for stacking bowls in a static scene, but a bowl that slips mid-chunk is noticed only at the next cycle.
       The paper softens this with temporal ensembling (see the last step); lerobot-nexarm leaves it off, as LeRobot does by
       default.
@@ -179,7 +179,7 @@ steps:
     shapes: "100 queries × 512 → Linear 512→6 → chunk 100 × 6"
     detail: |-
       All 100 queries start as the same zero vector, so the first self-attention can tell them apart only through their
-      learned positions. Query 1 learns to ask for the next action, query 100 for the action 3.3 seconds ahead.
+      learned positions. Query 1 learns to ask for the next action, query 100 for the action 5 seconds ahead.
       Cross-attention is where the actions read the scene: each query weighs all 902 memory tokens and takes what it needs.
 
       There is a single decoder layer. The paper lists 7, but its released code used only the output of the first one.
@@ -193,16 +193,16 @@ steps:
     title: Execute the whole chunk
     body: >-
       lerobot-nexarm keeps ACT's default `n_action_steps = 100` with no temporal ensembling: the arm follows all 100
-      targets open loop, one every 33 ms, then captures new frames. In the 3D view the dots ahead of the gripper are the
+      targets open loop, one every 50 ms, then captures new frames. In the 3D view the dots ahead of the gripper are the
       part of the current chunk still to run; when they run out, the next cycle starts.
     formulas:
       - 'a_k = \sigma_a \odot \hat a_k + \mu_a,\quad k = 1, \dots, 100'
-      - '\Delta t_{\text{replan}} = 100 \times \tfrac{1}{30}\,\text{s} \approx 3.33\,\text{s}'
+      - '\Delta t_{\text{replan}} = 100 \times \tfrac{1}{20}\,\text{s} = 5\,\text{s}'
       - 'a_t = \frac{\sum_i w_i\, \hat a_t^{(i)}}{\sum_i w_i},\quad w_i = e^{-m\, i}\qquad \text{(paper only)}'
-    shapes: "100 actions × 33 ms = 3.33 s between observations"
+    shapes: "100 actions × 50 ms = 5 s between observations"
     detail: |-
       The 100 targets are de-normalized with the training set's action statistics and sent as joint-position commands. The
-      motors' own position controllers track each target until the next one arrives 33 ms later.
+      motors' own position controllers track each target until the next one arrives 50 ms later.
 
       The ACT paper instead runs the policy at every step and averages all the chunks that predict the current step (the third formula above). Index *i* = 0 is the oldest of those chunks, so with *m* > 0 older predictions weigh more, and *m* sets how quickly new observations are let in. This temporal ensembling gives
       smoother and more reactive motion, but costs 100 forward passes where lerobot-nexarm needs one. A middle ground is to
@@ -363,7 +363,7 @@ links:
 
 ## Architecture
 
-ACT predicts actions in chunks instead of one at a time. Predicting 100 steps at once means a single mistake in one prediction is not compounded at every step, and it lets the policy represent a smooth motion rather than a series of corrections. The cost is that the arm moves without new observations for the length of the executed part of the chunk; on the NexArm that is the full 3.33 seconds.
+ACT predicts actions in chunks instead of one at a time. Predicting 100 steps at once means a single mistake in one prediction is not compounded at every step, and it lets the policy represent a smooth motion rather than a series of corrections. The cost is that the arm moves without new observations for the length of the executed part of the chunk; on the NexArm that is the full 5 seconds.
 
 The network has two halves. The **encoder** turns everything the robot knows at this instant into one sequence of 902 tokens: 300 image tokens from each camera, one for the joint state and one for the style latent. Four self-attention layers let all of them exchange information. The **decoder** holds 100 slots, one per future step, which read that sequence through cross-attention and each return one action. Nothing in the decoder is autoregressive: the 100 actions are produced together, so the whole chunk costs a single forward pass.
 

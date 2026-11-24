@@ -403,7 +403,7 @@
     </g>
     <text class="CLs" x="878" y="620">RUN 8</text>
     <text class="CLs" x="1194" y="620" text-anchor="end">DROPPED</text>
-    <text class="M" x="878" y="684">8 × 33 ms ≈ 0.27 s</text>
+    <text class="M" x="878" y="684">8 × 50 ms = 0.4 s</text>
   </g>
   <text class="CL" x="40" y="746">source · TurboVLA/turbovla/models · click a block or use the arrow keys</text>
 </svg>

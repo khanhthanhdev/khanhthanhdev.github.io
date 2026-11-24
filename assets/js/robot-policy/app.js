@@ -506,9 +506,32 @@ function initPolicyPage(app) {
       return;
     }
     try {
+      // Download the NexArm asset while the stage module and three.js load, not after.
+      const assetUrl = app.dataset.assetUrl;
+      const assetData = Promise.all([
+        fetch(`${assetUrl}/nexarm.json`).then((r) => r.json()),
+        // Gzipped by bin/build_nexarm_asset.py (hosts do not compress octet-streams) and inflated here, unless the
+        // host already sent it with Content-Encoding: gzip and the browser inflated it.
+        fetch(`${assetUrl}/nexarm.bin.gz`)
+          .then((r) => r.arrayBuffer())
+          .then((buf) => {
+            const head = new Uint8Array(buf, 0, 2);
+            if (head[0] !== 0x1f || head[1] !== 0x8b) return buf;
+            return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+          }),
+      ]);
+      assetData.catch(() => {});
+      // stage.js imports these statically; preloading them saves a round trip after stage.js arrives.
+      for (const dep of ["./nexarm.js", "./lib/three.module.min.js"]) {
+        const link = document.createElement("link");
+        link.rel = "modulepreload";
+        link.href = new URL(dep, new URL(app.dataset.stageModule, location.href)).href;
+        document.head.appendChild(link);
+      }
       const { mountStage } = await import(app.dataset.stageModule);
       stage = await mountStage(stageEl, {
-        assetUrl: app.dataset.assetUrl,
+        assetUrl,
+        assetData,
         policy: {
           name: app.dataset.name,
           horizon: Number(app.dataset.horizon),
