@@ -1,24 +1,47 @@
-<li class="project-item">
-  {% if project.img %}
-    <a href="{% if project.redirect %}{{ project.redirect }}{% else %}{{ project.url | relative_url }}{% endif %}">
+{% if project.redirect %}
+  {% assign project_url = project.redirect %}
+{% else %}
+  {% assign project_url = project.url | relative_url %}
+{% endif %}
+<article class="work-card">
+  <a class="work-card-media" href="{{ project_url }}" tabindex="-1" aria-hidden="true">
+    {% if project.img %}
       {%
         include figure.liquid
-        loading="eager"
+        loading="lazy"
         path=project.img
-        sizes="80px"
-        class="project-thumb z-depth-1 rounded"
-        alt="project thumbnail"
+        sizes="(min-width: 768px) 440px, 100vw"
+        alt=project.title
       %}
-    </a>
-  {% endif %}
-  <div class="project-info">
-    <a href="{% if project.redirect %}{{ project.redirect }}{% else %}{{ project.url | relative_url }}{% endif %}">
-      <strong>{{ project.title }}</strong>
-    </a>
-    {% if project.date %} ({{ project.date | date: '%Y' }}){% endif %}
-    {% if project.description %} — {{ project.description }}{% endif %}
-    {% if project.github %}
-      [<a href="{{ project.github }}">code</a>]
+    {% else %}
+      <span class="work-card-placeholder">{{ project.title | slice: 0 }}</span>
     {% endif %}
+  </a>
+  <div class="work-card-body">
+    <h3 class="work-card-title">
+      <a href="{{ project_url }}">{{ project.title }}</a>
+    </h3>
+    {% if project.date -%}
+      <span class="work-card-year">{{ project.date | date: '%Y' }}</span>
+    {%- endif %}
+    {% if project.description %}
+      <p class="work-card-desc">{{ project.description }}</p>
+    {% endif %}
+    {% if project.tags %}
+      <ul class="work-card-tags">
+        {% for tag in project.tags limit: 4 %}
+          <li>{{ tag }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <div class="work-card-links">
+      <a href="{{ project_url }}">Read more <i class="fa-solid fa-arrow-right"></i></a>
+      {% if project.github %}
+        <a href="{{ project.github }}" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Code</a>
+      {% endif %}
+      {% if project.website %}
+        <a href="{{ project.website }}" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> Live</a>
+      {% endif %}
+    </div>
   </div>
-</li>
+</article>

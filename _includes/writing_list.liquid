@@ -1,6 +1,6 @@
 {% comment %}
   Writing list for the works page: posts that share a `series` front-matter key
-  are listed once, with their parts nested underneath; other posts get one line.
+  become one card with their parts in a collapsible list; other posts get one row.
 {% endcomment %}
 {% assign series_groups = site.posts | where_exp: 'p', 'p.series' | group_by: 'series' %}
 {% assign single_posts = site.posts | where_exp: 'p', 'p.series == nil' %}
@@ -8,48 +8,66 @@
 {% if site.posts.size == 0 %}
   <p class="text-muted">No posts yet.</p>
 {% else %}
-  <ul class="writing-list">
-    {% for group in series_groups %}
-      {% assign parts = group.items | sort: 'part' %}
-      {% assign first_part = parts | first %}
-      {% assign newest = group.items | sort: 'date' | last %}
-      {% if first_part.series_title %}
-        {% assign series_name = first_part.series_title %}
-      {% else %}
-        {% assign series_name = first_part.title | split: ', part' | first %}
-      {% endif %}
-      {% include writing_url.liquid post=first_part %}
-      <li class="writing-item">
-        <a href="{{ writing_url }}"
-          ><strong>{{ series_name }}</strong></a
-        >
-        ({{ newest.date | date: '%Y' }}, {{ parts.size }}-part series) &mdash;
-        {{ first_part.series_description | default: first_part.description }}
-        <ol class="writing-parts">
-          {% for p in parts %}
-            {% include writing_url.liquid post=p %}
-            <li>
-              <a href="{{ writing_url }}">{{ p.title | split: ': ' | last }}</a>
-              <span class="writing-desc">&mdash; {{ p.description }}</span>
-            </li>
-          {% endfor %}
-        </ol>
-      </li>
-    {% endfor %}
+  {% if series_groups.size > 0 %}
+    <h3 class="works-subheading">Series</h3>
+    <div class="works-grid">
+      {% for group in series_groups %}
+        {% assign parts = group.items | sort: 'part' %}
+        {% assign first_part = parts | first %}
+        {% assign newest = group.items | sort: 'date' | last %}
+        {% if first_part.series_title %}
+          {% assign series_name = first_part.series_title %}
+        {% else %}
+          {% assign series_name = first_part.title | split: ', part' | first %}
+        {% endif %}
+        {% include writing_url.liquid post=first_part %}
+        <article class="work-card series-card">
+          <div class="work-card-body">
+            <span class="series-card-meta">{{ parts.size }}-part series &middot; {{ newest.date | date: '%Y' }}</span>
+            <h3 class="work-card-title">
+              <a href="{{ writing_url }}">{{ series_name }}</a>
+            </h3>
+            <p class="work-card-desc">{{ first_part.series_description | default: first_part.description }}</p>
+            <details class="series-card-parts">
+              <summary>Show all {{ parts.size }} parts</summary>
+              <ol>
+                {% for p in parts %}
+                  {% include writing_url.liquid post=p %}
+                  <li>
+                    <a href="{{ writing_url }}" title="{{ p.description | escape }}">{{ p.title | split: ': ' | last }}</a>
+                  </li>
+                {% endfor %}
+              </ol>
+            </details>
+            <div class="work-card-links">
+              <a href="{{ writing_url }}">Start reading <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-    {% for post in single_posts %}
-      {% include writing_url.liquid post=post %}
-      <li class="writing-item">
-        <a
-          href="{{ writing_url }}"
-          {% if post.redirect contains '://' %}
-            target="_blank" rel="noopener"
-          {% endif %}
-        >
-          <strong>{{ post.title }}</strong></a
-        >
-        ({{ post.date | date: '%Y' }}) &mdash; {{ post.description }}
-      </li>
-    {% endfor %}
-  </ul>
+  {% if single_posts.size > 0 %}
+    <h3 class="works-subheading">Articles</h3>
+    <ul class="writing-list">
+      {% for post in single_posts %}
+        {% include writing_url.liquid post=post %}
+        <li class="writing-item">
+          <span class="writing-year">{{ post.date | date: '%Y' }}</span>
+          <div>
+            <a
+              href="{{ writing_url }}"
+              {% if post.redirect contains '://' %}
+                target="_blank" rel="noopener"
+              {% endif %}
+            >
+              {{- post.title -}}
+            </a>
+            <p class="writing-desc">{{ post.description }}</p>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 {% endif %}
